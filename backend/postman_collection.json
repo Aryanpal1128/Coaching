@@ -1,0 +1,163 @@
+{
+  "info": {
+    "name": "AI-Powered Student Learning Platform API",
+    "description": "Production-Ready MERN Backend REST API collection covering Phases 1 through 8",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Phase 1: Auth",
+      "item": [
+        {
+          "name": "Register User",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Student One\",\n  \"email\": \"student1@example.com\",\n  \"password\": \"password123\",\n  \"role\": \"STUDENT\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/v1/auth/register" }
+          }
+        },
+        {
+          "name": "Login User",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"student1@example.com\",\n  \"password\": \"password123\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/v1/auth/login" }
+          }
+        },
+        {
+          "name": "Get Current User Profile",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }],
+            "url": { "raw": "{{baseUrl}}/api/v1/auth/me" }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Phase 2 & 3: Questions & Answers (AI Evaluated & Ranked)",
+      "item": [
+        {
+          "name": "Ask Question",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{accessToken}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"How does Red-Black Tree self-balancing work?\",\n  \"description\": \"Explain the color properties, rotations, and time complexity.\",\n  \"tags\": [\"trees\", \"data-structures\"],\n  \"difficulty\": \"Hard\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/v1/questions" }
+          }
+        },
+        {
+          "name": "Search Questions",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/api/v1/questions/search?tag=trees&sortBy=popularity" }
+          }
+        },
+        {
+          "name": "Submit Answer (Triggers AI Evaluation)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{accessToken}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"questionId\": \"{{questionId}}\",\n  \"answerText\": \"Red-Black trees balance using color rules (root is black, no consecutive red nodes, equal black-height) and tree rotations (Left/Right) during insertions/deletions, guaranteeing O(log N) operations.\",\n  \"timeTakenSeconds\": 150\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/v1/answers" }
+          }
+        },
+        {
+          "name": "Get Ranked Answers",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/api/v1/answers/question/{{questionId}}" }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Phase 4: Leaderboard",
+      "item": [
+        {
+          "name": "Overall Leaderboard",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/api/v1/leaderboard/overall" }
+          }
+        },
+        {
+          "name": "Weekly Leaderboard",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/api/v1/leaderboard/weekly" }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Phase 5 & 6: Teacher Module & Live Classes",
+      "item": [
+        {
+          "name": "Schedule Live Class",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{teacherToken}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Advanced Graph Algorithms Masterclass\",\n  \"subject\": \"{{subjectId}}\",\n  \"scheduledAt\": \"2026-08-01T10:00:00.000Z\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/v1/live-classes/schedule" }
+          }
+        },
+        {
+          "name": "Start Live Class",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Authorization", "value": "Bearer {{teacherToken}}" }],
+            "url": { "raw": "{{baseUrl}}/api/v1/live-classes/{{classId}}/start" }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Phase 7 & 8: Notifications & Admin",
+      "item": [
+        {
+          "name": "Get Notifications",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }],
+            "url": { "raw": "{{baseUrl}}/api/v1/notifications" }
+          }
+        },
+        {
+          "name": "Admin Platform Analytics",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{adminToken}}" }],
+            "url": { "raw": "{{baseUrl}}/api/v1/admin/analytics" }
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,120 @@
+import React, { useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { useDispatch } from 'react-redux';
+import { Card } from '../../components/common/Card.jsx';
+import { Input } from '../../components/common/Input.jsx';
+import { Button } from '../../components/common/Button.jsx';
+import { useRegisterMutation } from '../../redux/api/authApi.js';
+import { setCredentials } from '../../redux/slices/authSlice.js';
+import { User, Mail, Lock, Sparkles, GraduationCap } from 'lucide-react';
+import toast from 'react-hot-toast';
+
+export const Register = () => {
+  const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [role, setRole] = useState('STUDENT');
+
+  const [registerApi, { isLoading }] = useRegisterMutation();
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      const res = await registerApi({ name, email, password, role }).unwrap();
+      dispatch(setCredentials({ user: res.data.user, accessToken: res.data.accessToken }));
+      toast.success('Registration successful!');
+      navigate(role === 'TEACHER' ? '/teacher-dashboard' : '/dashboard');
+    } catch (err) {
+      toast.error(err?.data?.message || 'Registration failed.');
+    }
+  };
+
+  return (
+    <Card className="glass-card shadow-2xl border border-slate-800 p-8 text-slate-100">
+      <div className="text-center mb-6">
+        <div className="inline-flex p-3 rounded-2xl bg-gradient-to-tr from-brand-600 to-indigo-600 shadow-lg shadow-brand-500/20 text-white mb-3">
+          <GraduationCap className="w-6 h-6" />
+        </div>
+        <h2 className="text-2xl font-extrabold tracking-tight">Create Account</h2>
+        <p className="text-xs text-slate-400 mt-1">
+          Join the AI-Powered Learning Community
+        </p>
+      </div>
+
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <Input
+          label="Full Name"
+          type="text"
+          icon={User}
+          placeholder="Ada Lovelace"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          required
+        />
+
+        <Input
+          label="Email Address"
+          type="email"
+          icon={Mail}
+          placeholder="ada@example.com"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          required
+        />
+
+        <Input
+          label="Password"
+          type="password"
+          icon={Lock}
+          placeholder="At least 6 characters"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          required
+        />
+
+        <div>
+          <label className="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1">
+            Account Role
+          </label>
+          <div className="grid grid-cols-2 gap-2">
+            <button
+              type="button"
+              onClick={() => setRole('STUDENT')}
+              className={`p-2.5 rounded-xl border text-xs font-bold transition-all ${
+                role === 'STUDENT'
+                  ? 'bg-brand-600 border-brand-500 text-white shadow-md'
+                  : 'bg-slate-800 border-slate-700 text-slate-400'
+              }`}
+            >
+              🎓 Student
+            </button>
+            <button
+              type="button"
+              onClick={() => setRole('TEACHER')}
+              className={`p-2.5 rounded-xl border text-xs font-bold transition-all ${
+                role === 'TEACHER'
+                  ? 'bg-indigo-600 border-indigo-500 text-white shadow-md'
+                  : 'bg-slate-800 border-slate-700 text-slate-400'
+              }`}
+            >
+              👨‍🏫 Instructor
+            </button>
+          </div>
+        </div>
+
+        <Button type="submit" isLoading={isLoading} className="w-full mt-2" size="lg">
+          Get Started Free
+        </Button>
+      </form>
+
+      <div className="mt-6 text-center text-xs text-slate-400">
+        Already have an account?{' '}
+        <Link to="/login" className="text-brand-400 font-bold hover:underline">
+          Sign In
+        </Link>
+      </div>
+    </Card>
+  );
+};
