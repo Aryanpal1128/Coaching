@@ -3,22 +3,25 @@ import { useSelector } from 'react-redux';
 import { StatCard } from '../../components/common/StatCard.jsx';
 import { Card } from '../../components/common/Card.jsx';
 import { Badge } from '../../components/common/Badge.jsx';
-import { Trophy, HelpCircle, CheckCircle, Cpu, Zap, Flame, Award, ArrowUpRight } from 'lucide-react';
-import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip } from 'recharts';
+import { Trophy, HelpCircle, CheckCircle, Cpu, Zap, Award, ArrowUpRight, Video, BookOpen } from 'lucide-react';
 import { Link } from 'react-router-dom';
-
-const mockWeeklyData = [
-  { day: 'Mon', questions: 3, answers: 5, aiScore: 88 },
-  { day: 'Tue', questions: 2, answers: 7, aiScore: 92 },
-  { day: 'Wed', questions: 5, answers: 4, aiScore: 85 },
-  { day: 'Thu', questions: 1, answers: 8, aiScore: 95 },
-  { day: 'Fri', questions: 4, answers: 6, aiScore: 90 },
-  { day: 'Sat', questions: 6, answers: 9, aiScore: 94 },
-  { day: 'Sun', questions: 2, answers: 3, aiScore: 89 }
-];
+import { useGetLiveClassesQuery } from '../../redux/api/liveClassApi.js';
+import { useGetStudyMaterialsQuery } from '../../redux/api/teacherApi.js';
+import { useSearchQuestionsQuery } from '../../redux/api/questionApi.js';
 
 export const StudentDashboard = () => {
   const { user } = useSelector((state) => state.auth);
+
+  // Fetch real data
+  const { data: liveClassData } = useGetLiveClassesQuery({ status: 'LIVE' });
+  const { data: scheduledData } = useGetLiveClassesQuery({ status: 'SCHEDULED' });
+  const { data: materialsData } = useGetStudyMaterialsQuery({});
+  const { data: questionsData } = useSearchQuestionsQuery({ limit: 4 });
+
+  const liveClasses = liveClassData?.data || [];
+  const upcomingClasses = scheduledData?.data || [];
+  const materials = materialsData?.data || [];
+  const recentQuestions = questionsData?.data || questionsData?.questions || [];
 
   return (
     <div className="space-y-6">
@@ -28,182 +31,193 @@ export const StudentDashboard = () => {
           <div>
             <div className="flex items-center gap-2">
               <span className="bg-white/20 backdrop-blur-md px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider">
-                {user?.level || 'Contributor'} Level
+                {user?.level || 'Beginner'} Level
               </span>
-              <span className="text-amber-300 font-bold text-xs">🔥 5 Day Streak</span>
+              {user?.badge && (
+                <span className="text-amber-300 font-bold text-xs">{user.badge}</span>
+              )}
             </div>
             <h2 className="text-2xl sm:text-3xl font-extrabold mt-2">
               Welcome back, {user?.name || 'Student'}! 👋
             </h2>
             <p className="text-xs sm:text-sm text-blue-100 mt-1 max-w-xl">
-              You are in the top 15% of contributors this week. Keep answering questions to earn badges & reach Expert level!
+              {liveClasses.length > 0
+                ? `🔴 ${liveClasses.length} class${liveClasses.length > 1 ? 'es are' : ' is'} LIVE right now — join before it ends!`
+                : upcomingClasses.length > 0
+                ? `📅 ${upcomingClasses.length} class${upcomingClasses.length > 1 ? 'es' : ''} coming up. Keep learning!`
+                : 'Ask questions, answer your peers, and climb the leaderboard!'}
             </p>
           </div>
           <Link
             to="/ask-question"
             className="inline-flex items-center gap-2 px-5 py-3 rounded-2xl bg-white text-brand-600 font-extrabold text-xs shadow-lg hover:bg-slate-100 transition-all shrink-0"
           >
-            <Zap className="w-4 h-4 text-amber-500 fill-amber-500" /> Ask Question Now
+            <Zap className="w-4 h-4 text-amber-500 fill-amber-500" /> Ask Question
           </Link>
         </div>
       </div>
 
-      {/* Analytics Stat Cards */}
+      {/* Stat Cards — real user data */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <StatCard
-          title="Total Reputation"
-          value={`${user?.reputation || 350} pts`}
+          title="Reputation Points"
+          value={`${user?.reputation || 0} pts`}
           icon={Trophy}
-          trend="+45 this week"
+          trend={user?.level || 'Keep going!'}
           color="amber"
         />
         <StatCard
-          title="AI Accuracy Avg"
-          value="91.5%"
-          icon={Cpu}
-          trend="Top 10% Platform"
-          color="indigo"
+          title="Live Now"
+          value={liveClasses.length.toString()}
+          icon={Video}
+          trend={liveClasses.length > 0 ? 'Classes in progress' : 'None active'}
+          color={liveClasses.length > 0 ? 'red' : 'slate'}
         />
         <StatCard
-          title="Questions Solved"
-          value="18"
-          icon={CheckCircle}
-          trend="82% resolution rate"
+          title="Study Materials"
+          value={materials.length.toString()}
+          icon={BookOpen}
+          trend="Available to download"
           color="emerald"
         />
         <StatCard
-          title="Answers Given"
-          value="24"
-          icon={HelpCircle}
-          trend="+6 teacher endorsed"
-          color="blue"
+          title="Upcoming Classes"
+          value={upcomingClasses.length.toString()}
+          icon={CheckCircle}
+          trend="Scheduled sessions"
+          color="indigo"
         />
       </div>
 
-      {/* Analytics Chart & Badges Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Weekly Activity Bar Chart */}
-        <Card className="lg:col-span-2">
-          <div className="flex items-center justify-between mb-4">
-            <div>
-              <h3 className="text-base font-bold text-slate-900 dark:text-slate-100">
-                Weekly Activity & AI Performance
-              </h3>
-              <p className="text-xs text-slate-500">Track questions answered and AI grade trend</p>
-            </div>
-            <Badge variant="blue">This Week</Badge>
-          </div>
-
-          <div className="h-64 w-full">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={mockWeeklyData}>
-                <XAxis dataKey="day" stroke="#94a3b8" fontSize={12} tickLine={false} />
-                <YAxis stroke="#94a3b8" fontSize={12} tickLine={false} />
-                <Tooltip
-                  contentStyle={{
-                    backgroundColor: '#0f172a',
-                    borderColor: '#334155',
-                    borderRadius: '12px',
-                    fontSize: '12px',
-                    color: '#fff'
-                  }}
-                />
-                <Bar dataKey="answers" fill="#3b82f6" radius={[6, 6, 0, 0]} name="Answers" />
-                <Bar dataKey="questions" fill="#6366f1" radius={[6, 6, 0, 0]} name="Questions" />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-        </Card>
-
-        {/* Gamified Badges */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Live & Upcoming Classes */}
         <Card>
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-base font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
-              <Award className="w-5 h-5 text-amber-500" /> Earned Badges
+              <Video className="w-5 h-5 text-red-500" /> Live & Upcoming
             </h3>
-            <span className="text-xs font-bold text-brand-500">4 / 10</span>
+            <Link to="/live-classes" className="text-xs font-bold text-brand-500 hover:underline flex items-center gap-1">
+              View All <ArrowUpRight className="w-3.5 h-3.5" />
+            </Link>
           </div>
-
-          <div className="space-y-3">
-            {[
-              { name: '🌱 Beginner', desc: 'Joined platform', date: 'Unlocked' },
-              { name: '📘 Learner', desc: 'Reached 100 points', date: 'Unlocked' },
-              { name: '⚡ Contributor', desc: 'Reached 300 points', date: 'Unlocked' },
-              { name: '🤖 AI Master', desc: '3+ AI Scores > 90%', date: 'Unlocked' }
-            ].map((badge, idx) => (
-              <div
-                key={idx}
-                className="flex items-center justify-between p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/60"
-              >
-                <div>
-                  <h4 className="text-xs font-bold text-slate-900 dark:text-slate-100">
-                    {badge.name}
-                  </h4>
-                  <p className="text-[11px] text-slate-500">{badge.desc}</p>
+          {[...liveClasses, ...upcomingClasses].length === 0 ? (
+            <div className="text-center py-8 text-slate-400">
+              <Video className="w-8 h-8 mx-auto mb-2 opacity-30" />
+              <p className="text-xs">No classes right now</p>
+              <Link to="/live-classes" className="text-xs text-brand-500 hover:underline mt-1 block">Browse all classes →</Link>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {[...liveClasses, ...upcomingClasses].slice(0, 3).map((cls) => (
+                <div key={cls._id} className={`p-3.5 rounded-2xl border flex items-start justify-between gap-3 ${
+                  cls.status === 'LIVE'
+                    ? 'bg-red-500/5 border-red-500/20'
+                    : 'bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-800'
+                }`}>
+                  <div className="flex-1 min-w-0">
+                    <h4 className="text-xs font-bold text-slate-900 dark:text-slate-100 truncate">{cls.title}</h4>
+                    <p className="text-[11px] text-slate-500 mt-0.5">
+                      {cls.teacher?.name} • {cls.subject?.name}
+                    </p>
+                  </div>
+                  <div className="shrink-0">
+                    {cls.status === 'LIVE' ? (
+                      <Link to="/live-classes">
+                        <span className="flex items-center gap-1 text-[10px] font-bold text-red-500 bg-red-500/10 px-2 py-1 rounded-full">
+                          <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-ping" />
+                          JOIN
+                        </span>
+                      </Link>
+                    ) : (
+                      <Badge variant="amber" size="xs">
+                        {new Date(cls.scheduledAt).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}
+                      </Badge>
+                    )}
+                  </div>
                 </div>
-                <Badge variant="emerald" size="xs">
-                  {badge.date}
-                </Badge>
-              </div>
-            ))}
+              ))}
+            </div>
+          )}
+        </Card>
+
+        {/* Recent Study Materials */}
+        <Card>
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-base font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
+              <BookOpen className="w-5 h-5 text-emerald-500" /> Study Materials
+            </h3>
+            <Link to="/study-materials" className="text-xs font-bold text-brand-500 hover:underline flex items-center gap-1">
+              View All <ArrowUpRight className="w-3.5 h-3.5" />
+            </Link>
           </div>
+          {materials.length === 0 ? (
+            <div className="text-center py-8 text-slate-400">
+              <BookOpen className="w-8 h-8 mx-auto mb-2 opacity-30" />
+              <p className="text-xs">No materials uploaded yet</p>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {materials.slice(0, 3).map((m) => (
+                <a
+                  key={m._id}
+                  href={m.fileUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="block p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 hover:border-brand-500/40 transition-all"
+                >
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="flex-1 min-w-0">
+                      <h4 className="text-xs font-bold text-slate-900 dark:text-slate-100 truncate">{m.title}</h4>
+                      <p className="text-[11px] text-slate-500 mt-0.5">{m.teacher?.name} • {m.subject?.name}</p>
+                    </div>
+                    <Badge variant="blue" size="xs">{m.fileType}</Badge>
+                  </div>
+                </a>
+              ))}
+            </div>
+          )}
         </Card>
       </div>
 
-      {/* Recommended Questions Section */}
+      {/* Recent Questions from Q&A */}
       <Card>
         <div className="flex items-center justify-between mb-4">
           <div>
-            <h3 className="text-base font-bold text-slate-900 dark:text-slate-100">
-              Recommended Questions for You
-            </h3>
-            <p className="text-xs text-slate-500">Based on your interests in Algorithms and Web Systems</p>
+            <h3 className="text-base font-bold text-slate-900 dark:text-slate-100">Recent Q&A</h3>
+            <p className="text-xs text-slate-500">Latest questions from the community</p>
           </div>
           <Link to="/questions" className="text-xs font-bold text-brand-500 hover:underline flex items-center gap-1">
             View All <ArrowUpRight className="w-4 h-4" />
           </Link>
         </div>
-
         <div className="space-y-3">
-          {[
-            {
-              id: '1',
-              title: 'What is the time complexity of QuickSort worst-case vs average-case?',
-              subject: 'Computer Science',
-              answers: 4,
-              difficulty: 'Medium'
-            },
-            {
-              id: '2',
-              title: 'How to implement JWT Refresh Token rotation safely in Express?',
-              subject: 'Web Systems',
-              answers: 2,
-              difficulty: 'Hard'
-            }
-          ].map((item) => (
-            <div
-              key={item.id}
-              className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-800 flex items-center justify-between gap-4"
-            >
-              <div>
-                <Link
-                  to={`/questions/${item.id}`}
-                  className="text-xs font-bold text-slate-900 dark:text-slate-100 hover:text-brand-500 transition-colors"
-                >
-                  {item.title}
-                </Link>
-                <div className="flex items-center gap-2 mt-1">
-                  <Badge variant="indigo" size="xs">
-                    {item.subject}
-                  </Badge>
-                  <span className="text-[11px] text-slate-500">{item.answers} Answers</span>
-                </div>
-              </div>
-              <Badge variant="amber" size="xs">
-                {item.difficulty}
-              </Badge>
+          {recentQuestions.length === 0 ? (
+            <div className="text-center py-6 text-slate-400">
+              <HelpCircle className="w-8 h-8 mx-auto mb-2 opacity-30" />
+              <p className="text-xs">No questions yet. Be the first to ask!</p>
+              <Link to="/ask-question" className="text-xs text-brand-500 hover:underline mt-1 block">Ask a question →</Link>
             </div>
-          ))}
+          ) : (
+            recentQuestions.map((q) => (
+              <div key={q._id} className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-800 flex items-center justify-between gap-4">
+                <div className="min-w-0">
+                  <Link
+                    to={`/questions/${q._id}`}
+                    className="text-xs font-bold text-slate-900 dark:text-slate-100 hover:text-brand-500 transition-colors line-clamp-1"
+                  >
+                    {q.title}
+                  </Link>
+                  <div className="flex items-center gap-2 mt-1">
+                    {q.subject?.name && <Badge variant="indigo" size="xs">{q.subject.name}</Badge>}
+                    <span className="text-[11px] text-slate-500">{q.answers?.length || 0} Answers</span>
+                  </div>
+                </div>
+                <Badge variant={q.difficulty === 'Hard' ? 'red' : q.difficulty === 'Easy' ? 'emerald' : 'amber'} size="xs">
+                  {q.difficulty || 'Medium'}
+                </Badge>
+              </div>
+            ))
+          )}
         </div>
       </Card>
     </div>

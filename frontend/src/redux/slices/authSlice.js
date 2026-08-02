@@ -18,6 +18,11 @@ const authSlice = createSlice({
       localStorage.setItem('user', JSON.stringify(user));
       localStorage.setItem('accessToken', accessToken);
     },
+    updateAccessToken: (state, action) => {
+      // Called by baseQueryWithReauth when token is refreshed silently
+      state.accessToken = action.payload;
+      localStorage.setItem('accessToken', action.payload);
+    },
     logout: (state) => {
       state.user = null;
       state.accessToken = null;
@@ -28,5 +33,5 @@ const authSlice = createSlice({
   }
 });
 
-export const { setCredentials, logout } = authSlice.actions;
+export const { setCredentials, updateAccessToken, logout } = authSlice.actions;
 export default authSlice.reducer;

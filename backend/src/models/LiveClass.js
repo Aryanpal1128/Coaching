@@ -35,7 +35,7 @@ const liveClassSchema = new mongoose.Schema(
     },
     meetingLink: {
       type: String,
-      required: true
+      default: ''
     },
     recordingUrl: {
       type: String,

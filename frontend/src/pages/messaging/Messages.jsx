@@ -1,143 +1,232 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { useSelector } from 'react-redux';
+import { useDispatch } from 'react-redux';
+import { apiSlice } from '../../redux/api/apiSlice.js';
 import { Card } from '../../components/common/Card.jsx';
 import { Button } from '../../components/common/Button.jsx';
-import { Send, ArrowLeft, Search, Phone, MoreVertical } from 'lucide-react';
+import { Send, ArrowLeft, Search, UserPlus, X, MessageSquare } from 'lucide-react';
+import { useSocket } from '../../context/SocketContext.jsx';
+import {
+  useGetConversationsQuery,
+  useGetMessagesQuery,
+  useGetUsersQuery
+} from '../../redux/api/messageApi.js';
 
-const CONTACTS = [
-  {
-    id: '1',
-    name: 'Prof. Alan Turing',
-    role: 'Instructor',
-    avatar: '',
-    lastMessage: 'Do you have any questions regarding Assignment 3?',
-    time: '10:32 AM',
-    unread: 2,
-    online: true
-  },
-  {
-    id: '2',
-    name: 'Dr. Grace Hopper',
-    role: 'Instructor',
-    avatar: '',
-    lastMessage: 'Great work on the last assignment!',
-    time: 'Yesterday',
-    unread: 0,
-    online: false
-  },
-  {
-    id: '3',
-    name: 'Ada Lovelace',
-    role: 'Student',
-    avatar: '',
-    lastMessage: 'Can we form a study group?',
-    time: 'Mon',
-    unread: 1,
-    online: true
-  },
-  {
-    id: '4',
-    name: 'Charles Babbage',
-    role: 'Student',
-    avatar: '',
-    lastMessage: 'Thanks for explaining BFS!',
-    time: 'Sun',
-    unread: 0,
-    online: false
-  }
+const AVATAR_COLORS = [
+  'from-brand-600 to-indigo-600',
+  'from-emerald-600 to-teal-600',
+  'from-amber-500 to-orange-600',
+  'from-purple-600 to-pink-600',
+  'from-rose-500 to-red-600'
 ];
 
-const CHAT_HISTORY = {
-  '1': [
-    { id: 1, sender: 'Prof. Alan Turing', text: 'Hello! Do you have any questions regarding Assignment 3?', isMe: false, time: '10:30 AM' },
-    { id: 2, sender: 'You', text: 'Hi Professor! Yes, I was confused about the edge case for disjoint graph components in Dijkstra.', isMe: true, time: '10:31 AM' },
-    { id: 3, sender: 'Prof. Alan Turing', text: 'Great question! For disconnected components, you should initialize all unvisited nodes with ∞ and only the source with 0. Nodes unreachable from source will remain at ∞.', isMe: false, time: '10:32 AM' }
-  ],
-  '2': [
-    { id: 1, sender: 'Dr. Grace Hopper', text: 'Great work on the last assignment!', isMe: false, time: 'Yesterday' }
-  ],
-  '3': [
-    { id: 1, sender: 'Ada Lovelace', text: 'Hey! Can we form a study group for the exam?', isMe: false, time: 'Mon' },
-    { id: 2, sender: 'You', text: 'Sure, sounds great! What topics should we cover?', isMe: true, time: 'Mon' }
-  ],
-  '4': [
-    { id: 1, sender: 'Charles Babbage', text: 'Thanks for explaining BFS so clearly!', isMe: false, time: 'Sun' }
-  ]
+const getInitials = (name = '') =>
+  name.split(' ').map((n) => n[0]).join('').slice(0, 2).toUpperCase();
+
+const avatarColor = (id = '') =>
+  AVATAR_COLORS[id.charCodeAt(id.length - 1) % AVATAR_COLORS.length];
+
+const Avatar = ({ user, size = 10 }) => (
+  <div
+    className={`w-${size} h-${size} rounded-full bg-gradient-to-tr ${avatarColor(user?._id || '')} text-white flex items-center justify-center text-xs font-extrabold shrink-0`}
+  >
+    {user?.avatar
+      ? <img src={user.avatar} alt={user.name} className={`w-${size} h-${size} rounded-full object-cover`} />
+      : getInitials(user?.name)}
+  </div>
+);
+
+const fmtTime = (d) => {
+  if (!d) return '';
+  const date = new Date(d);
+  const now = new Date();
+  const isToday = date.toDateString() === now.toDateString();
+  if (isToday) return date.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' });
+  return date.toLocaleDateString('en-IN', { day: '2-digit', month: 'short' });
 };
-
-const getInitials = (name) =>
-  name
-    .split(' ')
-    .map((n) => n[0])
-    .join('')
-    .slice(0, 2)
-    .toUpperCase();
-
-const COLORS = ['from-brand-600 to-indigo-600', 'from-emerald-600 to-teal-600', 'from-amber-500 to-orange-600', 'from-purple-600 to-pink-600'];
 
 export const Messages = () => {
   const { user } = useSelector((state) => state.auth);
-  const [selectedContact, setSelectedContact] = useState(null);
-  const [messages, setMessages] = useState({});
+  const socket = useSocket();
+  const dispatch = useDispatch();
+
+  const [partner, setPartner] = useState(null);   // selected conversation partner
+  const [liveMessages, setLiveMessages] = useState([]); // combined DB + socket messages
   const [text, setText] = useState('');
+  const [showChat, setShowChat] = useState(false); // mobile toggle
+  const [typing, setTyping] = useState(false);
+  const [partnerTyping, setPartnerTyping] = useState(false);
+  const [onlineUsers, setOnlineUsers] = useState(new Set());
+  const [showNewChat, setShowNewChat] = useState(false);
+  const [userSearch, setUserSearch] = useState('');
   const [contactSearch, setContactSearch] = useState('');
-  const [showChat, setShowChat] = useState(false); // mobile: toggle between list/chat
+  const typingTimer = useRef(null);
   const messagesEndRef = useRef(null);
 
-  // Initialize messages from history
-  useEffect(() => {
-    setMessages(CHAT_HISTORY);
-  }, []);
+  // API queries
+  const { data: convData, refetch: refetchConvs } = useGetConversationsQuery(undefined, { pollingInterval: 10000 });
+  const conversations = convData?.data || [];
 
-  // Auto scroll to bottom on new message
+  const { data: histData } = useGetMessagesQuery(partner?._id, {
+    skip: !partner?._id,
+    refetchOnMountOrArgChange: true
+  });
+
+  const { data: usersData } = useGetUsersQuery(userSearch, { skip: !showNewChat });
+  const allUsers = usersData?.data || [];
+
+  // Load history into live messages when partner changes
+  useEffect(() => {
+    if (histData?.data) {
+      setLiveMessages(histData.data.map((m) => ({
+        _id: m._id,
+        text: m.text,
+        isMe: m.sender._id === user?._id,
+        sender: m.sender,
+        createdAt: m.createdAt
+      })));
+    } else {
+      setLiveMessages([]);
+    }
+  }, [histData, user?._id]);
+
+  // Auto-scroll
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages, selectedContact]);
+  }, [liveMessages, partnerTyping]);
 
-  const handleSelectContact = (contact) => {
-    setSelectedContact(contact);
+  // Socket events
+  useEffect(() => {
+    if (!socket || !user?._id) return;
+
+    // Register as online
+    socket.emit('user_online', user._id);
+
+    socket.on('user_status', ({ userId, online }) => {
+      setOnlineUsers((prev) => {
+        const next = new Set(prev);
+        if (online) next.add(userId);
+        else next.delete(userId);
+        return next;
+      });
+    });
+
+    socket.on('receive_direct_message', (msg) => {
+      // Only append if we're looking at the conversation with this sender
+      setPartner((currentPartner) => {
+        if (currentPartner && msg.sender?._id === currentPartner._id) {
+          setLiveMessages((prev) => [
+            ...prev,
+            {
+              _id: msg._id,
+              text: msg.text,
+              isMe: false,
+              sender: msg.sender,
+              createdAt: msg.createdAt
+            }
+          ]);
+        }
+        return currentPartner;
+      });
+      // Refresh conversations sidebar
+      refetchConvs();
+      // Invalidate RTK cache for this convo
+      dispatch(apiSlice.util.invalidateTags(['Message']));
+    });
+
+    socket.on('message_sent', (msg) => {
+      // Server ack — conversation update
+      refetchConvs();
+    });
+
+    socket.on('user_typing', ({ senderName, typing: isTyping }) => {
+      setPartnerTyping(isTyping);
+    });
+
+    return () => {
+      socket.off('user_status');
+      socket.off('receive_direct_message');
+      socket.off('message_sent');
+      socket.off('user_typing');
+    };
+  }, [socket, user?._id, dispatch]);
+
+  const handleSelectPartner = (usr) => {
+    setPartner(usr);
     setShowChat(true);
+    setShowNewChat(false);
+    setLiveMessages([]);
   };
 
   const handleSend = (e) => {
     e.preventDefault();
-    if (!text.trim() || !selectedContact) return;
+    if (!text.trim() || !partner || !socket) return;
 
-    const newMsg = {
-      id: Date.now(),
-      sender: user?.name || 'You',
-      text: text.trim(),
-      isMe: true,
-      time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-    };
-
-    setMessages((prev) => ({
+    const tempId = `temp-${Date.now()}`;
+    // Optimistic UI
+    setLiveMessages((prev) => [
       ...prev,
-      [selectedContact.id]: [...(prev[selectedContact.id] || []), newMsg]
-    }));
+      { _id: tempId, text: text.trim(), isMe: true, sender: user, createdAt: new Date().toISOString() }
+    ]);
+
+    socket.emit('send_direct_message', {
+      senderId: user._id,
+      recipientId: partner._id,
+      text: text.trim()
+    });
+
     setText('');
+    stopTyping();
   };
 
-  const filteredContacts = CONTACTS.filter((c) =>
-    c.name.toLowerCase().includes(contactSearch.toLowerCase())
+  const handleTyping = (e) => {
+    setText(e.target.value);
+    if (!socket || !partner) return;
+
+    if (!typing) {
+      setTyping(true);
+      socket.emit('typing_start', { recipientId: partner._id, senderName: user?.name });
+    }
+    clearTimeout(typingTimer.current);
+    typingTimer.current = setTimeout(stopTyping, 1500);
+  };
+
+  const stopTyping = useCallback(() => {
+    if (typing && socket && partner) {
+      socket.emit('typing_stop', { recipientId: partner._id });
+    }
+    setTyping(false);
+  }, [typing, socket, partner]);
+
+  const filteredConvs = conversations.filter((c) =>
+    c.user?.name?.toLowerCase().includes(contactSearch.toLowerCase())
   );
 
-  const currentMessages = selectedContact ? messages[selectedContact.id] || [] : [];
+  const isOnline = (userId) => onlineUsers.has(userId);
 
   return (
     <div className="h-[calc(100vh-140px)] min-h-[500px]">
       <div className="flex h-full rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm">
 
-        {/* Contacts Sidebar */}
+        {/* ── Contacts Sidebar ─────────────────────────── */}
         <div className={`w-full sm:w-72 md:w-80 border-r border-slate-200 dark:border-slate-800 flex flex-col shrink-0 ${showChat ? 'hidden sm:flex' : 'flex'}`}>
-          {/* Header */}
+
           <div className="p-4 border-b border-slate-200 dark:border-slate-800">
-            <h2 className="text-sm font-extrabold text-slate-900 dark:text-slate-100 mb-3">Messages</h2>
+            <div className="flex items-center justify-between mb-3">
+              <h2 className="text-sm font-extrabold text-slate-900 dark:text-slate-100">Messages</h2>
+              <button
+                onClick={() => { setShowNewChat(true); setShowChat(true); }}
+                className="p-1.5 rounded-xl text-brand-500 hover:bg-brand-500/10 transition-colors"
+                title="New conversation"
+              >
+                <UserPlus className="w-4 h-4" />
+              </button>
+            </div>
             <div className="relative">
               <Search className="absolute left-3 top-2.5 w-3.5 h-3.5 text-slate-400" />
               <input
                 type="text"
-                placeholder="Search contacts..."
+                placeholder="Search conversations..."
                 value={contactSearch}
                 onChange={(e) => setContactSearch(e.target.value)}
                 className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl pl-9 pr-4 py-2 text-xs text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-brand-500"
@@ -145,34 +234,43 @@ export const Messages = () => {
             </div>
           </div>
 
-          {/* Contact List */}
           <div className="flex-1 overflow-y-auto divide-y divide-slate-100 dark:divide-slate-800/60">
-            {filteredContacts.map((contact, idx) => (
+            {filteredConvs.length === 0 && (
+              <div className="p-6 text-center text-slate-400 text-xs">
+                <MessageSquare className="w-8 h-8 mx-auto mb-2 opacity-30" />
+                <p>No conversations yet.</p>
+                <button
+                  onClick={() => { setShowNewChat(true); setShowChat(true); }}
+                  className="mt-2 text-brand-500 hover:underline font-semibold"
+                >
+                  Start a new chat →
+                </button>
+              </div>
+            )}
+            {filteredConvs.map((conv) => (
               <button
-                key={contact.id}
-                onClick={() => handleSelectContact(contact)}
+                key={conv.user._id}
+                onClick={() => handleSelectPartner(conv.user)}
                 className={`w-full text-left p-3.5 flex items-center gap-3 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors ${
-                  selectedContact?.id === contact.id ? 'bg-brand-500/5 border-r-2 border-brand-500' : ''
+                  partner?._id === conv.user._id ? 'bg-brand-500/5 border-r-2 border-brand-500' : ''
                 }`}
               >
-                <div className="relative shrink-0">
-                  <div className={`w-10 h-10 rounded-full bg-gradient-to-tr ${COLORS[idx % COLORS.length]} text-white flex items-center justify-center text-xs font-extrabold`}>
-                    {getInitials(contact.name)}
-                  </div>
-                  {contact.online && (
+                <div className="relative">
+                  <Avatar user={conv.user} />
+                  {isOnline(conv.user._id) && (
                     <span className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-emerald-500 rounded-full border-2 border-white dark:border-slate-900" />
                   )}
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center justify-between">
-                    <span className="text-xs font-bold text-slate-900 dark:text-slate-100 truncate">{contact.name}</span>
-                    <span className="text-[10px] text-slate-400 shrink-0 ml-1">{contact.time}</span>
+                    <span className="text-xs font-bold text-slate-900 dark:text-slate-100 truncate">{conv.user.name}</span>
+                    <span className="text-[10px] text-slate-400 shrink-0 ml-1">{fmtTime(conv.lastMessageAt)}</span>
                   </div>
-                  <p className="text-[11px] text-slate-500 truncate mt-0.5">{contact.lastMessage}</p>
+                  <p className="text-[11px] text-slate-500 truncate mt-0.5">{conv.lastMessage}</p>
                 </div>
-                {contact.unread > 0 && (
+                {conv.unread > 0 && (
                   <span className="w-4 h-4 rounded-full bg-brand-600 text-white text-[9px] font-extrabold flex items-center justify-center shrink-0">
-                    {contact.unread}
+                    {conv.unread}
                   </span>
                 )}
               </button>
@@ -180,58 +278,120 @@ export const Messages = () => {
           </div>
         </div>
 
-        {/* Chat Panel */}
-        <div className={`flex-1 flex flex-col min-w-0 ${!showChat && !selectedContact ? 'hidden sm:flex' : 'flex'}`}>
-          {selectedContact ? (
+        {/* ── Chat / New Chat Panel ─────────────────────── */}
+        <div className={`flex-1 flex flex-col min-w-0 ${!showChat && !partner ? 'hidden sm:flex' : 'flex'}`}>
+
+          {/* NEW CHAT: User Search */}
+          {showNewChat && (
+            <div className="flex flex-col h-full">
+              <div className="p-4 border-b border-slate-200 dark:border-slate-800 flex items-center gap-3">
+                <button onClick={() => { setShowNewChat(false); setShowChat(false); }} className="p-2 rounded-xl text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 sm:hidden">
+                  <ArrowLeft className="w-4 h-4" />
+                </button>
+                <h3 className="text-xs font-bold text-slate-900 dark:text-slate-100">New Conversation</h3>
+                <button onClick={() => { setShowNewChat(false); setShowChat(!!partner); }} className="ml-auto p-1.5 text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl hidden sm:block">
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+              <div className="p-4 border-b border-slate-200 dark:border-slate-800">
+                <div className="relative">
+                  <Search className="absolute left-3 top-2.5 w-3.5 h-3.5 text-slate-400" />
+                  <input
+                    autoFocus
+                    type="text"
+                    placeholder="Search by name..."
+                    value={userSearch}
+                    onChange={(e) => setUserSearch(e.target.value)}
+                    className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl pl-9 pr-4 py-2 text-xs text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-brand-500"
+                  />
+                </div>
+              </div>
+              <div className="flex-1 overflow-y-auto divide-y divide-slate-100 dark:divide-slate-800/60">
+                {allUsers.map((u) => (
+                  <button
+                    key={u._id}
+                    onClick={() => handleSelectPartner(u)}
+                    className="w-full text-left p-3.5 flex items-center gap-3 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors"
+                  >
+                    <div className="relative">
+                      <Avatar user={u} />
+                      {isOnline(u._id) && (
+                        <span className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-emerald-500 rounded-full border-2 border-white dark:border-slate-900" />
+                      )}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs font-bold text-slate-900 dark:text-slate-100">{u.name}</p>
+                      <p className="text-[10px] text-slate-500">{u.role}</p>
+                    </div>
+                    {isOnline(u._id) && <span className="text-[10px] text-emerald-500 font-semibold">Online</span>}
+                  </button>
+                ))}
+                {allUsers.length === 0 && userSearch && (
+                  <p className="text-center text-xs text-slate-400 py-8">No users found</p>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* CHAT VIEW */}
+          {!showNewChat && partner && (
             <>
-              {/* Chat Header */}
+              {/* Chat header */}
               <div className="p-3.5 border-b border-slate-200 dark:border-slate-800 flex items-center gap-3 bg-white dark:bg-slate-900">
-                {/* Back button on mobile */}
                 <button
-                  onClick={() => setShowChat(false)}
+                  onClick={() => { setShowChat(false); setPartner(null); }}
                   className="p-2 rounded-xl text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 sm:hidden"
                 >
                   <ArrowLeft className="w-4 h-4" />
                 </button>
-
-                <div className="relative shrink-0">
-                  <div className={`w-9 h-9 rounded-full bg-gradient-to-tr ${COLORS[CONTACTS.findIndex(c => c.id === selectedContact.id) % COLORS.length]} text-white flex items-center justify-center text-xs font-extrabold`}>
-                    {getInitials(selectedContact.name)}
-                  </div>
-                  {selectedContact.online && (
+                <div className="relative">
+                  <Avatar user={partner} />
+                  {isOnline(partner._id) && (
                     <span className="absolute bottom-0 right-0 w-2 h-2 bg-emerald-500 rounded-full border-2 border-white dark:border-slate-900" />
                   )}
                 </div>
-
                 <div className="flex-1 min-w-0">
-                  <h3 className="text-xs font-bold text-slate-900 dark:text-slate-100 truncate">{selectedContact.name}</h3>
-                  <p className={`text-[10px] font-semibold ${selectedContact.online ? 'text-emerald-500' : 'text-slate-400'}`}>
-                    {selectedContact.online ? 'Online' : 'Offline'} • {selectedContact.role}
+                  <h3 className="text-xs font-bold text-slate-900 dark:text-slate-100">{partner.name}</h3>
+                  <p className={`text-[10px] font-semibold ${isOnline(partner._id) ? 'text-emerald-500' : 'text-slate-400'}`}>
+                    {partnerTyping ? '✍️ typing...' : isOnline(partner._id) ? 'Online' : 'Offline'}
+                    {partner.role && ` • ${partner.role}`}
                   </p>
                 </div>
-
-                <button className="p-2 rounded-xl text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800">
-                  <MoreVertical className="w-4 h-4" />
-                </button>
               </div>
 
               {/* Messages */}
               <div className="flex-1 overflow-y-auto p-4 space-y-3 bg-slate-50/50 dark:bg-slate-950/50">
-                {currentMessages.map((m) => (
-                  <div key={m.id} className={`flex ${m.isMe ? 'justify-end' : 'justify-start'}`}>
+                {liveMessages.length === 0 && (
+                  <div className="flex flex-col items-center justify-center h-full text-slate-400 gap-2">
+                    <MessageSquare className="w-8 h-8 opacity-30" />
+                    <p className="text-xs">No messages yet. Say hi! 👋</p>
+                  </div>
+                )}
+                {liveMessages.map((m) => (
+                  <div key={m._id} className={`flex ${m.isMe ? 'justify-end' : 'justify-start'}`}>
                     <div className={`max-w-[75%] sm:max-w-sm rounded-2xl px-3.5 py-2.5 shadow-sm ${
                       m.isMe
                         ? 'bg-brand-600 text-white rounded-br-sm'
                         : 'bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 rounded-bl-sm border border-slate-200 dark:border-slate-700'
                     }`}>
-                      {!m.isMe && (
-                        <p className="text-[10px] font-bold text-brand-500 mb-0.5">{m.sender}</p>
-                      )}
                       <p className="text-xs leading-relaxed">{m.text}</p>
-                      <p className={`text-[9px] mt-1 text-right ${m.isMe ? 'text-blue-200' : 'text-slate-400'}`}>{m.time}</p>
+                      <p className={`text-[9px] mt-1 text-right ${m.isMe ? 'text-blue-200' : 'text-slate-400'}`}>
+                        {fmtTime(m.createdAt)}
+                      </p>
                     </div>
                   </div>
                 ))}
+                {partnerTyping && (
+                  <div className="flex justify-start">
+                    <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl rounded-bl-sm px-4 py-3">
+                      <div className="flex gap-1 items-center">
+                        <span className="w-1.5 h-1.5 bg-slate-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+                        <span className="w-1.5 h-1.5 bg-slate-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+                        <span className="w-1.5 h-1.5 bg-slate-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+                      </div>
+                    </div>
+                  </div>
+                )}
                 <div ref={messagesEndRef} />
               </div>
 
@@ -242,9 +402,10 @@ export const Messages = () => {
               >
                 <input
                   type="text"
-                  placeholder={`Message ${selectedContact.name}...`}
+                  placeholder={`Message ${partner.name}...`}
                   value={text}
-                  onChange={(e) => setText(e.target.value)}
+                  onChange={handleTyping}
+                  onBlur={stopTyping}
                   className="flex-1 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-2.5 text-xs text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-brand-500"
                 />
                 <Button type="submit" size="md" disabled={!text.trim()}>
@@ -252,14 +413,22 @@ export const Messages = () => {
                 </Button>
               </form>
             </>
-          ) : (
-            /* Empty state */
+          )}
+
+          {/* Empty state */}
+          {!showNewChat && !partner && (
             <div className="flex-1 hidden sm:flex flex-col items-center justify-center text-center p-8 text-slate-400">
               <div className="w-16 h-16 rounded-2xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center mb-4">
-                <Send className="w-7 h-7 text-slate-300 dark:text-slate-600" />
+                <MessageSquare className="w-7 h-7 text-slate-300 dark:text-slate-600" />
               </div>
-              <h3 className="font-bold text-slate-600 dark:text-slate-300 text-sm">Select a conversation</h3>
-              <p className="text-xs mt-1 max-w-xs">Choose a contact from the left panel to start messaging</p>
+              <h3 className="font-bold text-slate-600 dark:text-slate-300 text-sm">Your Messages</h3>
+              <p className="text-xs mt-1 max-w-xs">Select a conversation or start a new one with the <strong>+</strong> button</p>
+              <button
+                onClick={() => { setShowNewChat(true); setShowChat(true); }}
+                className="mt-4 flex items-center gap-2 px-4 py-2 text-xs font-bold text-brand-500 bg-brand-500/10 rounded-xl hover:bg-brand-500/20 transition-colors"
+              >
+                <UserPlus className="w-4 h-4" /> New Conversation
+              </button>
             </div>
           )}
         </div>

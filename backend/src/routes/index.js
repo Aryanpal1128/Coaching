@@ -7,6 +7,9 @@ import teacherRoutes from './teacher.routes.js';
 import liveClassRoutes from './liveClass.routes.js';
 import notificationRoutes from './notification.routes.js';
 import adminRoutes from './admin.routes.js';
+import studyMaterialRoutes from './studyMaterial.routes.js';
+import subjectRoutes from './subject.routes.js';
+import messageRoutes from './message.routes.js';
 
 const router = Router();
 
@@ -18,5 +21,8 @@ router.use('/teacher', teacherRoutes);
 router.use('/live-classes', liveClassRoutes);
 router.use('/notifications', notificationRoutes);
 router.use('/admin', adminRoutes);
+router.use('/study-materials', studyMaterialRoutes);
+router.use('/subjects', subjectRoutes);
+router.use('/messages', messageRoutes);
 
 export default router;

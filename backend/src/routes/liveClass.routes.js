@@ -8,6 +8,13 @@ import { ROLES } from '../constants/roles.js';
 
 const router = Router();
 
+// GET all live classes (any authenticated user)
+router.get('/', authenticate, liveClassController.getLiveClasses);
+
+// GET single live class by ID
+router.get('/:id', authenticate, liveClassController.getLiveClass);
+
+// POST schedule a new live class (teacher/admin)
 router.post(
   '/schedule',
   authenticate,
@@ -16,6 +23,7 @@ router.post(
   liveClassController.scheduleLiveClass
 );
 
+// PUT start a live class
 router.put(
   '/:id/start',
   authenticate,
@@ -23,6 +31,15 @@ router.put(
   liveClassController.startLiveClass
 );
 
+// PUT end a live class
+router.put(
+  '/:id/end',
+  authenticate,
+  authorize(ROLES.TEACHER, ROLES.ADMIN),
+  liveClassController.endLiveClass
+);
+
+// PUT cancel a live class
 router.put(
   '/:id/cancel',
   authenticate,
@@ -30,6 +47,7 @@ router.put(
   liveClassController.cancelLiveClass
 );
 
+// POST upload recording URL
 router.post(
   '/:id/recording',
   authenticate,
@@ -37,6 +55,7 @@ router.post(
   liveClassController.uploadRecording
 );
 
+// POST record student attendance when joining
 router.post('/:id/attendance', authenticate, liveClassController.recordAttendance);
 
 export default router;
