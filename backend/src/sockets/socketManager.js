@@ -58,5 +58,3 @@ export const getIO = () => {
   }
   return ioInstance;
 };
-console.log("FRONTEND_URL =", process.env.FRONTEND_URL);
-console.log("Allowed Origins =", allowedOrigins);
