@@ -18,10 +18,10 @@ export const authenticate = asyncHandler(async (req, res, next) => {
   }
 
   try {
-    const decoded = verifyToken(
-      token,
-      process.env.JWT_ACCESS_SECRET || 'fallback_access_secret'
-    );
+    if (!process.env.JWT_ACCESS_SECRET) {
+      throw new ApiError(500, 'Server misconfiguration: JWT_ACCESS_SECRET not set');
+    }
+    const decoded = verifyToken(token, process.env.JWT_ACCESS_SECRET);
     const user = await User.findById(decoded._id).select('-password');
 
     if (!user) {

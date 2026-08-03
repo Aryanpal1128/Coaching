@@ -46,7 +46,7 @@ export const registerUser = async (userData) => {
 };
 
 export const verifyEmailToken = async (token) => {
-  const decoded = verifyToken(token, process.env.JWT_ACCESS_SECRET || 'fallback_access_secret');
+  const decoded = verifyToken(token, process.env.JWT_ACCESS_SECRET);
   if (decoded.type !== 'VERIFY_EMAIL') {
     throw new ApiError(400, 'Invalid email verification token');
   }
@@ -88,10 +88,7 @@ export const refreshAccessToken = async (incomingRefreshToken) => {
     throw new ApiError(401, 'Refresh token required');
   }
 
-  const decoded = verifyToken(
-    incomingRefreshToken,
-    process.env.JWT_REFRESH_SECRET || 'fallback_refresh_secret'
-  );
+  const decoded = verifyToken(incomingRefreshToken, process.env.JWT_REFRESH_SECRET);
 
   const user = await User.findById(decoded._id).select('+refreshToken');
   if (!user || user.refreshToken !== incomingRefreshToken) {
@@ -127,7 +124,7 @@ export const forgotPassword = async (email) => {
 };
 
 export const resetPassword = async (token, newPassword) => {
-  const decoded = verifyToken(token, process.env.JWT_ACCESS_SECRET || 'fallback_access_secret');
+  const decoded = verifyToken(token, process.env.JWT_ACCESS_SECRET);
   if (decoded.type !== 'RESET_PASSWORD') {
     throw new ApiError(400, 'Invalid reset password token');
   }

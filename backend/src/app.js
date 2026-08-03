@@ -2,6 +2,7 @@ import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import morgan from 'morgan';
+import compression from 'compression';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import cookieParser from 'cookie-parser';
@@ -14,32 +15,51 @@ const __dirname = path.dirname(__filename);
 
 const app = express();
 
-// Security Middlewares
+// ─── Security Middlewares ─────────────────────────────────────────────────────
 app.use(helmet());
+
+// ─── CORS ─────────────────────────────────────────────────────────────────────
+// Allow FRONTEND_URL (set on Render) + localhost for local development.
+const allowedOrigins = [
+  process.env.FRONTEND_URL,           // e.g. https://your-app.vercel.app
+  'http://localhost:3000',
+  'http://localhost:5173',
+  'http://127.0.0.1:3000',
+  'http://127.0.0.1:5173'
+].filter(Boolean); // remove undefined if FRONTEND_URL is not set
+
 app.use(
   cors({
     origin: (origin, callback) => {
-      callback(null, true);
+      // Allow server-to-server requests (no origin header) and allowed origins
+      if (!origin || allowedOrigins.includes(origin)) {
+        return callback(null, true);
+      }
+      return callback(new Error(`CORS: Origin '${origin}' not allowed`));
     },
     credentials: true
   })
 );
 
-// Logging
-app.use(morgan('dev'));
+// ─── Compression ──────────────────────────────────────────────────────────────
+app.use(compression());
 
-// Body Parser
+// ─── Logging ──────────────────────────────────────────────────────────────────
+// Use 'combined' (Apache-style) in production for structured logs; 'dev' locally.
+app.use(morgan(process.env.NODE_ENV === 'production' ? 'combined' : 'dev'));
+
+// ─── Body Parser ─────────────────────────────────────────────────────────────
 app.use(express.json({ limit: '16kb' }));
 app.use(express.urlencoded({ extended: true, limit: '16kb' }));
 app.use(cookieParser());
 
-// Global Rate Limiting
+// ─── Global Rate Limiting ─────────────────────────────────────────────────────
 app.use('/api', globalRateLimiter);
 
-// Serve static upload directory
+// ─── Static Uploads (local dev only — production uses Cloudinary) ─────────────
 app.use('/uploads', express.static(path.join(__dirname, '../public/uploads')));
 
-// Health Check
+// ─── Health Check ─────────────────────────────────────────────────────────────
 app.get('/health', (req, res) => {
   res.status(200).json({
     status: 'OK',
@@ -48,10 +68,10 @@ app.get('/health', (req, res) => {
   });
 });
 
-// API Routes
+// ─── API Routes ───────────────────────────────────────────────────────────────
 app.use('/api/v1', apiRoutes);
 
-// 404 Handler
+// ─── 404 Handler ─────────────────────────────────────────────────────────────
 app.use((req, res, next) => {
   res.status(404).json({
     success: false,
@@ -60,7 +80,7 @@ app.use((req, res, next) => {
   });
 });
 
-// Global Error Handler
+// ─── Global Error Handler ─────────────────────────────────────────────────────
 app.use(errorHandler);
 
 export default app;
