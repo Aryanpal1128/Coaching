@@ -15,6 +15,8 @@ const __dirname = path.dirname(__filename);
 
 const app = express();
 
+
+app.set('trust proxy', 1);
 // ─── Security Middlewares ─────────────────────────────────────────────────────
 app.use(helmet());
 
@@ -84,3 +86,5 @@ app.use((req, res, next) => {
 app.use(errorHandler);
 
 export default app;
+console.log("FRONTEND_URL =", process.env.FRONTEND_URL);
+console.log("Allowed Origins =", allowedOrigins);
