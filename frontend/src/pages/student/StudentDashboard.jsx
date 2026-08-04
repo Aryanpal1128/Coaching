@@ -18,11 +18,23 @@ export const StudentDashboard = () => {
   const { data: materialsData } = useGetStudyMaterialsQuery({});
   const { data: questionsData } = useSearchQuestionsQuery({ limit: 4 });
 
-  const liveClasses = liveClassData?.data || [];
-  const upcomingClasses = scheduledData?.data || [];
-  const materials = materialsData?.data || [];
-  const recentQuestions = questionsData?.data || questionsData?.questions || [];
+ const liveClasses = Array.isArray(liveClassData?.data)
+  ? liveClassData.data
+  : [];
 
+const upcomingClasses = Array.isArray(scheduledData?.data)
+  ? scheduledData.data
+  : [];
+
+const materials = Array.isArray(materialsData?.data)
+  ? materialsData.data
+  : [];
+
+const recentQuestions = Array.isArray(questionsData?.data)
+  ? questionsData.data
+  : Array.isArray(questionsData?.questions)
+  ? questionsData.questions
+  : [];
   return (
     <div className="space-y-6">
       {/* Welcome Banner */}
