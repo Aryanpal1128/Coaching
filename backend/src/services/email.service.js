@@ -2,33 +2,41 @@ import nodemailer from 'nodemailer';
 import logger from '../config/logger.js';
 
 const transporter = nodemailer.createTransport({
-  host: process.env.SMTP_HOST || 'smtp.mailtrap.io',
-  port: parseInt(process.env.SMTP_PORT || '2525'),
+  host: process.env.SMTP_HOST,
+  port: Number(process.env.SMTP_PORT),
+  secure: false, // Port 587 uses STARTTLS
+  requireTLS: true,
   auth: {
-    user: process.env.SMTP_USER || 'mock_user',
-    pass: process.env.SMTP_PASS || 'mock_pass'
+    user: process.env.SMTP_USER,
+    pass: process.env.SMTP_PASS
+  },
+  connectionTimeout: 30000,
+  greetingTimeout: 30000,
+  socketTimeout: 30000
+});
+
+// Verify SMTP when server starts
+transporter.verify((error) => {
+  if (error) {
+    logger.error(`SMTP Error: ${error.message}`);
+  } else {
+    logger.info('SMTP Server Ready');
   }
 });
 
 export const sendEmail = async ({ to, subject, html }) => {
   try {
-    const mailOptions = {
-      from: process.env.EMAIL_FROM || '"AI Learning Platform" <noreply@ailearning.com>',
+    const info = await transporter.sendMail({
+      from: process.env.EMAIL_FROM,
       to,
       subject,
       html
-    };
+    });
 
-    if (process.env.NODE_ENV === 'development' && process.env.SMTP_USER === 'mock_user') {
-      logger.info(`[MOCK EMAIL SENT] To: ${to} | Subject: ${subject}`);
-      return true;
-    }
-
-    const info = await transporter.sendMail(mailOptions);
-    logger.info(`Email sent to ${to}: ${info.messageId}`);
+    logger.info(`Email sent: ${info.messageId}`);
     return true;
   } catch (error) {
-    logger.error(`Email send failure to ${to}: ${error.message}`);
+    logger.error(error);
     return false;
   }
 };

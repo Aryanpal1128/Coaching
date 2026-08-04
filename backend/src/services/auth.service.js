@@ -15,6 +15,8 @@ export const registerUser = async (userData) => {
   }
 
   const userRole = role && Object.values(ROLES).includes(role) ? role : ROLES.STUDENT;
+  logger.info("Creating user...");
+
 
   const user = await User.create({
     name,
@@ -25,19 +27,20 @@ export const registerUser = async (userData) => {
 
   if (userRole === ROLES.STUDENT) {
     await StudentProfile.create({ user: user._id });
+    logger.info("Student profile created");
   } else if (userRole === ROLES.TEACHER) {
     await TeacherProfile.create({ user: user._id });
   }
 
   const verificationToken = generateEmailVerificationToken(user);
-  const verifyUrl = `${process.env.CLIENT_URL || 'http://localhost:3000'}/verify-email?token=${verificationToken}`;
-
+  const verifyUrl = `${process.env.FRONTEND_URL}/verify-email?token=${verificationToken}`;
+  logger.info("Sending verification email...");
   await sendEmail({
     to: user.email,
     subject: 'Verify Your Email - AI Learning Platform',
     html: `<p>Hello ${user.name},</p><p>Please click the link below to verify your account:</p><a href="${verifyUrl}">${verifyUrl}</a>`
   });
-
+  logger.info("Verification email step completed");
   const { accessToken, refreshToken } = generateTokens(user);
   user.refreshToken = refreshToken;
   await user.save();
@@ -112,8 +115,7 @@ export const forgotPassword = async (email) => {
   if (!user) throw new ApiError(404, 'User not found');
 
   const resetToken = generatePasswordResetToken(user);
-  const resetUrl = `${process.env.CLIENT_URL || 'http://localhost:3000'}/reset-password?token=${resetToken}`;
-
+  const resetUrl = `${process.env.FRONTEND_URL}/reset-password?token=${resetToken}`;
   await sendEmail({
     to: user.email,
     subject: 'Password Reset Request',
