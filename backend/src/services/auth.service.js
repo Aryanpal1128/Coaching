@@ -5,6 +5,7 @@ import { ApiError } from '../utils/ApiError.js';
 import { generateTokens, generateEmailVerificationToken, generatePasswordResetToken, verifyToken } from '../utils/token.js';
 import { sendEmail } from './email.service.js';
 import { ROLES } from '../constants/roles.js';
+import logger from '../config/logger.js';
 
 export const registerUser = async (userData) => {
   const { name, email, password, role } = userData;

@@ -1,13 +1,26 @@
-catch (error) {
-  console.error("========== ZOD ERROR ==========");
-  console.error(JSON.stringify(error.errors, null, 2));
+import { ApiError } from '../utils/ApiError.js';
 
-  const formattedErrors = error.errors
-    ? error.errors.map((e) => ({
-      field: e.path.join("."),
-      message: e.message,
-    }))
-    : [error.message];
+export const validate = (schema) => {
+  return (req, res, next) => {
+    try {
+      schema.parse({
+        body: req.body,
+        query: req.query,
+        params: req.params
+      });
+      next();
+    } catch (error) {
+      console.error("========== ZOD ERROR ==========");
+      console.error(JSON.stringify(error.errors, null, 2));
 
-  next(new ApiError(400, "Validation Error", formattedErrors));
-}
+      const formattedErrors = error.errors
+        ? error.errors.map((e) => ({
+          field: e.path.join("."),
+          message: e.message,
+        }))
+        : [error.message];
+
+      next(new ApiError(400, "Validation Error", formattedErrors));
+    }
+  };
+};
