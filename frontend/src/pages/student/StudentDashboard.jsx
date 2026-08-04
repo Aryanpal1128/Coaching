@@ -18,23 +18,24 @@ export const StudentDashboard = () => {
   const { data: materialsData } = useGetStudyMaterialsQuery({});
   const { data: questionsData } = useSearchQuestionsQuery({ limit: 4 });
 
- const liveClasses = Array.isArray(liveClassData?.data)
-  ? liveClassData.data
-  : [];
+  const liveClasses = Array.isArray(liveClassData?.data)
+    ? liveClassData.data
+    : [];
 
-const upcomingClasses = Array.isArray(scheduledData?.data)
-  ? scheduledData.data
-  : [];
+  const upcomingClasses = Array.isArray(scheduledData?.data)
+    ? scheduledData.data
+    : [];
 
-const materials = Array.isArray(materialsData?.data)
-  ? materialsData.data
-  : [];
+  const materials = Array.isArray(materialsData?.data)
+    ? materialsData.data
+    : [];
 
-const recentQuestions = Array.isArray(questionsData?.data)
-  ? questionsData.data
-  : Array.isArray(questionsData?.questions)
-  ? questionsData.questions
-  : [];
+  const recentQuestions = Array.isArray(questionsData?.data)
+    ? questionsData.data
+    : Array.isArray(questionsData?.questions)
+      ? questionsData.questions
+      : [];
+
   return (
     <div className="space-y-6">
       {/* Welcome Banner */}
@@ -56,8 +57,8 @@ const recentQuestions = Array.isArray(questionsData?.data)
               {liveClasses.length > 0
                 ? `🔴 ${liveClasses.length} class${liveClasses.length > 1 ? 'es are' : ' is'} LIVE right now — join before it ends!`
                 : upcomingClasses.length > 0
-                ? `📅 ${upcomingClasses.length} class${upcomingClasses.length > 1 ? 'es' : ''} coming up. Keep learning!`
-                : 'Ask questions, answer your peers, and climb the leaderboard!'}
+                  ? `📅 ${upcomingClasses.length} class${upcomingClasses.length > 1 ? 'es' : ''} coming up. Keep learning!`
+                  : 'Ask questions, answer your peers, and climb the leaderboard!'}
             </p>
           </div>
           <Link
@@ -121,11 +122,10 @@ const recentQuestions = Array.isArray(questionsData?.data)
           ) : (
             <div className="space-y-3">
               {[...liveClasses, ...upcomingClasses].slice(0, 3).map((cls) => (
-                <div key={cls._id} className={`p-3.5 rounded-2xl border flex items-start justify-between gap-3 ${
-                  cls.status === 'LIVE'
-                    ? 'bg-red-500/5 border-red-500/20'
-                    : 'bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-800'
-                }`}>
+                <div key={cls._id} className={`p-3.5 rounded-2xl border flex items-start justify-between gap-3 ${cls.status === 'LIVE'
+                  ? 'bg-red-500/5 border-red-500/20'
+                  : 'bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-800'
+                  }`}>
                   <div className="flex-1 min-w-0">
                     <h4 className="text-xs font-bold text-slate-900 dark:text-slate-100 truncate">{cls.title}</h4>
                     <p className="text-[11px] text-slate-500 mt-0.5">
