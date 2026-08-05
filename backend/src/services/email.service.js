@@ -1,42 +1,32 @@
-import nodemailer from 'nodemailer';
+import { Resend } from 'resend';
 import logger from '../config/logger.js';
 
-const transporter = nodemailer.createTransport({
-  host: process.env.SMTP_HOST,
-  port: Number(process.env.SMTP_PORT),
-  secure: false, // Port 587 uses STARTTLS
-  requireTLS: true,
-  auth: {
-    user: process.env.SMTP_USER,
-    pass: process.env.SMTP_PASS
-  },
-  connectionTimeout: 30000,
-  greetingTimeout: 30000,
-  socketTimeout: 30000
-});
+const resend = new Resend(process.env.RESEND_API_KEY);
 
-// Verify SMTP when server starts
-transporter.verify((error) => {
-  if (error) {
-    logger.error(`SMTP Error: ${error.message}`);
-  } else {
-    logger.info('SMTP Server Ready');
-  }
-});
+if (!process.env.RESEND_API_KEY) {
+  logger.error('RESEND_API_KEY not set');
+} else {
+  logger.info('Resend Email Service Ready');
+}
 
 export const sendEmail = async ({ to, subject, html }) => {
   try {
-    const info = await transporter.sendMail({
-      from: process.env.EMAIL_FROM,
+    const response = await resend.emails.send({
+      from: process.env.EMAIL_FROM || 'onboarding@resend.dev',
       to,
       subject,
       html
     });
 
-    logger.info(`Email sent: ${info.messageId}`);
+    if (response.error) {
+      logger.error(`Email error: ${response.error.message}`);
+      return false;
+    }
+
+    logger.info(`Email sent: ${response.data.id}`);
     return true;
   } catch (error) {
-    logger.error(error);
+    logger.error(`Email service error: ${error.message}`);
     return false;
   }
 };
