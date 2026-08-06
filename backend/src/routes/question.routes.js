@@ -7,6 +7,7 @@ import { createQuestionSchema } from '../validators/question.validator.js';
 const router = Router();
 
 router.get('/search', questionController.searchQuestions);
+router.post('/suggest', authenticate, questionController.suggestQuestionImprovements);
 router.get('/:id', questionController.getQuestionById);
 
 router.post(

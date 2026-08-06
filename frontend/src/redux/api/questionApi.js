@@ -9,6 +9,13 @@ export const questionApi = apiSlice.injectEndpoints({
       }),
       providesTags: ['Question']
     }),
+    suggestQuestion: builder.mutation({
+      query: (data) => ({
+        url: '/questions/suggest',
+        method: 'POST',
+        body: data
+      })
+    }),
     getQuestionById: builder.query({
       query: (id) => `/questions/${id}`,
       providesTags: (result, error, id) => [{ type: 'Question', id }]
@@ -40,6 +47,7 @@ export const questionApi = apiSlice.injectEndpoints({
 
 export const {
   useSearchQuestionsQuery,
+  useSuggestQuestionMutation,
   useGetQuestionByIdQuery,
   useCreateQuestionMutation,
   useFollowQuestionMutation,

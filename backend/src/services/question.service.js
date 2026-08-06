@@ -1,6 +1,8 @@
 import { Question } from '../models/Question.js';
 import { StudentProfile } from '../models/StudentProfile.js';
 import { Tag } from '../models/Tag.js';
+import { Subject } from '../models/Subject.js';
+import { User } from '../models/User.js';
 import { ApiError } from '../utils/ApiError.js';
 
 export const createQuestion = async (userId, data) => {
@@ -83,7 +85,29 @@ export const searchQuestions = async (filters, pagination) => {
   const filterCriteria = {};
 
   if (query) {
-    filterCriteria.$text = { $search: query };
+    const regexQuery = { $regex: query, $options: 'i' };
+    
+    // Find matching subjects to include in question search
+    const matchingSubjects = await Subject.find({ name: regexQuery }).select('_id');
+    const subjectIds = matchingSubjects.map(s => s._id);
+
+    // Find matching users (authors) to include in question search
+    const matchingUsers = await User.find({ name: regexQuery }).select('_id');
+    const userIds = matchingUsers.map(u => u._id);
+
+    filterCriteria.$or = [
+      { title: regexQuery },
+      { description: regexQuery },
+      { tags: regexQuery }
+    ];
+
+    if (subjectIds.length > 0) {
+      filterCriteria.$or.push({ subject: { $in: subjectIds } });
+    }
+
+    if (userIds.length > 0) {
+      filterCriteria.$or.push({ askedBy: { $in: userIds } });
+    }
   }
   if (tag) {
     filterCriteria.tags = tag.toLowerCase();

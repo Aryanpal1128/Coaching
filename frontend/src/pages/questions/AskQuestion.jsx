@@ -3,8 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import { Card } from '../../components/common/Card.jsx';
 import { Input } from '../../components/common/Input.jsx';
 import { Button } from '../../components/common/Button.jsx';
-import { useCreateQuestionMutation } from '../../redux/api/questionApi.js';
-import { HelpCircle, Sparkles, Plus, X } from 'lucide-react';
+import { useCreateQuestionMutation, useSuggestQuestionMutation } from '../../redux/api/questionApi.js';
+import { HelpCircle, Sparkles, Plus, X, AlertTriangle, Lightbulb } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 export const AskQuestion = () => {
@@ -13,8 +13,10 @@ export const AskQuestion = () => {
   const [difficulty, setDifficulty] = useState('Medium');
   const [tagInput, setTagInput] = useState('');
   const [tags, setTags] = useState(['algorithms']);
+  const [suggestions, setSuggestions] = useState(null);
 
   const [createQuestion, { isLoading }] = useCreateQuestionMutation();
+  const [suggestQuestion, { isLoading: isSuggesting }] = useSuggestQuestionMutation();
   const navigate = useNavigate();
 
   const handleAddTag = (e) => {
@@ -29,6 +31,20 @@ export const AskQuestion = () => {
 
   const removeTag = (t) => {
     setTags(tags.filter((item) => item !== t));
+  };
+
+  const handleGetSuggestions = async () => {
+    if (!title.trim() || !description.trim()) {
+      toast.error('Please enter both title and description first');
+      return;
+    }
+    try {
+      const res = await suggestQuestion({ title: title.trim(), description: description.trim() }).unwrap();
+      setSuggestions(res.data);
+      toast.success('AI suggestions generated!');
+    } catch (err) {
+      toast.error('Failed to get AI suggestions');
+    }
   };
 
   const handleSubmit = async (e) => {
@@ -150,9 +166,98 @@ export const AskQuestion = () => {
           </div>
         )}
 
-        <div className="pt-2 flex justify-end">
-          <Button type="submit" isLoading={isLoading} size="lg">
-            <Sparkles className="w-4 h-4 mr-2" /> Post Question
+        {/* AI Suggestions Section */}
+        {suggestions && (
+          <div className="bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 space-y-4">
+            <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-2.5">
+              <h4 className="text-sm font-bold text-slate-900 dark:text-slate-100 flex items-center gap-1.5">
+                <Sparkles className="w-4 h-4 text-brand-500 fill-brand-500/20 animate-pulse" />
+                AI Learning Coach Suggestions
+              </h4>
+              <span className={`text-[10px] font-bold px-2.5 py-0.5 rounded-full ${
+                suggestions.isGood 
+                  ? 'bg-emerald-500/10 text-emerald-500' 
+                  : 'bg-amber-500/10 text-amber-500'
+              }`}>
+                {suggestions.isGood ? 'Clear & Well-Structured' : 'Needs Polish'}
+              </span>
+            </div>
+
+            <p className="text-xs text-slate-600 dark:text-slate-400 italic bg-white dark:bg-slate-950 p-3 rounded-xl border border-slate-100 dark:border-slate-900">
+              "{suggestions.generalFeedback}"
+            </p>
+
+            {(suggestions.grammarIssues?.length > 0 || suggestions.conceptualIssues?.length > 0) && (
+              <div className="space-y-2">
+                {suggestions.grammarIssues?.map((issue, idx) => (
+                  <div key={idx} className="text-xs text-red-500 flex items-start gap-1.5">
+                    <AlertTriangle className="w-3.5 h-3.5 shrink-0 mt-0.5" />
+                    <span>{issue}</span>
+                  </div>
+                ))}
+                {suggestions.conceptualIssues?.map((issue, idx) => (
+                  <div key={idx} className="text-xs text-amber-500 flex items-start gap-1.5">
+                    <Lightbulb className="w-3.5 h-3.5 shrink-0 mt-0.5" />
+                    <span>{issue}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Suggested Title */}
+            {suggestions.suggestedTitle && suggestions.suggestedTitle !== title && (
+              <div className="bg-white dark:bg-slate-950 border border-slate-100 dark:border-slate-900 p-3 rounded-xl flex items-start justify-between gap-3">
+                <div className="space-y-1">
+                  <span className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Suggested Title:</span>
+                  <p className="text-xs font-semibold text-slate-900 dark:text-slate-100">{suggestions.suggestedTitle}</p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setTitle(suggestions.suggestedTitle);
+                    toast.success('Suggested title applied!');
+                  }}
+                  className="text-[10px] font-bold text-brand-600 hover:text-brand-700 bg-brand-50 dark:bg-brand-950/40 px-2.5 py-1.5 rounded-lg shrink-0 transition-colors"
+                >
+                  Apply
+                </button>
+              </div>
+            )}
+
+            {/* Suggested Description */}
+            {suggestions.suggestedDescription && suggestions.suggestedDescription !== description && (
+              <div className="bg-white dark:bg-slate-950 border border-slate-100 dark:border-slate-900 p-3 rounded-xl flex items-start justify-between gap-3">
+                <div className="space-y-1 overflow-hidden">
+                  <span className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Suggested Description:</span>
+                  <p className="text-xs text-slate-700 dark:text-slate-300 line-clamp-3 leading-relaxed whitespace-pre-wrap">{suggestions.suggestedDescription}</p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setDescription(suggestions.suggestedDescription);
+                    toast.success('Suggested description applied!');
+                  }}
+                  className="text-[10px] font-bold text-brand-600 hover:text-brand-700 bg-brand-50 dark:bg-brand-950/40 px-2.5 py-1.5 rounded-lg shrink-0 transition-colors"
+                >
+                  Apply
+                </button>
+              </div>
+            )}
+          </div>
+        )}
+
+        <div className="pt-2 flex items-center justify-between gap-4">
+          <Button 
+            type="button" 
+            variant="outline" 
+            onClick={handleGetSuggestions} 
+            isLoading={isSuggesting} 
+            size="md"
+          >
+            <Sparkles className="w-4 h-4 mr-2 text-brand-500 fill-brand-500/25" /> Check with AI
+          </Button>
+          <Button type="submit" isLoading={isLoading} size="md">
+            <Plus className="w-4 h-4 mr-1.5" /> Post Question
           </Button>
         </div>
       </form>

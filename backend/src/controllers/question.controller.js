@@ -41,3 +41,11 @@ export const bookmarkQuestion = asyncHandler(async (req, res) => {
   const result = await questionService.bookmarkQuestion(req.params.id, req.user._id);
   return res.status(200).json(new ApiResponse(200, result, 'Question bookmark status updated'));
 });
+
+import { evaluateQuestionWithAI } from '../services/aiEvaluation.service.js';
+
+export const suggestQuestionImprovements = asyncHandler(async (req, res) => {
+  const { title, description } = req.body;
+  const suggestions = await evaluateQuestionWithAI(title || '', description || '');
+  return res.status(200).json(new ApiResponse(200, suggestions, 'Question suggestions generated'));
+});

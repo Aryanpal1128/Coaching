@@ -80,3 +80,169 @@ const generateMockEvaluation = (answerText) => {
     evaluatedAt: new Date()
   };
 };
+
+export const evaluateQuestionWithAI = async (title, description) => {
+  const apiKey = process.env.GEMINI_API_KEY;
+
+  if (!apiKey || apiKey === 'mock_gemini_api_key_replace_with_actual') {
+    logger.info('Using Mock AI Question Suggestion Engine (GEMINI_API_KEY not configured)');
+    return generateMockQuestionSuggestions(title, description);
+  }
+
+  try {
+    const genAI = new GoogleGenerativeAI(apiKey);
+    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+
+    const prompt = `
+You are an AI learning coach. Review the student's proposed academic question.
+Analyze if it has any errors (grammatical, spelling, technical, conceptual) or lacks clarity, and suggest improvements.
+Return ONLY a valid JSON object matching the exact schema below.
+
+Question Title: "${title}"
+Question Context: "${description}"
+
+JSON Schema format:
+{
+  "isGood": boolean,
+  "grammarIssues": ["array of grammar/spelling errors found, or empty array"],
+  "conceptualIssues": ["array of conceptual/technical inaccuracies or lacks of context, or empty array"],
+  "suggestedTitle": "an improved, clearer, or corrected version of the title",
+  "suggestedDescription": "an improved, clearer, or corrected version of the description",
+  "generalFeedback": "helpful coaching feedback to the student on how to write better questions"
+}
+`;
+
+    const result = await model.generateContent({
+      contents: [{ role: 'user', parts: [{ text: prompt }] }],
+      generationConfig: {
+        responseMimeType: "application/json",
+      },
+    });
+    const responseText = result.response.text().trim();
+    const cleanJson = responseText.replace(/```json/g, '').replace(/```/g, '').trim();
+    const evaluation = JSON.parse(cleanJson);
+
+    return {
+      isGood: evaluation.isGood !== false,
+      grammarIssues: evaluation.grammarIssues || [],
+      conceptualIssues: evaluation.conceptualIssues || [],
+      suggestedTitle: evaluation.suggestedTitle || title,
+      suggestedDescription: evaluation.suggestedDescription || description,
+      generalFeedback: evaluation.generalFeedback || 'Your question is clear and well-structured.'
+    };
+  } catch (error) {
+    logger.error(`AI Question Evaluation failed: ${error.message}. Fallback mock evaluation generated.`);
+    return generateMockQuestionSuggestions(title, description);
+  }
+};
+
+const generateMockQuestionSuggestions = (title, description) => {
+  const grammarIssues = [];
+  const conceptualIssues = [];
+  let suggestedTitle = title.trim();
+  let suggestedDescription = description.trim();
+
+  // Heuristic spelling dictionary for common student/developer typos
+  const typoDict = {
+    "answe": "answer",
+    "sentece": "sentence",
+    "perseon": "person",
+    "fir": "fix",
+    "whateveer": "whatever",
+    "forgetting": "forgot",
+    "teh": "the",
+    "recieve": "receive",
+    "definately": "definitely",
+    "dont": "don't",
+    "cant": "can't",
+    "wont": "won't",
+    "shouldnt": "shouldn't",
+    "wouldnt": "wouldn't",
+    "couldnt": "couldn't",
+    "doesnt": "doesn't",
+    "isnt": "isn't",
+    "arent": "aren't",
+    "wasnt": "wasn't",
+    "werent": "weren't",
+    "hasnt": "hasn't",
+    "havent": "haven't",
+    "hadnt": "hadn't"
+  };
+
+  const correctText = (text, typeName) => {
+    let corrected = text;
+    // split by word boundaries to match exact words
+    const words = text.split(/\b/);
+    const issues = [];
+    
+    for (let word of words) {
+      const lowerWord = word.toLowerCase();
+      if (typoDict[lowerWord]) {
+        const isCapitalized = word[0] === word[0].toUpperCase();
+        const replacement = isCapitalized 
+          ? typoDict[lowerWord].charAt(0).toUpperCase() + typoDict[lowerWord].slice(1)
+          : typoDict[lowerWord];
+        
+        // Escape special chars if any (none in typoDict keys)
+        const regex = new RegExp(`\\b${word}\\b`, 'g');
+        corrected = corrected.replace(regex, replacement);
+        issues.push(`Spelling: Found typo "${word}" in the ${typeName}. Corrected to "${replacement}".`);
+      }
+    }
+    return { corrected, issues };
+  };
+
+  const titleCheck = correctText(suggestedTitle, "title");
+  suggestedTitle = titleCheck.corrected;
+  grammarIssues.push(...titleCheck.issues);
+
+  const descCheck = correctText(suggestedDescription, "description");
+  suggestedDescription = descCheck.corrected;
+  grammarIssues.push(...descCheck.issues);
+
+  // Capitalize first letter of title
+  if (suggestedTitle.length > 0 && suggestedTitle[0] !== suggestedTitle[0].toUpperCase()) {
+    suggestedTitle = suggestedTitle.charAt(0).toUpperCase() + suggestedTitle.slice(1);
+    grammarIssues.push('Sentence: The title should start with a capitalized letter.');
+  }
+
+  // Add question mark to title if it's a question and lacks a trailing question mark
+  if (suggestedTitle.length > 0) {
+    const questionWords = ['what', 'why', 'how', 'when', 'who', 'which', 'is', 'are', 'can', 'do', 'does', 'did', 'should', 'would', 'could'];
+    const firstWord = suggestedTitle.split(/\s+/)[0].toLowerCase().replace(/[^a-z]/g, '');
+    if (questionWords.includes(firstWord) && !suggestedTitle.endsWith('?')) {
+      suggestedTitle = suggestedTitle + '?';
+      grammarIssues.push('Sentence: Added a question mark to the end of the question title.');
+    }
+  }
+
+  // Capitalize first letter of description
+  if (suggestedDescription.length > 0 && suggestedDescription[0] !== suggestedDescription[0].toUpperCase()) {
+    suggestedDescription = suggestedDescription.charAt(0).toUpperCase() + suggestedDescription.slice(1);
+    grammarIssues.push('Sentence: The description should start with a capitalized letter.');
+  }
+
+  // Length constraints
+  const titleWords = title.trim().split(/\s+/).filter(Boolean).length;
+  const descWords = description.trim().split(/\s+/).filter(Boolean).length;
+  const isTooShort = titleWords < 4 || descWords < 8;
+
+  if (isTooShort) {
+    grammarIssues.push("Length: The title or description is too short to provide clear context.");
+    conceptualIssues.push("Context: Please describe the issue details, steps to reproduce, and expected results.");
+    suggestedDescription = `${suggestedDescription}\n\nAdditional Context:\n- What are the steps to reproduce?\n- What did you try and what did you expect?`;
+  }
+
+  const isGood = grammarIssues.length === 0 && conceptualIssues.length === 0;
+
+  return {
+    isGood,
+    grammarIssues,
+    conceptualIssues,
+    suggestedTitle,
+    suggestedDescription,
+    generalFeedback: isGood 
+      ? "Excellent query! The question has clear context and a defined objective."
+      : "We identified spelling errors and sentence formatting issues. Review the suggestions below to correct them."
+  };
+};

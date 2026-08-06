@@ -85,7 +85,7 @@ export const saveMessage = async (senderId, recipientId, text) => {
  * Get all users (for starting a new conversation).
  */
 export const getUsers = async (currentUserId, search = '') => {
-  const filter = { _id: { $ne: currentUserId }, isVerified: true };
+  const filter = { _id: { $ne: currentUserId } };
   if (search) {
     filter.$or = [
       { name: { $regex: search, $options: 'i' } },

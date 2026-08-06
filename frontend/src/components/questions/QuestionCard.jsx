@@ -56,13 +56,16 @@ export const QuestionCard = ({ question }) => {
       <div className="mt-3">
         <Link
           to={`/questions/${question._id}`}
-          className="text-base font-bold text-slate-900 dark:text-slate-100 hover:text-brand-500 transition-colors line-clamp-2"
+          className="text-base font-bold text-slate-900 dark:text-slate-100 hover:text-brand-500 transition-colors line-clamp-2 block"
         >
           {question.title}
         </Link>
-        <p className="text-xs text-slate-600 dark:text-slate-400 line-clamp-2 mt-1.5 leading-relaxed">
+        <Link
+          to={`/questions/${question._id}`}
+          className="text-xs text-slate-600 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-300 transition-colors line-clamp-2 mt-1.5 leading-relaxed block"
+        >
           {question.description}
-        </p>
+        </Link>
       </div>
 
       {/* Tags & Subject */}
@@ -85,10 +88,13 @@ export const QuestionCard = ({ question }) => {
       {/* Footer Metrics & Actions */}
       <div className="mt-4 pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-xs text-slate-500 dark:text-slate-400">
         <div className="flex items-center gap-4">
-          <span className="flex items-center gap-1.5 font-medium">
+          <Link
+            to={`/questions/${question._id}`}
+            className="flex items-center gap-1.5 font-medium hover:text-brand-500 transition-colors"
+          >
             <MessageSquare className="w-4 h-4 text-brand-500" />
             {question.answersCount || 0} Answers
-          </span>
+          </Link>
           <span className="flex items-center gap-1.5">
             <Eye className="w-4 h-4" />
             {question.viewsCount || 0} Views
@@ -96,6 +102,11 @@ export const QuestionCard = ({ question }) => {
         </div>
 
         <div className="flex items-center gap-2">
+          <Link to={`/questions/${question._id}`}>
+            <span className="text-[11px] font-bold text-brand-600 hover:text-brand-700 bg-brand-50 dark:bg-brand-950/40 hover:bg-brand-100 dark:hover:bg-brand-900/60 px-3 py-1.5 rounded-lg transition-colors cursor-pointer mr-2">
+              Answer Question →
+            </span>
+          </Link>
           <button className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
             <Bookmark className="w-4 h-4" />
           </button>

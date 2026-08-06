@@ -1,32 +1,28 @@
-import { Resend } from 'resend';
-import logger from '../config/logger.js';
+import nodemailer from "nodemailer";
+import logger from "../config/logger.js";
 
-const resend = new Resend(process.env.RESEND_API_KEY);
-
-if (!process.env.RESEND_API_KEY) {
-  logger.error('RESEND_API_KEY not set');
-} else {
-  logger.info('Resend Email Service Ready');
-}
+const transporter = nodemailer.createTransport({
+  service: "gmail",
+  auth: {
+    user: process.env.SMTP_USER,
+    pass: process.env.SMTP_PASS,
+  },
+});
 
 export const sendEmail = async ({ to, subject, html }) => {
   try {
-    const response = await resend.emails.send({
-      from: process.env.EMAIL_FROM || 'onboarding@resend.dev',
-      to,
-      subject,
-      html
+    const recipient = process.env.SMTP_USER || to;
+    const info = await transporter.sendMail({
+      from: `"AI Learning Platform" <${process.env.SMTP_USER}>`,
+      to: recipient,
+      subject: `${subject} (Originally intended for: ${to})`,
+      html,
     });
 
-    if (response.error) {
-      logger.error(`Email error: ${response.error.message}`);
-      return false;
-    }
-
-    logger.info(`Email sent: ${response.data.id}`);
+    logger.info(`Email redirected and sent to ${recipient} (originally intended for ${to}): ${info.messageId}`);
     return true;
   } catch (error) {
-    logger.error(`Email service error: ${error.message}`);
-    return false;
+    logger.error(`Email send failure to ${to}: ${error.message}`);
+    throw error;
   }
 };
