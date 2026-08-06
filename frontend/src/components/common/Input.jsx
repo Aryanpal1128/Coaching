@@ -36,6 +36,7 @@ export const Input = ({
           value={value}
           onChange={onChange}
           placeholder={placeholder}
+          required={required}
           className={`w-full bg-slate-50 dark:bg-slate-800/80 border ${
             error ? 'border-red-500 focus:ring-red-500' : 'border-slate-300 dark:border-slate-700 focus:ring-brand-500'
           } text-slate-900 dark:text-slate-100 placeholder-slate-400 rounded-xl py-2.5 ${
