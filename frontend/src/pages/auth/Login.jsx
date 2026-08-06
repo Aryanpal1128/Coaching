@@ -4,8 +4,9 @@ import { useDispatch } from 'react-redux';
 import { Card } from '../../components/common/Card.jsx';
 import { Input } from '../../components/common/Input.jsx';
 import { Button } from '../../components/common/Button.jsx';
-import { useLoginMutation } from '../../redux/api/authApi.js';
+import { useLoginMutation, useGoogleLoginMutation } from '../../redux/api/authApi.js';
 import { setCredentials } from '../../redux/slices/authSlice.js';
+import { GoogleLogin } from '@react-oauth/google';
 import { Mail, Lock, Sparkles } from 'lucide-react';
 import toast from 'react-hot-toast';
 
@@ -14,6 +15,7 @@ export const Login = () => {
   const [password, setPassword] = useState('');
 
   const [loginApi, { isLoading }] = useLoginMutation();
+  const [googleLoginApi, { isLoading: isGoogleLoading }] = useGoogleLoginMutation();
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
@@ -33,6 +35,27 @@ export const Login = () => {
     } catch (err) {
       toast.error(err?.data?.message || 'Login failed. Please check your credentials.');
     }
+  };
+
+  const handleGoogleSuccess = async (credentialResponse) => {
+    try {
+      const res = await googleLoginApi({ idToken: credentialResponse.credential }).unwrap();
+      dispatch(setCredentials({ user: res.data.user, accessToken: res.data.accessToken }));
+      toast.success('Welcome back with Google!');
+      if (res.data.user.role === 'TEACHER') {
+        navigate('/teacher-dashboard');
+      } else if (res.data.user.role === 'ADMIN') {
+        navigate('/admin-dashboard');
+      } else {
+        navigate('/dashboard');
+      }
+    } catch (err) {
+      toast.error(err?.data?.message || 'Google sign-in failed. Please try again.');
+    }
+  };
+
+  const handleGoogleError = () => {
+    toast.error('Google sign-in failed.');
   };
 
   return (
@@ -82,6 +105,25 @@ export const Login = () => {
           Sign In
         </Button>
       </form>
+
+      <div className="relative my-5">
+        <div className="absolute inset-0 flex items-center">
+          <div className="w-full border-t border-slate-800"></div>
+        </div>
+        <div className="relative flex justify-center text-[10px] uppercase font-bold tracking-wider">
+          <span className="bg-slate-900 px-3 text-slate-500">Or continue with</span>
+        </div>
+      </div>
+
+      <div className="flex justify-center w-full">
+        <GoogleLogin
+          onSuccess={handleGoogleSuccess}
+          onError={handleGoogleError}
+          useOneTap
+          theme="filled_dark"
+          shape="pill"
+        />
+      </div>
 
       <div className="mt-6 text-center text-xs text-slate-400">
         Don't have an account?{' '}

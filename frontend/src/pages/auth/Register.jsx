@@ -22,10 +22,9 @@ export const Register = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const res = await registerApi({ name, email, password, role }).unwrap();
-      dispatch(setCredentials({ user: res.data.user, accessToken: res.data.accessToken }));
-      toast.success('Registration successful!');
-      navigate(role === 'TEACHER' ? '/teacher-dashboard' : '/dashboard');
+      await registerApi({ name, email, password, role }).unwrap();
+      toast.success('Registration successful! Please verify your email address (sent to your inbox) before logging in.', { duration: 6000 });
+      navigate('/login');
     } catch (err) {
       toast.error(err?.data?.message || 'Registration failed.');
     }

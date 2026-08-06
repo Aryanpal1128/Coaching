@@ -6,6 +6,7 @@ import { generateTokens, generateEmailVerificationToken, generatePasswordResetTo
 import { sendEmail } from './email.service.js';
 import { ROLES } from '../constants/roles.js';
 import logger from '../config/logger.js';
+import { OAuth2Client } from 'google-auth-library';
 
 export const registerUser = async (userData) => {
   const { name, email, password, role } = userData;
@@ -42,11 +43,8 @@ export const registerUser = async (userData) => {
     html: `<p>Hello ${user.name},</p><p>Please click the link below to verify your account:</p><a href="${verifyUrl}">${verifyUrl}</a>`
   });
   logger.info("Verification email step completed");
-  const { accessToken, refreshToken } = generateTokens(user);
-  user.refreshToken = refreshToken;
-  await user.save();
 
-  return { user, accessToken, refreshToken, verificationToken };
+  return { user, verificationToken };
 };
 
 export const verifyEmailToken = async (token) => {
@@ -76,6 +74,10 @@ export const loginUser = async (email, password) => {
 
   if (user.isSuspended) {
     throw new ApiError(403, 'Your account is suspended.');
+  }
+
+  if (!user.isVerified) {
+    throw new ApiError(403, 'Your email address is not verified. Please verify your email first.');
   }
 
   user.lastActiveAt = new Date();
@@ -152,4 +154,71 @@ export const changePassword = async (userId, oldPassword, newPassword) => {
   user.password = newPassword;
   await user.save();
   return true;
+};
+
+export const googleAuth = async (idToken, role) => {
+  const googleClientId = process.env.GOOGLE_CLIENT_ID;
+
+  if (!googleClientId) {
+    throw new ApiError(500, 'Google Client ID is not configured on the server.');
+  }
+
+  const client = new OAuth2Client(googleClientId);
+  let payload;
+
+  try {
+    const ticket = await client.verifyIdToken({
+      idToken,
+      audience: googleClientId,
+    });
+    payload = ticket.getPayload();
+  } catch (error) {
+    throw new ApiError(400, 'Invalid Google ID token: ' + error.message);
+  }
+
+  const { email, name, picture } = payload;
+
+  if (!email) {
+    throw new ApiError(400, 'Google account is missing email address');
+  }
+
+  // Find or create user
+  let user = await User.findOne({ email });
+
+  if (!user) {
+    const userRole = role && Object.values(ROLES).includes(role) ? role : ROLES.STUDENT;
+    // Create new Google Auth user, already verified by Google
+    user = await User.create({
+      name,
+      email,
+      password: Math.random().toString(36).slice(-10), // random safe password
+      role: userRole,
+      avatar: picture || 'https://res.cloudinary.com/demo/image/upload/v1571218039/sample.jpg',
+      isVerified: true
+    });
+
+    if (userRole === ROLES.STUDENT) {
+      await StudentProfile.create({ user: user._id });
+    } else if (userRole === ROLES.TEACHER) {
+      await TeacherProfile.create({ user: user._id });
+    }
+  } else {
+    // If user existed but wasn't verified, mark them verified since they proved access via Google Auth
+    if (!user.isVerified) {
+      user.isVerified = true;
+      await user.save();
+    }
+  }
+
+  if (user.isSuspended) {
+    throw new ApiError(403, 'Your account is suspended.');
+  }
+
+  user.lastActiveAt = new Date();
+  const { accessToken, refreshToken } = generateTokens(user);
+  user.refreshToken = refreshToken;
+  await user.save();
+
+  user.password = undefined;
+  return { user, accessToken, refreshToken };
 };

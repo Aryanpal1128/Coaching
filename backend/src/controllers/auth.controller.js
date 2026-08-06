@@ -14,9 +14,7 @@ const cookieOptions = {
 };
 
 export const register = asyncHandler(async (req, res) => {
-  const { refreshToken, ...responseData } = await authService.registerUser(req.body);
-
-  res.cookie('refreshToken', refreshToken, cookieOptions);
+  const responseData = await authService.registerUser(req.body);
 
   return res.status(201).json(
     new ApiResponse(201, responseData, 'User registered successfully. Please verify your email.')
@@ -75,4 +73,13 @@ export const changePassword = asyncHandler(async (req, res) => {
 
 export const getMe = asyncHandler(async (req, res) => {
   return res.status(200).json(new ApiResponse(200, req.user, 'Current user profile fetched'));
+});
+
+export const googleAuth = asyncHandler(async (req, res) => {
+  const { idToken, role } = req.body;
+  const { refreshToken, ...responseData } = await authService.googleAuth(idToken, role);
+
+  res.cookie('refreshToken', refreshToken, cookieOptions);
+
+  return res.status(200).json(new ApiResponse(200, responseData, 'Logged in with Google successfully'));
 });

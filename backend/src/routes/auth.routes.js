@@ -23,6 +23,8 @@ router.post(
   authController.login
 );
 
+router.post('/google', authRateLimiter, authController.googleAuth);
+
 router.post('/refresh-token', authController.refreshToken);
 router.post('/logout', authenticate, authController.logout);
 
