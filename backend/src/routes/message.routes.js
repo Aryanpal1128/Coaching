@@ -16,4 +16,7 @@ router.get('/:partnerId', authenticate, messageController.getMessages);
 // Send a message (HTTP fallback, socket is primary)
 router.post('/:recipientId', authenticate, messageController.sendMessage);
 
+// React to a message
+router.post('/reaction/:messageId', authenticate, messageController.toggleReaction);
+
 export default router;

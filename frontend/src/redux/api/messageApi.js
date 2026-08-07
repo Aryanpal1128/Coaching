@@ -13,6 +13,13 @@ export const messageApi = apiSlice.injectEndpoints({
     getUsers: builder.query({
       query: (search = '') => `/messages/users?search=${search}`,
       providesTags: ['User']
+    }),
+    toggleReaction: builder.mutation({
+      query: ({ messageId, emoji }) => ({
+        url: `/messages/reaction/${messageId}`,
+        method: 'POST',
+        body: { emoji }
+      })
     })
   })
 });
@@ -20,5 +27,6 @@ export const messageApi = apiSlice.injectEndpoints({
 export const {
   useGetConversationsQuery,
   useGetMessagesQuery,
-  useGetUsersQuery
+  useGetUsersQuery,
+  useToggleReactionMutation
 } = messageApi;

@@ -1,4 +1,4 @@
-import { saveMessage } from '../services/message.service.js';
+import { saveMessage, toggleReaction } from '../services/message.service.js';
 import logger from '../config/logger.js';
 
 // Track online users: userId → socketId
@@ -17,18 +17,20 @@ export const setupMessageSocket = (io, socket) => {
   });
 
   // Send a direct message
-  socket.on('send_direct_message', async ({ recipientId, text, senderId }) => {
+  socket.on('send_direct_message', async ({ recipientId, text, senderId, parentMessageId = null }) => {
     if (!text?.trim() || !recipientId || !senderId) return;
 
     try {
       // Save to DB
-      const message = await saveMessage(senderId, recipientId, text);
+      const message = await saveMessage(senderId, recipientId, text, parentMessageId);
 
       const payload = {
         _id: message._id,
         sender: message.sender,
         recipient: recipientId,
         text: message.text,
+        parentMessage: message.parentMessage,
+        reactions: message.reactions || [],
         createdAt: message.createdAt,
         read: false
       };
@@ -42,6 +44,27 @@ export const setupMessageSocket = (io, socket) => {
     } catch (err) {
       logger.error('Direct message error: ' + err.message);
       socket.emit('message_error', { error: 'Failed to send message' });
+    }
+  });
+
+  // Toggle reaction on a message
+  socket.on('message_reaction', async ({ messageId, emoji, userId, recipientId }) => {
+    if (!messageId || !emoji || !userId) return;
+
+    try {
+      const message = await toggleReaction(messageId, userId, emoji);
+
+      const payload = {
+        messageId,
+        reactions: message.reactions
+      };
+
+      // Deliver updated reaction to recipient and sender rooms
+      io.to(`user:${recipientId}`).emit('message_reaction_updated', payload);
+      io.to(`user:${userId}`).emit('message_reaction_updated', payload);
+
+    } catch (err) {
+      logger.error('Reaction socket error: ' + err.message);
     }
   });
 

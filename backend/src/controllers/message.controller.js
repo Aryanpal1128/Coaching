@@ -30,3 +30,13 @@ export const getUsers = asyncHandler(async (req, res) => {
   const users = await messageService.getUsers(req.user._id, search);
   return res.status(200).json(new ApiResponse(200, users, 'Users fetched'));
 });
+
+// POST /messages/reaction/:messageId — react to a message
+export const toggleReaction = asyncHandler(async (req, res) => {
+  const { emoji } = req.body;
+  if (!emoji) {
+    return res.status(400).json(new ApiResponse(400, null, 'Emoji is required'));
+  }
+  const message = await messageService.toggleReaction(req.params.messageId, req.user._id, emoji);
+  return res.status(200).json(new ApiResponse(200, message, 'Reaction updated'));
+});

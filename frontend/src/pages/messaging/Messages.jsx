@@ -9,7 +9,8 @@ import { useSocket } from '../../context/SocketContext.jsx';
 import {
   useGetConversationsQuery,
   useGetMessagesQuery,
-  useGetUsersQuery
+  useGetUsersQuery,
+  useToggleReactionMutation
 } from '../../redux/api/messageApi.js';
 
 const AVATAR_COLORS = [
@@ -19,6 +20,8 @@ const AVATAR_COLORS = [
   'from-purple-600 to-pink-600',
   'from-rose-500 to-red-600'
 ];
+
+const EMOJIS = ['👍', '❤️', '😂', '😮', '😢', '🙏'];
 
 const getInitials = (name = '') =>
   name.split(' ').map((n) => n[0]).join('').slice(0, 2).toUpperCase();
@@ -60,8 +63,16 @@ export const Messages = () => {
   const [showNewChat, setShowNewChat] = useState(false);
   const [userSearch, setUserSearch] = useState('');
   const [contactSearch, setContactSearch] = useState('');
+  
+  // Message Reply & Reaction States
+  const [replyingTo, setReplyingTo] = useState(null);
+  const [hoveredMessageId, setHoveredMessageId] = useState(null);
+  const [showReactionPickerId, setShowReactionPickerId] = useState(null);
+
   const typingTimer = useRef(null);
   const messagesEndRef = useRef(null);
+
+  const [toggleReactionApi] = useToggleReactionMutation();
 
   // API queries
   const { data: convData, refetch: refetchConvs } = useGetConversationsQuery(undefined, { pollingInterval: 10000 });
@@ -83,6 +94,8 @@ export const Messages = () => {
         text: m.text,
         isMe: m.sender._id === user?._id,
         sender: m.sender,
+        parentMessage: m.parentMessage,
+        reactions: m.reactions || [],
         createdAt: m.createdAt
       })));
     } else {
@@ -122,6 +135,8 @@ export const Messages = () => {
               text: msg.text,
               isMe: false,
               sender: msg.sender,
+              parentMessage: msg.parentMessage,
+              reactions: msg.reactions || [],
               createdAt: msg.createdAt
             }
           ]);
@@ -132,6 +147,12 @@ export const Messages = () => {
       refetchConvs();
       // Invalidate RTK cache for this convo
       dispatch(apiSlice.util.invalidateTags(['Message']));
+    });
+
+    socket.on('message_reaction_updated', ({ messageId, reactions }) => {
+      setLiveMessages((prev) =>
+        prev.map((m) => (m._id === messageId ? { ...m, reactions } : m))
+      );
     });
 
     socket.on('message_sent', (msg) => {
@@ -146,16 +167,18 @@ export const Messages = () => {
     return () => {
       socket.off('user_status');
       socket.off('receive_direct_message');
+      socket.off('message_reaction_updated');
       socket.off('message_sent');
       socket.off('user_typing');
     };
-  }, [socket, user?._id, dispatch]);
+  }, [socket, user?._id, dispatch, refetchConvs]);
 
   const handleSelectPartner = (usr) => {
     setPartner(usr);
     setShowChat(true);
     setShowNewChat(false);
     setLiveMessages([]);
+    setReplyingTo(null);
   };
 
   const handleSend = (e) => {
@@ -163,20 +186,53 @@ export const Messages = () => {
     if (!text.trim() || !partner || !socket) return;
 
     const tempId = `temp-${Date.now()}`;
+    
     // Optimistic UI
     setLiveMessages((prev) => [
       ...prev,
-      { _id: tempId, text: text.trim(), isMe: true, sender: user, createdAt: new Date().toISOString() }
+      {
+        _id: tempId,
+        text: text.trim(),
+        isMe: true,
+        sender: user,
+        parentMessage: replyingTo ? { _id: replyingTo._id, text: replyingTo.text, sender: replyingTo.sender } : null,
+        reactions: [],
+        createdAt: new Date().toISOString()
+      }
     ]);
 
     socket.emit('send_direct_message', {
       senderId: user._id,
       recipientId: partner._id,
-      text: text.trim()
+      text: text.trim(),
+      parentMessageId: replyingTo ? replyingTo._id : null
     });
 
     setText('');
+    setReplyingTo(null);
     stopTyping();
+  };
+
+  const handleToggleReaction = async (messageId, emoji) => {
+    if (!socket || !partner) return;
+    
+    // Emit socket event for real-time broadcast
+    socket.emit('message_reaction', {
+      messageId,
+      emoji,
+      userId: user._id,
+      recipientId: partner._id
+    });
+
+    // Close reaction picker
+    setShowReactionPickerId(null);
+
+    // Call fallback REST API mutation just in case of reconnection issues
+    try {
+      await toggleReactionApi({ messageId, emoji }).unwrap();
+    } catch (err) {
+      // Ignore API catch since socket will broadcast reaction
+    }
   };
 
   const handleTyping = (e) => {
@@ -360,7 +416,7 @@ export const Messages = () => {
               </div>
 
               {/* Messages */}
-              <div className="flex-1 overflow-y-auto p-4 space-y-3 bg-slate-50/50 dark:bg-slate-950/50">
+              <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-slate-50/50 dark:bg-slate-950/50">
                 {liveMessages.length === 0 && (
                   <div className="flex flex-col items-center justify-center h-full text-slate-400 gap-2">
                     <MessageSquare className="w-8 h-8 opacity-30" />
@@ -368,17 +424,112 @@ export const Messages = () => {
                   </div>
                 )}
                 {liveMessages.map((m) => (
-                  <div key={m._id} className={`flex ${m.isMe ? 'justify-end' : 'justify-start'}`}>
-                    <div className={`max-w-[75%] sm:max-w-sm rounded-2xl px-3.5 py-2.5 shadow-sm ${
-                      m.isMe
-                        ? 'bg-brand-600 text-white rounded-br-sm'
-                        : 'bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 rounded-bl-sm border border-slate-200 dark:border-slate-700'
-                    }`}>
-                      <p className="text-xs leading-relaxed">{m.text}</p>
-                      <p className={`text-[9px] mt-1 text-right ${m.isMe ? 'text-blue-200' : 'text-slate-400'}`}>
-                        {fmtTime(m.createdAt)}
-                      </p>
+                  <div
+                    key={m._id}
+                    onMouseEnter={() => setHoveredMessageId(m._id)}
+                    onMouseLeave={() => { setHoveredMessageId(null); setShowReactionPickerId(null); }}
+                    className={`flex relative group ${m.isMe ? 'justify-end' : 'justify-start'}`}
+                  >
+                    <div className="relative max-w-[70%] sm:max-w-sm">
+                      {/* Parent message reply reference */}
+                      {m.parentMessage && (
+                        <div className={`text-[10px] rounded-t-2xl px-3 py-1.5 border-l-2 opacity-80 ${
+                          m.isMe
+                            ? 'bg-brand-700/50 text-brand-100 border-brand-300'
+                            : 'bg-slate-100 dark:bg-slate-800/80 text-slate-500 border-slate-400'
+                        } truncate`}>
+                          <span className="font-extrabold block text-[9px] uppercase tracking-wider opacity-90">
+                            Replying to {m.parentMessage.sender?.name || 'User'}
+                          </span>
+                          "{m.parentMessage.text}"
+                        </div>
+                      )}
+
+                      <div className={`shadow-sm px-3.5 py-2.5 ${
+                        m.isMe
+                          ? 'bg-brand-600 text-white rounded-br-sm'
+                          : 'bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 rounded-bl-sm border border-slate-200 dark:border-slate-700'
+                      } ${m.parentMessage ? 'rounded-b-2xl' : 'rounded-2xl'}`}>
+                        <p className="text-xs leading-relaxed break-words">{m.text}</p>
+                        <p className={`text-[8px] mt-1 text-right ${m.isMe ? 'text-indigo-200' : 'text-slate-400'}`}>
+                          {fmtTime(m.createdAt)}
+                        </p>
+                      </div>
+
+                      {/* Display Emoji Reactions */}
+                      {m.reactions && m.reactions.length > 0 && (
+                        <div className={`flex flex-wrap gap-1 mt-1.5 ${m.isMe ? 'justify-end' : 'justify-start'}`}>
+                          {Object.entries(
+                            m.reactions.reduce((acc, r) => {
+                              const emoji = r.emoji;
+                              acc[emoji] = acc[emoji] || [];
+                              acc[emoji].push(r.user);
+                              return acc;
+                            }, {})
+                          ).map(([emoji, usersList]) => {
+                            const hasReacted = usersList.some((u) => u._id === user._id || u === user._id);
+                            return (
+                              <button
+                                key={emoji}
+                                onClick={() => handleToggleReaction(m._id, emoji)}
+                                title={usersList.map((u) => u.name || 'Someone').join(', ')}
+                                className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-extrabold border transition-all ${
+                                  hasReacted
+                                    ? 'bg-brand-500/10 border-brand-500/30 text-brand-500'
+                                    : 'bg-slate-50 dark:bg-slate-850/80 border-slate-200 dark:border-slate-700 text-slate-500 hover:bg-slate-100'
+                                }`}
+                              >
+                                <span>{emoji}</span>
+                                <span>{usersList.length}</span>
+                              </button>
+                            );
+                          })}
+                        </div>
+                      )}
                     </div>
+
+                    {/* Action hovering trigger buttons */}
+                    {hoveredMessageId === m._id && (
+                      <div className={`absolute top-1/2 -translate-y-1/2 flex items-center gap-1 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-md rounded-full px-1.5 py-1 z-20 ${
+                        m.isMe ? 'right-[100%] mr-2' : 'left-[100%] ml-2'
+                      }`}>
+                        {/* Reaction picker trigger */}
+                        <div className="relative">
+                          <button
+                            type="button"
+                            onClick={() => setShowReactionPickerId(showReactionPickerId === m._id ? null : m._id)}
+                            className="w-6 h-6 flex items-center justify-center rounded-full hover:bg-slate-100 dark:hover:bg-slate-700 text-xs"
+                            title="React"
+                          >
+                            😊
+                          </button>
+                          {showReactionPickerId === m._id && (
+                            <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex gap-1.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-xl rounded-xl p-1.5 z-30 animate-in fade-in slide-in-from-bottom-2 duration-150">
+                              {EMOJIS.map((emoji) => (
+                                <button
+                                  key={emoji}
+                                  type="button"
+                                  onClick={() => handleToggleReaction(m._id, emoji)}
+                                  className="hover:scale-125 transition-transform text-xs"
+                                >
+                                  {emoji}
+                                </button>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Reply button */}
+                        <button
+                          type="button"
+                          onClick={() => setReplyingTo(m)}
+                          className="w-6 h-6 flex items-center justify-center rounded-full hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-500 hover:text-slate-900 dark:hover:text-slate-100"
+                          title="Reply"
+                        >
+                          💬
+                        </button>
+                      </div>
+                    )}
                   </div>
                 ))}
                 {partnerTyping && (
@@ -394,6 +545,23 @@ export const Messages = () => {
                 )}
                 <div ref={messagesEndRef} />
               </div>
+
+              {/* Reply Preview Above Input */}
+              {replyingTo && (
+                <div className="px-4 py-2 bg-slate-50 dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between text-xs text-slate-500 dark:text-slate-400 animate-in slide-in-from-bottom duration-150">
+                  <div className="flex-1 truncate">
+                    <span className="font-extrabold text-brand-500">Replying to {replyingTo.sender?.name || (replyingTo.isMe ? 'You' : 'User')}: </span>
+                    <span className="italic">"{replyingTo.text}"</span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setReplyingTo(null)}
+                    className="p-1 hover:bg-slate-200 dark:hover:bg-slate-800 rounded-lg ml-2 transition-colors text-slate-400 hover:text-slate-200"
+                  >
+                    <X className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              )}
 
               {/* Input */}
               <form

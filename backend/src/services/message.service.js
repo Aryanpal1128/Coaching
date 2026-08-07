@@ -54,7 +54,15 @@ export const getMessages = async (userId, partnerId) => {
     ]
   })
     .sort({ createdAt: 1 })
-    .populate('sender', 'name avatar');
+    .populate('sender', 'name avatar')
+    .populate({
+      path: 'parentMessage',
+      populate: { path: 'sender', select: 'name' }
+    })
+    .populate({
+      path: 'reactions.user',
+      select: 'name'
+    });
 
   // Mark all messages from partner as read
   await Message.updateMany(
@@ -68,17 +76,48 @@ export const getMessages = async (userId, partnerId) => {
 /**
  * Save a message to the database.
  */
-export const saveMessage = async (senderId, recipientId, text) => {
+export const saveMessage = async (senderId, recipientId, text, parentMessageId = null) => {
   const recipient = await User.findById(recipientId);
   if (!recipient) throw new ApiError(404, 'Recipient not found');
 
   const message = await Message.create({
     sender: senderId,
     recipient: recipientId,
-    text: text.trim()
+    text: text.trim(),
+    parentMessage: parentMessageId || null
   });
 
-  return message.populate('sender', 'name avatar');
+  return message.populate([
+    { path: 'sender', select: 'name avatar' },
+    { path: 'parentMessage', populate: { path: 'sender', select: 'name' } },
+    { path: 'reactions.user', select: 'name' }
+  ]);
+};
+
+/**
+ * React to a message (toggle emoji)
+ */
+export const toggleReaction = async (messageId, userId, emoji) => {
+  const message = await Message.findById(messageId);
+  if (!message) throw new ApiError(404, 'Message not found');
+
+  const existingReactionIndex = message.reactions.findIndex(
+    (r) => r.user.toString() === userId.toString() && r.emoji === emoji
+  );
+
+  if (existingReactionIndex > -1) {
+    message.reactions.splice(existingReactionIndex, 1);
+  } else {
+    message.reactions = message.reactions.filter((r) => r.user.toString() !== userId.toString());
+    message.reactions.push({ user: userId, emoji });
+  }
+
+  await message.save();
+  return message.populate([
+    { path: 'sender', select: 'name avatar' },
+    { path: 'parentMessage', populate: { path: 'sender', select: 'name' } },
+    { path: 'reactions.user', select: 'name' }
+  ]);
 };
 
 /**

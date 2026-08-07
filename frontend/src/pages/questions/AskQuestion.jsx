@@ -103,6 +103,7 @@ export const AskQuestion = () => {
           value={title}
           onChange={(e) => setTitle(e.target.value)}
           required
+          error={title.trim().length > 0 && title.trim().length < 5 ? 'Title must be at least 5 characters' : undefined}
         />
 
         <div>
@@ -114,9 +115,19 @@ export const AskQuestion = () => {
             placeholder="Explain what you are trying to understand, edge cases, code context..."
             value={description}
             onChange={(e) => setDescription(e.target.value)}
-            className="w-full bg-slate-50 dark:bg-slate-800/80 border border-slate-300 dark:border-slate-700 rounded-xl p-3.5 text-sm text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-brand-500"
+            className={`w-full bg-slate-50 dark:bg-slate-800/80 border ${
+              description.trim().length > 0 && description.trim().length < 10
+                ? 'border-red-500 focus:ring-red-500'
+                : 'border-slate-300 dark:border-slate-700 focus:ring-brand-500'
+            } rounded-xl p-3.5 text-sm text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 transition-all`}
             required
           />
+          {description.trim().length > 0 && description.trim().length < 10 && (
+            <p className="text-xs text-red-500 mt-1.5 font-medium flex items-center gap-1">
+              <AlertTriangle className="w-3.5 h-3.5" />
+              Description must be at least 10 characters
+            </p>
+          )}
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
