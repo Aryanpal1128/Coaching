@@ -42,6 +42,62 @@ export const LiveClasses = () => {
   const [messages, setMessages] = useState([]);
   const [onlineCount, setOnlineCount] = useState(0);
   const chatEndRef = useRef(null);
+  
+  const jitsiContainerRef = useRef(null);
+  const jitsiApiRef = useRef(null);
+
+  // Load Jitsi Meet External API dynamically when a session is active
+  useEffect(() => {
+    if (!activeSession) return;
+
+    // Load Jitsi script dynamically
+    const script = document.createElement('script');
+    script.src = 'https://meet.jit.si/external_api.js';
+    script.async = true;
+    document.body.appendChild(script);
+
+    script.onload = () => {
+      if (!jitsiContainerRef.current) return;
+      
+      const domain = 'meet.jit.si';
+      const options = {
+        roomName: `CoachingAI-${activeSession._id}`,
+        width: '100%',
+        height: '100%',
+        parentNode: jitsiContainerRef.current,
+        userInfo: {
+          displayName: user?.name || 'User',
+          email: user?.email || ''
+        },
+        configOverwrite: {
+          startWithAudioMuted: true,
+          disableDeepLinking: true, // Don't redirect to mobile apps
+          prejoinPageEnabled: false // Skip Jitsi prejoin screen for instant join
+        },
+        interfaceConfigOverwrite: {
+          SHOW_JITSI_WATERMARK: false,
+          SHOW_BRAND_WATERMARK: false,
+          MOBILE_APP_PROMO: false
+        }
+      };
+
+      const api = new window.JitsiMeetExternalAPI(domain, options);
+      jitsiApiRef.current = api;
+
+      // Automatically handle when user hangs up inside Jitsi UI
+      api.addEventListener('videoConferenceLeft', () => {
+        handleLeaveClass();
+      });
+    };
+
+    return () => {
+      if (jitsiApiRef.current) {
+        jitsiApiRef.current.dispose();
+        jitsiApiRef.current = null;
+      }
+      script.remove();
+    };
+  }, [activeSession, user]);
 
   const { data, isLoading, refetch } = useGetLiveClassesQuery(
     activeTab === 'ALL' ? {} : { status: activeTab },
@@ -220,21 +276,9 @@ export const LiveClasses = () => {
               </div>
             </div>
 
-            {/* Jitsi Meet iframe */}
-            <div className="flex-1 relative">
-              {activeSession.meetingLink ? (
-                <iframe
-                  src={`${activeSession.meetingLink}#userInfo.displayName="${encodeURIComponent(user?.name || 'Student')}"`}
-                  className="absolute inset-0 w-full h-full border-0"
-                  allow="camera; microphone; fullscreen; display-capture; autoplay"
-                  title={activeSession.title}
-                />
-              ) : (
-                <div className="flex flex-col items-center justify-center h-full text-slate-400 gap-3">
-                  <Monitor className="w-16 h-16 text-brand-500 animate-pulse" />
-                  <p className="text-sm font-semibold text-slate-200">Joining meeting room...</p>
-                </div>
-              )}
+            {/* Jitsi Meet Embed Container */}
+            <div className="flex-1 relative w-full h-full min-h-[420px] bg-slate-950">
+              <div ref={jitsiContainerRef} className="absolute inset-0 w-full h-full" />
             </div>
 
             <div className="p-3 bg-slate-900/80 border-t border-slate-800 flex items-center justify-between text-xs text-slate-400">
