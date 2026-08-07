@@ -4,7 +4,7 @@ import { useDispatch } from 'react-redux';
 import { Card } from '../../components/common/Card.jsx';
 import { Input } from '../../components/common/Input.jsx';
 import { Button } from '../../components/common/Button.jsx';
-import { useRegisterMutation } from '../../redux/api/authApi.js';
+import { useRegisterMutation, useVerifyOtpMutation } from '../../redux/api/authApi.js';
 import { setCredentials } from '../../redux/slices/authSlice.js';
 import { User, Mail, Lock, Sparkles, GraduationCap } from 'lucide-react';
 import toast from 'react-hot-toast';
@@ -15,12 +15,18 @@ export const Register = () => {
   const [password, setPassword] = useState('');
   const [role, setRole] = useState('STUDENT');
 
+  // OTP Verification States
+  const [showOtpScreen, setShowOtpScreen] = useState(false);
+  const [pendingToken, setPendingToken] = useState('');
+  const [otpCode, setOtpCode] = useState('');
+
   const [registerApi, { isLoading }] = useRegisterMutation();
+  const [verifyOtpApi, { isLoading: isVerifying }] = useVerifyOtpMutation();
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
+    if (e) e.preventDefault();
 
     // Client-side validations
     if (name.trim().length < 2) {
@@ -38,9 +44,10 @@ export const Register = () => {
     }
 
     try {
-      await registerApi({ name: name.trim(), email: email.trim(), password, role }).unwrap();
-      toast.success('Registration successful! Please verify your email address (sent to your inbox) before logging in.', { duration: 6000 });
-      navigate('/login');
+      const res = await registerApi({ name: name.trim(), email: email.trim(), password, role }).unwrap();
+      setPendingToken(res.data.pendingToken);
+      setShowOtpScreen(true);
+      toast.success('Verification code sent to your email!');
     } catch (err) {
       const validationErrors = err?.data?.errors;
       if (Array.isArray(validationErrors) && validationErrors.length > 0) {
@@ -50,6 +57,81 @@ export const Register = () => {
       }
     }
   };
+
+  const handleVerifyOtp = async (e) => {
+    e.preventDefault();
+    if (otpCode.length !== 6) {
+      toast.error('Verification code must be exactly 6 digits');
+      return;
+    }
+
+    try {
+      const res = await verifyOtpApi({ pendingToken, otp: otpCode }).unwrap();
+      dispatch(setCredentials({ user: res.data.user, accessToken: res.data.accessToken }));
+      toast.success('Email verified successfully! Welcome to the platform.');
+      
+      if (res.data.user.role === 'TEACHER') {
+        navigate('/teacher-dashboard');
+      } else if (res.data.user.role === 'ADMIN') {
+        navigate('/admin-dashboard');
+      } else {
+        navigate('/dashboard');
+      }
+    } catch (err) {
+      toast.error(err?.data?.message || 'Verification failed. Please check the code.');
+    }
+  };
+
+  if (showOtpScreen) {
+    return (
+      <Card className="glass-card shadow-2xl border border-slate-800 p-8 text-slate-100 max-w-md mx-auto text-center">
+        <div className="flex flex-col items-center justify-center space-y-6">
+          <div className="inline-flex p-3 rounded-2xl bg-gradient-to-tr from-brand-600 to-indigo-600 shadow-lg shadow-brand-500/20 text-white">
+            <Sparkles className="w-8 h-8 animate-pulse" />
+          </div>
+          <div>
+            <h2 className="text-xl font-extrabold tracking-tight">Verify Your Email</h2>
+            <p className="text-xs text-slate-400 mt-2 leading-relaxed">
+              We sent a 6-digit verification code to <span className="font-semibold text-slate-200">{email}</span>. Please enter it below to complete sign up.
+            </p>
+          </div>
+
+          <form onSubmit={handleVerifyOtp} className="space-y-4 w-full">
+            <Input
+              label="Verification Code"
+              type="text"
+              placeholder="e.g. 123456"
+              value={otpCode}
+              onChange={(e) => setOtpCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+              className="text-center font-bold tracking-[8px] text-lg focus:tracking-[8px]"
+              required
+            />
+
+            <Button type="submit" isLoading={isVerifying} className="w-full mt-2" size="lg">
+              Verify & Complete Sign Up
+            </Button>
+          </form>
+
+          <div className="flex items-center justify-between w-full text-xs text-slate-400 pt-4 border-t border-slate-800/60">
+            <button
+              type="button"
+              onClick={() => setShowOtpScreen(false)}
+              className="hover:text-slate-200 transition-colors font-medium"
+            >
+              ← Edit Email
+            </button>
+            <button
+              type="button"
+              onClick={() => handleSubmit(null)}
+              className="hover:text-brand-400 text-brand-500 transition-colors font-bold"
+            >
+              Resend OTP
+            </button>
+          </div>
+        </div>
+      </Card>
+    );
+  }
 
   return (
     <Card className="glass-card shadow-2xl border border-slate-800 p-8 text-slate-100">

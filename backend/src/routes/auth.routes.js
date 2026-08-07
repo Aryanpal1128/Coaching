@@ -14,7 +14,7 @@ router.post(
   authController.register
 );
 
-router.get('/verify-email', authController.verifyEmail);
+router.post('/verify-otp', authController.verifyOTP);
 
 router.post(
   '/login',

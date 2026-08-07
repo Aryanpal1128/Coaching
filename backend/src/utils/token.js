@@ -37,17 +37,18 @@ export const generateTokens = (user) => {
   return { accessToken, refreshToken };
 };
 
-export const generatePendingRegistrationToken = (userData) => {
+export const generatePendingOTPToken = (userData, otp) => {
   return jwt.sign(
     {
       name: userData.name,
       email: userData.email,
       password: userData.password,
       role: userData.role,
-      type: 'PENDING_REGISTRATION'
+      otp: otp,
+      type: 'PENDING_OTP'
     },
     getAccessSecret(),
-    { expiresIn: process.env.JWT_VERIFY_EMAIL_EXPIRATION || '24h' }
+    { expiresIn: '15m' }
   );
 };
 

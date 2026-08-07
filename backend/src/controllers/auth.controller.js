@@ -21,13 +21,13 @@ export const register = asyncHandler(async (req, res) => {
   );
 });
 
-export const verifyEmail = asyncHandler(async (req, res) => {
-  const { token } = req.query;
-  const { refreshToken, ...responseData } = await authService.verifyEmailToken(token);
+export const verifyOTP = asyncHandler(async (req, res) => {
+  const { pendingToken, otp } = req.body;
+  const { refreshToken, ...responseData } = await authService.verifyOTPToken(pendingToken, otp);
 
   res.cookie('refreshToken', refreshToken, cookieOptions);
 
-  return res.status(200).json(new ApiResponse(200, responseData, 'Email verified and logged in successfully'));
+  return res.status(200).json(new ApiResponse(200, responseData, 'Email verified with OTP and logged in successfully'));
 });
 
 export const login = asyncHandler(async (req, res) => {

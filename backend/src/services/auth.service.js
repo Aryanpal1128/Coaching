@@ -2,7 +2,7 @@ import { User } from '../models/User.js';
 import { StudentProfile } from '../models/StudentProfile.js';
 import { TeacherProfile } from '../models/TeacherProfile.js';
 import { ApiError } from '../utils/ApiError.js';
-import { generateTokens, generatePendingRegistrationToken, generatePasswordResetToken, verifyToken } from '../utils/token.js';
+import { generateTokens, generatePendingOTPToken, generatePasswordResetToken, verifyToken } from '../utils/token.js';
 import { sendEmail } from './email.service.js';
 import { ROLES } from '../constants/roles.js';
 import logger from '../config/logger.js';
@@ -18,30 +18,46 @@ export const registerUser = async (userData) => {
 
   const userRole = role && Object.values(ROLES).includes(role) ? role : ROLES.STUDENT;
 
-  // Generate pending registration token without saving user to DB yet
-  const pendingToken = generatePendingRegistrationToken({
+  // Generate 6-digit OTP code
+  const otp = Math.floor(100000 + Math.random() * 900000).toString();
+
+  // Generate pending registration token with OTP
+  const pendingToken = generatePendingOTPToken({
     name,
     email,
     password,
     role: userRole
-  });
+  }, otp);
 
-  const verifyUrl = `${process.env.FRONTEND_URL}/verify-email?token=${pendingToken}`;
-  logger.info("Sending pending registration verification email...");
+  logger.info(`Sending OTP verification email to ${email}...`);
   await sendEmail({
     to: email,
-    subject: 'Verify Your Email - AI Learning Platform',
-    html: `<p>Hello ${name},</p><p>Please click the link below to verify your email and complete your registration:</p><a href="${verifyUrl}">${verifyUrl}</a>`
+    subject: 'Verify Your Email - OTP Code',
+    html: `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e2e8f0; border-radius: 12px; background-color: #ffffff;">
+        <h2 style="color: #4f46e5; text-align: center; margin-bottom: 20px;">Email Verification Code</h2>
+        <p style="font-size: 14px; color: #334155; line-height: 1.5;">Hello ${name},</p>
+        <p style="font-size: 14px; color: #334155; line-height: 1.5;">Thank you for registering. Please enter the following 6-digit verification code to complete your registration:</p>
+        <div style="font-size: 32px; font-weight: bold; text-align: center; letter-spacing: 5px; margin: 30px 0; color: #4f46e5; background-color: #f8fafc; padding: 15px; border-radius: 8px; border: 1px dashed #cbd5e1;">
+          ${otp}
+        </div>
+        <p style="font-size: 12px; color: #64748b; text-align: center;">This code is valid for 15 minutes. Do not share this code with anyone.</p>
+      </div>
+    `
   });
-  logger.info("Verification email sent");
+  logger.info("Verification OTP email sent");
 
-  return { email };
+  return { pendingToken, email };
 };
 
-export const verifyEmailToken = async (token) => {
-  const decoded = verifyToken(token, process.env.JWT_ACCESS_SECRET);
-  if (decoded.type !== 'PENDING_REGISTRATION') {
-    throw new ApiError(400, 'Invalid or expired email verification link.');
+export const verifyOTPToken = async (pendingToken, submittedOtp) => {
+  const decoded = verifyToken(pendingToken, process.env.JWT_ACCESS_SECRET);
+  if (decoded.type !== 'PENDING_OTP') {
+    throw new ApiError(400, 'Invalid or expired verification session.');
+  }
+
+  if (decoded.otp !== submittedOtp) {
+    throw new ApiError(400, 'Incorrect verification code. Please check your email and try again.');
   }
 
   const { name, email, password, role } = decoded;
@@ -49,7 +65,7 @@ export const verifyEmailToken = async (token) => {
   // Check if user already exists
   let user = await User.findOne({ email });
   if (user) {
-    throw new ApiError(400, 'User with this email already exists and is verified.');
+    throw new ApiError(400, 'User with this email already exists');
   }
 
   // Create user in DB now that email is verified
