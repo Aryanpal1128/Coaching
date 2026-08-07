@@ -5,7 +5,7 @@ import { useNavigate } from 'react-router-dom';
 import { apiSlice } from '../../redux/api/apiSlice.js';
 import { Card } from '../../components/common/Card.jsx';
 import { Button } from '../../components/common/Button.jsx';
-import { Send, ArrowLeft, Search, UserPlus, X, MessageSquare } from 'lucide-react';
+import { Send, ArrowLeft, Search, UserPlus, X, MessageSquare, CornerUpLeft } from 'lucide-react';
 import { useSocket } from '../../context/SocketContext.jsx';
 import {
   useGetConversationsQuery,
@@ -71,6 +71,82 @@ export const Messages = () => {
   const [replyingTo, setReplyingTo] = useState(null);
   const [hoveredMessageId, setHoveredMessageId] = useState(null);
   const [showReactionPickerId, setShowReactionPickerId] = useState(null);
+
+  // Gesture & Touch States
+  const [touchStartPos, setTouchStartPos] = useState({ x: 0, y: 0 });
+  const [activeSwipeMessageId, setActiveSwipeMessageId] = useState(null);
+  const [swipeX, setSwipeX] = useState(0);
+  const [gestureLock, setGestureLock] = useState(null); // 'scroll' | 'swipe' | null
+  const [longPressedMessageId, setLongPressedMessageId] = useState(null);
+  const longPressTimerRef = useRef(null);
+
+  const handleTouchStart = (e, m) => {
+    if (e.touches.length !== 1) return;
+    const touch = e.touches[0];
+    setTouchStartPos({ x: touch.clientX, y: touch.clientY });
+    setActiveSwipeMessageId(m._id);
+    setSwipeX(0);
+    setGestureLock(null);
+
+    if (longPressTimerRef.current) clearTimeout(longPressTimerRef.current);
+    longPressTimerRef.current = setTimeout(() => {
+      setLongPressedMessageId(m._id);
+      setHoveredMessageId(m._id);
+      
+      // Auto reset scale feedback after a short pop duration
+      setTimeout(() => {
+        setLongPressedMessageId(null);
+      }, 300);
+
+      // Lock gesture so they don't scroll/swipe during active menu
+      setGestureLock('scroll');
+    }, 450);
+  };
+
+  const handleTouchMove = (e) => {
+    if (e.touches.length !== 1 || !activeSwipeMessageId) return;
+    const touch = e.touches[0];
+    const diffX = touch.clientX - touchStartPos.x;
+    const diffY = touch.clientY - touchStartPos.y;
+
+    // Clear long press if user moves finger significantly (scroll/swipe)
+    if (Math.abs(diffX) > 8 || Math.abs(diffY) > 8) {
+      if (longPressTimerRef.current) {
+        clearTimeout(longPressTimerRef.current);
+        longPressTimerRef.current = null;
+      }
+    }
+
+    if (!gestureLock) {
+      if (Math.abs(diffY) > Math.abs(diffX)) {
+        setGestureLock('scroll');
+      } else if (diffX > 8) {
+        setGestureLock('swipe');
+      }
+    }
+
+    if (gestureLock === 'swipe') {
+      // Capped right-swipe translation
+      const translation = Math.max(0, Math.min(diffX, 90));
+      setSwipeX(translation);
+    }
+  };
+
+  const handleTouchEnd = (e, m) => {
+    if (longPressTimerRef.current) {
+      clearTimeout(longPressTimerRef.current);
+      longPressTimerRef.current = null;
+    }
+
+    if (gestureLock === 'swipe' && swipeX > 50) {
+      setReplyingTo(m);
+    }
+
+    // Reset touch variables
+    setActiveSwipeMessageId(null);
+    setSwipeX(0);
+    setGestureLock(null);
+  };
 
   const typingTimer = useRef(null);
   const messagesEndRef = useRef(null);
@@ -538,9 +614,32 @@ export const Messages = () => {
                       e.stopPropagation();
                       setHoveredMessageId((prev) => (prev === m._id ? null : m._id));
                     }}
+                    onTouchStart={(e) => handleTouchStart(e, m)}
+                    onTouchMove={handleTouchMove}
+                    onTouchEnd={(e) => handleTouchEnd(e, m)}
                     className={`flex relative group cursor-pointer sm:cursor-default ${m.isMe ? 'justify-end' : 'justify-start'}`}
                   >
-                    <div className="relative max-w-[70%] sm:max-w-sm">
+                    {/* Visual Swipe Reply Cue */}
+                    {activeSwipeMessageId === m._id && swipeX > 10 && (
+                      <div 
+                        className={`absolute top-1/2 -translate-y-1/2 flex items-center justify-center w-8 h-8 rounded-full bg-brand-500/10 border border-brand-500/20 text-brand-500 pointer-events-none transition-opacity duration-150 ${
+                          m.isMe ? 'left-[-40px]' : 'left-[8px]'
+                        }`}
+                        style={{ opacity: Math.min((swipeX - 10) / 40, 1) }}
+                      >
+                        <CornerUpLeft className="w-4 h-4" />
+                      </div>
+                    )}
+
+                    <div 
+                      className={`relative max-w-[70%] sm:max-w-sm transition-all duration-200 ${
+                        longPressedMessageId === m._id ? 'scale-95 duration-100 shadow-lg' : ''
+                      }`}
+                      style={{
+                        transform: activeSwipeMessageId === m._id ? `translateX(${swipeX}px)` : 'none',
+                        transition: activeSwipeMessageId === m._id ? 'none' : 'transform 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275)'
+                      }}
+                    >
                       {/* Parent message reply reference */}
                       {m.parentMessage && (
                         <div className={`text-[10px] rounded-t-2xl px-3 py-1.5 border-l-2 opacity-80 ${
