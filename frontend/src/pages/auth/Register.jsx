@@ -21,12 +21,33 @@ export const Register = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    // Client-side validations
+    if (name.trim().length < 2) {
+      toast.error('Name must be at least 2 characters');
+      return;
+    }
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email.trim())) {
+      toast.error('Please enter a valid email address');
+      return;
+    }
+    if (password.length < 6) {
+      toast.error('Password must be at least 6 characters');
+      return;
+    }
+
     try {
-      await registerApi({ name, email, password, role }).unwrap();
+      await registerApi({ name: name.trim(), email: email.trim(), password, role }).unwrap();
       toast.success('Registration successful! Please verify your email address (sent to your inbox) before logging in.', { duration: 6000 });
       navigate('/login');
     } catch (err) {
-      toast.error(err?.data?.message || 'Registration failed.');
+      const validationErrors = err?.data?.errors;
+      if (Array.isArray(validationErrors) && validationErrors.length > 0) {
+        validationErrors.forEach((e) => toast.error(e.message || String(e)));
+      } else {
+        toast.error(err?.data?.message || 'Registration failed.');
+      }
     }
   };
 

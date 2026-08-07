@@ -78,7 +78,12 @@ export const QuestionDetails = () => {
       toast.success('Answer submitted! Gemini AI is evaluating your submission...');
       setAnswerText('');
     } catch (err) {
-      toast.error(err?.data?.message || 'Failed to submit answer');
+      const validationErrors = err?.data?.errors;
+      if (Array.isArray(validationErrors) && validationErrors.length > 0) {
+        validationErrors.forEach((e) => toast.error(e.message || String(e)));
+      } else {
+        toast.error(err?.data?.message || 'Failed to submit answer');
+      }
     }
   };
 

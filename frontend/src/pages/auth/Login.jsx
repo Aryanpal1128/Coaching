@@ -21,8 +21,20 @@ export const Login = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    // Client-side validations
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email.trim())) {
+      toast.error('Please enter a valid email address');
+      return;
+    }
+    if (password.length === 0) {
+      toast.error('Password is required');
+      return;
+    }
+
     try {
-      const res = await loginApi({ email, password }).unwrap();
+      const res = await loginApi({ email: email.trim(), password }).unwrap();
       dispatch(setCredentials({ user: res.data.user, accessToken: res.data.accessToken }));
       toast.success('Welcome back!');
       if (res.data.user.role === 'TEACHER') {
@@ -33,7 +45,12 @@ export const Login = () => {
         navigate('/dashboard');
       }
     } catch (err) {
-      toast.error(err?.data?.message || 'Login failed. Please check your credentials.');
+      const validationErrors = err?.data?.errors;
+      if (Array.isArray(validationErrors) && validationErrors.length > 0) {
+        validationErrors.forEach((e) => toast.error(e.message || String(e)));
+      } else {
+        toast.error(err?.data?.message || 'Login failed. Please check your credentials.');
+      }
     }
   };
 
