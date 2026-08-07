@@ -70,6 +70,30 @@ export const StudentDashboard = () => {
         </div>
       </div>
 
+      {/* 🔴 Active Live Class Banner */}
+      {liveClasses.length > 0 && (
+        <div className="bg-red-500/10 border border-red-500/30 rounded-3xl p-5 flex flex-col sm:flex-row items-center justify-between gap-4 animate-pulse">
+          <div className="flex items-center gap-3 text-center sm:text-left">
+            <span className="relative flex h-3 w-3 shrink-0">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-3 w-3 bg-red-500"></span>
+            </span>
+            <div>
+              <h3 className="text-xs font-black text-red-500 uppercase tracking-wider">Live Class In Progress</h3>
+              <p className="text-xs text-slate-800 dark:text-slate-200 font-extrabold mt-0.5">
+                "{liveClasses[0].title}" by {liveClasses[0].teacher?.name} ({liveClasses[0].subject?.name})
+              </p>
+            </div>
+          </div>
+          <Link
+            to={`/live-classes?join=${liveClasses[0]._id}`}
+            className="px-5 py-2.5 rounded-xl bg-red-600 hover:bg-red-500 text-white font-extrabold text-xs shadow-lg shadow-red-500/20 transition-all shrink-0 uppercase tracking-wider"
+          >
+            Join Live Class Now →
+          </Link>
+        </div>
+      )}
+
       {/* Stat Cards — real user data */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <StatCard

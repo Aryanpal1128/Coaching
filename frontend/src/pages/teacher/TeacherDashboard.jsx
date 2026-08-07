@@ -9,13 +9,19 @@ import { UploadMaterialModal } from '../../components/studyMaterials/UploadMater
 import {
   Users, Video, BookOpen, Star, Calendar, FileText, ArrowUpRight, Plus, Upload
 } from 'lucide-react';
-import { Link } from 'react-router-dom';
-import { useGetLiveClassesQuery, useStartLiveClassMutation, useCancelLiveClassMutation } from '../../redux/api/liveClassApi.js';
+import { Link, useNavigate } from 'react-router-dom';
+import {
+  useGetLiveClassesQuery,
+  useStartLiveClassMutation,
+  useCancelLiveClassMutation,
+  useStartInstantLiveClassMutation
+} from '../../redux/api/liveClassApi.js';
 import { useGetStudyMaterialsQuery } from '../../redux/api/teacherApi.js';
 import toast from 'react-hot-toast';
 
 export const TeacherDashboard = () => {
   const { user } = useSelector((state) => state.auth);
+  const navigate = useNavigate();
   const [showScheduleModal, setShowScheduleModal] = useState(false);
   const [showUploadModal, setShowUploadModal] = useState(false);
 
@@ -29,6 +35,17 @@ export const TeacherDashboard = () => {
 
   const [startClass, { isLoading: starting }] = useStartLiveClassMutation();
   const [cancelClass] = useCancelLiveClassMutation();
+  const [startInstantLiveClass, { isLoading: isStartingInstant }] = useStartInstantLiveClassMutation();
+
+  const handleGoLiveInstantly = async () => {
+    try {
+      const res = await startInstantLiveClass().unwrap();
+      toast.success('Instant live class created! Opening room... 🔴');
+      navigate(`/live-classes?join=${res.data._id}`);
+    } catch (err) {
+      toast.error(err?.data?.message || 'Failed to start instant class');
+    }
+  };
 
   const upcomingClasses = allClasses.filter((c) => c.status === 'SCHEDULED' || c.status === 'LIVE');
   const liveCount = allClasses.filter((c) => c.status === 'LIVE').length;
@@ -72,6 +89,14 @@ export const TeacherDashboard = () => {
             </p>
           </div>
           <div className="flex flex-wrap gap-2 shrink-0">
+            <Button
+              variant="primary"
+              className="bg-red-600 hover:bg-red-500 font-bold border-0 text-white shadow-lg shadow-red-500/20"
+              onClick={handleGoLiveInstantly}
+              disabled={isStartingInstant}
+            >
+              <Video className="w-4 h-4 mr-2" /> {isStartingInstant ? 'Starting...' : '⚡ Go Live Instantly'}
+            </Button>
             <Button
               variant="primary"
               className="bg-white !text-indigo-900 hover:bg-slate-100 font-bold border-0"

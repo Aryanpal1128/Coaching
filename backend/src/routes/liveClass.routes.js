@@ -11,6 +11,14 @@ const router = Router();
 // GET all live classes (any authenticated user)
 router.get('/', authenticate, liveClassController.getLiveClasses);
 
+// POST start an instant live class (teacher/admin)
+router.post(
+  '/instant',
+  authenticate,
+  authorize(ROLES.TEACHER, ROLES.ADMIN),
+  liveClassController.startInstantLiveClass
+);
+
 // GET single live class by ID
 router.get('/:id', authenticate, liveClassController.getLiveClass);
 

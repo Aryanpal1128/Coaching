@@ -23,6 +23,13 @@ export const liveClassApi = apiSlice.injectEndpoints({
       }),
       invalidatesTags: ['LiveClass']
     }),
+    startInstantLiveClass: builder.mutation({
+      query: () => ({
+        url: '/live-classes/instant',
+        method: 'POST'
+      }),
+      invalidatesTags: ['LiveClass']
+    }),
     startLiveClass: builder.mutation({
       query: (id) => ({
         url: `/live-classes/${id}/start`,
@@ -60,5 +67,6 @@ export const {
   useStartLiveClassMutation,
   useEndLiveClassMutation,
   useCancelLiveClassMutation,
-  useRecordAttendanceMutation
+  useRecordAttendanceMutation,
+  useStartInstantLiveClassMutation
 } = liveClassApi;

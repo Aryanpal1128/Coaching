@@ -43,3 +43,8 @@ export const recordAttendance = asyncHandler(async (req, res) => {
   const attendance = await liveClassService.recordAttendance(req.user._id, req.params.id);
   return res.status(200).json(new ApiResponse(200, attendance, 'Attendance recorded'));
 });
+
+export const startInstantLiveClass = asyncHandler(async (req, res) => {
+  const liveClass = await liveClassService.startInstantLiveClass(req.user._id);
+  return res.status(201).json(new ApiResponse(201, liveClass, 'Instant live class started!'));
+});

@@ -1,6 +1,7 @@
 import { LiveClass } from '../models/LiveClass.js';
 import { Attendance } from '../models/Attendance.js';
 import { TeacherProfile } from '../models/TeacherProfile.js';
+import { Subject } from '../models/Subject.js';
 import { createNotification } from './notification.service.js';
 import { ApiError } from '../utils/ApiError.js';
 
@@ -152,4 +153,51 @@ export const recordAttendance = async (studentId, classId) => {
 
   await LiveClass.findByIdAndUpdate(classId, { $inc: { attendeesCount: 1 } });
   return attendance;
+};
+
+export const startInstantLiveClass = async (teacherId) => {
+  const teacherProfile = await TeacherProfile.findOne({ user: teacherId }).populate('user', 'name');
+  if (!teacherProfile) throw new ApiError(404, 'Teacher profile not found');
+
+  // Find a subject they teach, or pick any subject from DB as fallback
+  let subjectId = teacherProfile.subjectsTaught[0];
+  if (!subjectId) {
+    const fallbackSubject = await Subject.findOne();
+    subjectId = fallbackSubject ? fallbackSubject._id : null;
+  }
+
+  const title = `Instant Live Session by ${teacherProfile.user?.name || 'Instructor'}`;
+
+  const liveClass = await LiveClass.create({
+    title,
+    description: 'Instant learning session. Join now to ask questions and learn live!',
+    teacher: teacherId,
+    subject: subjectId,
+    scheduledAt: new Date(),
+    status: 'LIVE'
+  });
+
+  liveClass.meetingLink = generateJitsiLink(liveClass._id.toString());
+  await liveClass.save();
+
+  await liveClass.populate([
+    { path: 'teacher', select: 'name avatar' },
+    { path: 'subject', select: 'name' }
+  ]);
+
+  // Notify all followers
+  if (teacherProfile.followers && teacherProfile.followers.length > 0) {
+    for (const followerId of teacherProfile.followers) {
+      await createNotification({
+        recipient: followerId,
+        sender: teacherId,
+        type: 'TEACHER_LIVE_CLASS',
+        title: 'Teacher is LIVE now!',
+        message: `Instructor ${teacherProfile.user?.name || 'Teacher'} started an instant live class. Join immediately!`,
+        link: `/live-classes`
+      });
+    }
+  }
+
+  return liveClass;
 };

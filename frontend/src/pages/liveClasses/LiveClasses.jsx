@@ -18,9 +18,11 @@ import {
   Wifi
 } from 'lucide-react';
 import { useSocket } from '../../context/SocketContext.jsx';
+import { useSearchParams, useNavigate } from 'react-router-dom';
 import {
   useGetLiveClassesQuery,
-  useRecordAttendanceMutation
+  useRecordAttendanceMutation,
+  useStartInstantLiveClassMutation
 } from '../../redux/api/liveClassApi.js';
 import toast from 'react-hot-toast';
 
@@ -29,6 +31,9 @@ const STATUS_TABS = ['ALL', 'LIVE', 'SCHEDULED', 'ENDED'];
 export const LiveClasses = () => {
   const { user } = useSelector((state) => state.auth);
   const socket = useSocket();
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const joinClassId = searchParams.get('join');
 
   const [activeTab, setActiveTab] = useState('ALL');
   const [showScheduleModal, setShowScheduleModal] = useState(false);
@@ -43,8 +48,20 @@ export const LiveClasses = () => {
     { pollingInterval: 15000 } // refresh every 15s
   );
   const [recordAttendance] = useRecordAttendanceMutation();
+  const [startInstantLiveClass, { isLoading: isStartingInstant }] = useStartInstantLiveClassMutation();
 
   const classes = data?.data || [];
+
+  // Auto-join if class ID is in URL query parameters
+  useEffect(() => {
+    if (joinClassId && classes.length > 0) {
+      const cls = classes.find((c) => c._id === joinClassId);
+      if (cls && cls.status === 'LIVE') {
+        handleJoinClass(cls);
+        navigate('/live-classes', { replace: true });
+      }
+    }
+  }, [joinClassId, classes, navigate]);
 
   // Auto-scroll chat
   useEffect(() => {
@@ -115,6 +132,16 @@ export const LiveClasses = () => {
   const handleLeaveClass = () => {
     setActiveSession(null);
     setMessages([]);
+  };
+
+  const handleStartInstantClass = async () => {
+    try {
+      const res = await startInstantLiveClass().unwrap();
+      toast.success('Instant live class created! Joining now... 🔴');
+      handleJoinClass(res.data);
+    } catch (err) {
+      toast.error(err?.data?.message || 'Failed to start instant class');
+    }
   };
 
   const handleSendMessage = (e) => {
@@ -288,15 +315,27 @@ export const LiveClasses = () => {
             Refresh
           </Button>
           {isTeacher && (
-            <Button
-              size="sm"
-              variant="primary"
-              className="bg-indigo-600 hover:bg-indigo-500 gap-1"
-              onClick={() => setShowScheduleModal(true)}
-            >
-              <Plus className="w-3.5 h-3.5" />
-              Schedule Class
-            </Button>
+            <>
+              <Button
+                size="sm"
+                variant="primary"
+                className="bg-red-600 hover:bg-red-500 gap-1 font-bold text-white shadow-md shadow-red-500/20"
+                onClick={handleStartInstantClass}
+                disabled={isStartingInstant}
+              >
+                <Wifi className="w-3.5 h-3.5 animate-pulse" />
+                {isStartingInstant ? 'Starting...' : '⚡ Go Live Instantly'}
+              </Button>
+              <Button
+                size="sm"
+                variant="primary"
+                className="bg-indigo-600 hover:bg-indigo-500 gap-1"
+                onClick={() => setShowScheduleModal(true)}
+              >
+                <Plus className="w-3.5 h-3.5" />
+                Schedule Class
+              </Button>
+            </>
           )}
         </div>
       </div>
