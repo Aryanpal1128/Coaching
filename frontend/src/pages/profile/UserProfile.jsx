@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useSelector } from 'react-redux';
+import { useParams } from 'react-router-dom';
 import { Card } from '../../components/common/Card.jsx';
 import { Badge } from '../../components/common/Badge.jsx';
 import { Button } from '../../components/common/Button.jsx';
@@ -8,6 +9,7 @@ import {
   Mail, Trophy, Award, BookOpen, CheckCircle, Flame,
   Edit, Camera, HelpCircle, MessageSquare, Cpu
 } from 'lucide-react';
+import { useGetUserProfileQuery } from '../../redux/api/authApi.js';
 
 const BADGES_LIST = [
   { name: '🌱 Beginner', desc: 'Joined platform', unlocked: true },
@@ -24,8 +26,40 @@ const getInitials = (name = '') =>
   name.split(' ').map((n) => n[0]).join('').slice(0, 2).toUpperCase();
 
 export const UserProfile = () => {
-  const { user } = useSelector((state) => state.auth);
+  const { userId } = useParams();
+  const { user: currentUser } = useSelector((state) => state.auth);
   const [activeTab, setActiveTab] = useState('Overview');
+
+  const activeUserId = userId || currentUser?._id;
+  const isOwnProfile = !userId || userId === currentUser?._id;
+
+  const { data: profileResponse, isLoading, error } = useGetUserProfileQuery(activeUserId, {
+    skip: !activeUserId
+  });
+
+  const user = isOwnProfile ? currentUser : profileResponse?.data?.user;
+  const profile = profileResponse?.data?.profile;
+
+  if (isLoading) {
+    return (
+      <div className="flex h-[300px] items-center justify-center bg-transparent flex-col gap-4">
+        <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-brand-600 to-indigo-600 flex items-center justify-center text-white font-black text-xl animate-pulse">
+          AI
+        </div>
+        <p className="text-xs text-slate-400 animate-pulse">Loading profile...</p>
+      </div>
+    );
+  }
+
+  if (error || !user) {
+    return (
+      <Card className="p-8 text-center max-w-md mx-auto my-12">
+        <Trophy className="w-12 h-12 text-rose-500 mx-auto mb-3 opacity-30" />
+        <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100">Failed to Load Profile</h3>
+        <p className="text-xs text-slate-500 mt-1">{error?.data?.message || 'Profile could not be found.'}</p>
+      </Card>
+    );
+  }
 
   return (
     <div className="space-y-6 max-w-4xl mx-auto">
@@ -45,9 +79,11 @@ export const UserProfile = () => {
                 {getInitials(user?.name)}
               </div>
             )}
-            <button className="absolute bottom-0 right-0 p-1.5 rounded-full bg-white dark:bg-slate-800 border-2 border-brand-500 shadow-md hover:bg-slate-50 transition-colors">
-              <Camera className="w-3.5 h-3.5 text-brand-500" />
-            </button>
+            {isOwnProfile && (
+              <button className="absolute bottom-0 right-0 p-1.5 rounded-full bg-white dark:bg-slate-800 border-2 border-brand-500 shadow-md hover:bg-slate-50 transition-colors">
+                <Camera className="w-3.5 h-3.5 text-brand-500" />
+              </button>
+            )}
           </div>
 
           {/* Info */}
@@ -60,9 +96,21 @@ export const UserProfile = () => {
               <Badge variant="emerald">{user?.level || 'Beginner'}</Badge>
             </div>
 
-            <p className="text-xs text-slate-400 flex items-center justify-center sm:justify-start gap-1.5 mt-1">
-              <Mail className="w-3.5 h-3.5" /> {user?.email || 'email@example.com'}
-            </p>
+            {isOwnProfile && user?.email && (
+              <p className="text-xs text-slate-400 flex items-center justify-center sm:justify-start gap-1.5 mt-1">
+                <Mail className="w-3.5 h-3.5" /> {user.email}
+              </p>
+            )}
+
+            {profile?.title && (
+              <p className="text-xs text-slate-500 font-semibold mt-1">{profile.title}</p>
+            )}
+
+            {profile?.bio && (
+              <p className="text-xs text-slate-400 mt-2 max-w-xl italic">
+                "{profile.bio}"
+              </p>
+            )}
 
             {/* Reputation stats row */}
             <div className="mt-4 flex flex-wrap items-center justify-center sm:justify-start gap-4 text-xs">
@@ -71,9 +119,6 @@ export const UserProfile = () => {
               </span>
               <span className="flex items-center gap-1.5 font-semibold text-brand-500">
                 <Award className="w-4 h-4" /> {user?.badge || '🌱 Beginner'}
-              </span>
-              <span className="flex items-center gap-1.5 font-semibold text-red-500">
-                <Flame className="w-4 h-4" /> 5 Day Streak
               </span>
             </div>
 
@@ -92,18 +137,28 @@ export const UserProfile = () => {
             </div>
           </div>
 
-          <Button variant="outline" size="sm" className="shrink-0">
-            <Edit className="w-3.5 h-3.5 mr-1.5" /> Edit Profile
-          </Button>
+          {isOwnProfile && (
+            <Button variant="outline" size="sm" className="shrink-0">
+              <Edit className="w-3.5 h-3.5 mr-1.5" /> Edit Profile
+            </Button>
+          )}
         </div>
       </Card>
 
       {/* Activity Stats */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <StatCard title="Questions Asked" value="12" icon={HelpCircle} color="blue" trend="3 this month" />
-        <StatCard title="Answers Contributed" value="24" icon={MessageSquare} color="indigo" trend="Top 15% platform" />
-        <StatCard title="AI Accuracy Avg" value="91.5%" icon={Cpu} color="amber" trend="Top 10% platform" />
-      </div>
+      {user?.role !== 'TEACHER' && user?.role !== 'ADMIN' ? (
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <StatCard title="Questions Asked" value={profile?.askedQuestionsCount?.toString() || "0"} icon={HelpCircle} color="blue" trend="Created by user" />
+          <StatCard title="Answers Contributed" value={profile?.answersCount?.toString() || "0"} icon={MessageSquare} color="indigo" trend="Helped others learn" />
+          <StatCard title="Solved Questions" value={profile?.solvedQuestionsCount?.toString() || "0"} icon={CheckCircle} color="emerald" trend="Completed solutions" />
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <StatCard title="Experience" value={`${profile?.experienceYears || 0} Years`} icon={Flame} color="amber" trend="Teaching experience" />
+          <StatCard title="Students Enrolled" value={profile?.enrolledStudents?.length?.toString() || "0"} icon={BookOpen} color="blue" trend="Active students" />
+          <StatCard title="Followers" value={profile?.followers?.length?.toString() || "0"} icon={MessageSquare} color="indigo" trend="Coaching community" />
+        </div>
+      )}
 
       {/* Tabs */}
       <div className="flex items-center gap-2 border-b border-slate-200 dark:border-slate-800 pb-3">
@@ -152,26 +207,61 @@ export const UserProfile = () => {
             </div>
           </Card>
 
-          {/* Recent Activity */}
+          {/* Details / Subject list */}
           <Card>
             <h3 className="text-base font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2 mb-4">
-              <BookOpen className="w-5 h-5 text-brand-500" /> Recent Activity
+              <BookOpen className="w-5 h-5 text-brand-500" /> Academic Profile
             </h3>
-            <div className="space-y-3">
-              {[
-                { action: '🤖 AI graded your answer with 95% accuracy', time: '2 hours ago', color: 'purple' },
-                { action: '✅ Your answer was accepted as solution', time: 'Yesterday', color: 'emerald' },
-                { action: '⚡ Received upvote on Graph Algorithms answer', time: '2 days ago', color: 'blue' },
-                { action: '🏆 Earned AI Master badge', time: '3 days ago', color: 'amber' },
-                { action: '📘 Asked question on Red-Black Trees', time: '5 days ago', color: 'indigo' }
-              ].map((item, idx) => (
-                <div key={idx} className="flex items-start gap-3 p-3 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800">
-                  <div className="flex-1 min-w-0">
-                    <p className="text-xs text-slate-800 dark:text-slate-200">{item.action}</p>
-                    <p className="text-[10px] text-slate-400 mt-0.5">{item.time}</p>
+            <div className="space-y-4">
+              <div>
+                <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Institution</p>
+                <p className="text-sm font-semibold text-slate-800 dark:text-slate-200 mt-0.5">
+                  {profile?.institution || 'AI Learning Academy'}
+                </p>
+              </div>
+              {user?.role !== 'TEACHER' ? (
+                <>
+                  <div>
+                    <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Grade / Year</p>
+                    <p className="text-sm font-semibold text-slate-800 dark:text-slate-200 mt-0.5">
+                      {profile?.gradeOrYear || 'High School / Freshman'}
+                    </p>
                   </div>
-                </div>
-              ))}
+                  <div>
+                    <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Subjects of Interest</p>
+                    <div className="flex flex-wrap gap-1.5 mt-1.5">
+                      {profile?.subjectsOfInterest && profile.subjectsOfInterest.length > 0 ? (
+                        profile.subjectsOfInterest.map((s) => (
+                          <Badge key={s._id} variant="indigo">{s.name}</Badge>
+                        ))
+                      ) : (
+                        <p className="text-xs text-slate-500">No subjects listed yet</p>
+                      )}
+                    </div>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div>
+                    <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Qualification</p>
+                    <p className="text-sm font-semibold text-slate-800 dark:text-slate-200 mt-0.5">
+                      {profile?.qualification || 'PhD / Masters'}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Subjects Taught</p>
+                    <div className="flex flex-wrap gap-1.5 mt-1.5">
+                      {profile?.subjectsTaught && profile.subjectsTaught.length > 0 ? (
+                        profile.subjectsTaught.map((s) => (
+                          <Badge key={s._id} variant="indigo">{s.name}</Badge>
+                        ))
+                      ) : (
+                        <p className="text-xs text-slate-500">No subjects listed yet</p>
+                      )}
+                    </div>
+                  </div>
+                </>
+              )}
             </div>
           </Card>
         </div>
@@ -180,7 +270,7 @@ export const UserProfile = () => {
       {activeTab === 'Questions' && (
         <Card>
           <p className="text-sm text-slate-500 text-center py-8">
-            Connect to MongoDB to see your actual question history.
+            Database connected: view question logs in Q&A Feed tab.
           </p>
         </Card>
       )}
@@ -188,7 +278,7 @@ export const UserProfile = () => {
       {activeTab === 'Answers' && (
         <Card>
           <p className="text-sm text-slate-500 text-center py-8">
-            Connect to MongoDB to see your actual answer history.
+            Database connected: view solution logs in Q&A Feed tab.
           </p>
         </Card>
       )}

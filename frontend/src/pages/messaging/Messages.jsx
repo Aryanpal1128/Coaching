@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { useSelector } from 'react-redux';
 import { useDispatch } from 'react-redux';
+import { useNavigate } from 'react-router-dom';
 import { apiSlice } from '../../redux/api/apiSlice.js';
 import { Card } from '../../components/common/Card.jsx';
 import { Button } from '../../components/common/Button.jsx';
@@ -53,6 +54,7 @@ export const Messages = () => {
   const { user } = useSelector((state) => state.auth);
   const socket = useSocket();
   const dispatch = useDispatch();
+  const navigate = useNavigate();
 
   const [partner, setPartner] = useState(null);   // selected conversation partner
   const [liveMessages, setLiveMessages] = useState([]); // combined DB + socket messages
@@ -109,6 +111,16 @@ export const Messages = () => {
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [liveMessages, partnerTyping]);
+
+  // Global click listener to clear message action menu state on tap outside
+  useEffect(() => {
+    const handleGlobalClick = () => {
+      setHoveredMessageId(null);
+      setShowReactionPickerId(null);
+    };
+    window.addEventListener('click', handleGlobalClick);
+    return () => window.removeEventListener('click', handleGlobalClick);
+  }, []);
 
   // Socket events
   useEffect(() => {
@@ -489,18 +501,23 @@ export const Messages = () => {
                 >
                   <ArrowLeft className="w-4 h-4" />
                 </button>
-                <div className="relative">
-                  <Avatar user={partner} />
-                  {isOnline(partner._id) && (
-                    <span className="absolute bottom-0 right-0 w-2 h-2 bg-emerald-500 rounded-full border-2 border-white dark:border-slate-900" />
-                  )}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <h3 className="text-xs font-bold text-slate-900 dark:text-slate-100">{partner.name}</h3>
-                  <p className={`text-[10px] font-semibold ${isOnline(partner._id) ? 'text-emerald-500' : 'text-slate-400'}`}>
-                    {partnerTyping ? '✍️ typing...' : isOnline(partner._id) ? 'Online' : 'Offline'}
-                    {partner.role && ` • ${partner.role}`}
-                  </p>
+                <div
+                  onClick={() => navigate(`/profile/${partner._id}`)}
+                  className="flex items-center gap-3 cursor-pointer hover:opacity-80 transition-all"
+                >
+                  <div className="relative animate-fadeIn">
+                    <Avatar user={partner} />
+                    {isOnline(partner._id) && (
+                      <span className="absolute bottom-0 right-0 w-2 h-2 bg-emerald-500 rounded-full border-2 border-white dark:border-slate-900" />
+                    )}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <h3 className="text-xs font-bold text-slate-900 dark:text-slate-100 hover:underline">{partner.name}</h3>
+                    <p className={`text-[10px] font-semibold ${isOnline(partner._id) ? 'text-emerald-500' : 'text-slate-400'}`}>
+                      {partnerTyping ? '✍️ typing...' : isOnline(partner._id) ? 'Online' : 'Offline'}
+                      {partner.role && ` • ${partner.role}`}
+                    </p>
+                  </div>
                 </div>
               </div>
 
@@ -517,7 +534,11 @@ export const Messages = () => {
                     key={m._id}
                     onMouseEnter={() => setHoveredMessageId(m._id)}
                     onMouseLeave={() => { setHoveredMessageId(null); setShowReactionPickerId(null); }}
-                    className={`flex relative group ${m.isMe ? 'justify-end' : 'justify-start'}`}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setHoveredMessageId((prev) => (prev === m._id ? null : m._id));
+                    }}
+                    className={`flex relative group cursor-pointer sm:cursor-default ${m.isMe ? 'justify-end' : 'justify-start'}`}
                   >
                     <div className="relative max-w-[70%] sm:max-w-sm">
                       {/* Parent message reply reference */}

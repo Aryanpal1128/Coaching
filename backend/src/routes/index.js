@@ -10,6 +10,7 @@ import adminRoutes from './admin.routes.js';
 import studyMaterialRoutes from './studyMaterial.routes.js';
 import subjectRoutes from './subject.routes.js';
 import messageRoutes from './message.routes.js';
+import userRoutes from './user.routes.js';
 
 const router = Router();
 
@@ -24,5 +25,6 @@ router.use('/admin', adminRoutes);
 router.use('/study-materials', studyMaterialRoutes);
 router.use('/subjects', subjectRoutes);
 router.use('/messages', messageRoutes);
+router.use('/users', userRoutes);
 
 export default router;

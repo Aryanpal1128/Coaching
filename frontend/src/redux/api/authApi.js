@@ -27,6 +27,10 @@ export const authApi = apiSlice.injectEndpoints({
       query: () => '/auth/me',
       providesTags: ['User']
     }),
+    getUserProfile: builder.query({
+      query: (userId) => `/users/${userId}/profile`,
+      providesTags: (result, error, userId) => [{ type: 'User', id: userId }]
+    }),
     forgotPassword: builder.mutation({
       query: (data) => ({
         url: '/auth/forgot-password',
@@ -58,5 +62,6 @@ export const {
   useGetMeQuery,
   useForgotPasswordMutation,
   useResetPasswordMutation,
-  useVerifyOtpMutation
+  useVerifyOtpMutation,
+  useGetUserProfileQuery
 } = authApi;

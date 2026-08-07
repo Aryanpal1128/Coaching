@@ -1,0 +1,8 @@
+import { asyncHandler } from '../utils/asyncHandler.js';
+import { ApiResponse } from '../utils/ApiResponse.js';
+import * as userService from '../services/user.service.js';
+
+export const getUserProfile = asyncHandler(async (req, res) => {
+  const data = await userService.getUserProfile(req.params.userId);
+  return res.status(200).json(new ApiResponse(200, data, 'User profile fetched successfully'));
+});

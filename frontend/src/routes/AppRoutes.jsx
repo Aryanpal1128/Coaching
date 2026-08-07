@@ -63,6 +63,7 @@ export const AppRoutes = () => {
 
             <Route path="/leaderboard" element={<Leaderboard />} />
             <Route path="/profile" element={<UserProfile />} />
+            <Route path="/profile/:userId" element={<UserProfile />} />
             <Route path="/live-classes" element={<LiveClasses />} />
             <Route path="/study-materials" element={<StudyMaterials />} />
             <Route path="/messages" element={<Messages />} />
