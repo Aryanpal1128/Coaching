@@ -23,8 +23,11 @@ export const register = asyncHandler(async (req, res) => {
 
 export const verifyEmail = asyncHandler(async (req, res) => {
   const { token } = req.query;
-  const user = await authService.verifyEmailToken(token);
-  return res.status(200).json(new ApiResponse(200, user, 'Email verified successfully'));
+  const { refreshToken, ...responseData } = await authService.verifyEmailToken(token);
+
+  res.cookie('refreshToken', refreshToken, cookieOptions);
+
+  return res.status(200).json(new ApiResponse(200, responseData, 'Email verified and logged in successfully'));
 });
 
 export const login = asyncHandler(async (req, res) => {

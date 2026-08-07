@@ -2,7 +2,7 @@ import { User } from '../models/User.js';
 import { StudentProfile } from '../models/StudentProfile.js';
 import { TeacherProfile } from '../models/TeacherProfile.js';
 import { ApiError } from '../utils/ApiError.js';
-import { generateTokens, generateEmailVerificationToken, generatePasswordResetToken, verifyToken } from '../utils/token.js';
+import { generateTokens, generatePendingRegistrationToken, generatePasswordResetToken, verifyToken } from '../utils/token.js';
 import { sendEmail } from './email.service.js';
 import { ROLES } from '../constants/roles.js';
 import logger from '../config/logger.js';
@@ -17,48 +17,63 @@ export const registerUser = async (userData) => {
   }
 
   const userRole = role && Object.values(ROLES).includes(role) ? role : ROLES.STUDENT;
-  logger.info("Creating user...");
 
-
-  const user = await User.create({
+  // Generate pending registration token without saving user to DB yet
+  const pendingToken = generatePendingRegistrationToken({
     name,
     email,
     password,
     role: userRole
   });
 
-  if (userRole === ROLES.STUDENT) {
-    await StudentProfile.create({ user: user._id });
-    logger.info("Student profile created");
-  } else if (userRole === ROLES.TEACHER) {
-    await TeacherProfile.create({ user: user._id });
-  }
-
-  const verificationToken = generateEmailVerificationToken(user);
-  const verifyUrl = `${process.env.FRONTEND_URL}/verify-email?token=${verificationToken}`;
-  logger.info("Sending verification email...");
+  const verifyUrl = `${process.env.FRONTEND_URL}/verify-email?token=${pendingToken}`;
+  logger.info("Sending pending registration verification email...");
   await sendEmail({
-    to: user.email,
+    to: email,
     subject: 'Verify Your Email - AI Learning Platform',
-    html: `<p>Hello ${user.name},</p><p>Please click the link below to verify your account:</p><a href="${verifyUrl}">${verifyUrl}</a>`
+    html: `<p>Hello ${name},</p><p>Please click the link below to verify your email and complete your registration:</p><a href="${verifyUrl}">${verifyUrl}</a>`
   });
-  logger.info("Verification email step completed");
+  logger.info("Verification email sent");
 
-  return { user, verificationToken };
+  return { email };
 };
 
 export const verifyEmailToken = async (token) => {
   const decoded = verifyToken(token, process.env.JWT_ACCESS_SECRET);
-  if (decoded.type !== 'VERIFY_EMAIL') {
-    throw new ApiError(400, 'Invalid email verification token');
+  if (decoded.type !== 'PENDING_REGISTRATION') {
+    throw new ApiError(400, 'Invalid or expired email verification link.');
   }
 
-  const user = await User.findById(decoded._id);
-  if (!user) throw new ApiError(404, 'User not found');
+  const { name, email, password, role } = decoded;
 
-  user.isVerified = true;
+  // Check if user already exists
+  let user = await User.findOne({ email });
+  if (user) {
+    throw new ApiError(400, 'User with this email already exists and is verified.');
+  }
+
+  // Create user in DB now that email is verified
+  user = await User.create({
+    name,
+    email,
+    password, // will be hashed by mongoose pre-save hook
+    role: role || 'STUDENT',
+    isVerified: true
+  });
+
+  if (role === 'TEACHER') {
+    await TeacherProfile.create({ user: user._id });
+  } else {
+    await StudentProfile.create({ user: user._id });
+  }
+
+  // Auto-login: generate JWT access & refresh tokens
+  const { accessToken, refreshToken } = generateTokens(user);
+  user.refreshToken = refreshToken;
   await user.save();
-  return user;
+
+  user.password = undefined;
+  return { user, accessToken, refreshToken };
 };
 
 export const loginUser = async (email, password) => {

@@ -10,6 +10,7 @@ const Login = lazy(() => import('../pages/auth/Login.jsx').then(m => ({ default:
 const Register = lazy(() => import('../pages/auth/Register.jsx').then(m => ({ default: m.Register })));
 const ForgotPassword = lazy(() => import('../pages/auth/ForgotPassword.jsx').then(m => ({ default: m.ForgotPassword })));
 const ResetPassword = lazy(() => import('../pages/auth/ResetPassword.jsx').then(m => ({ default: m.ResetPassword })));
+const VerifyEmail = lazy(() => import('../pages/auth/VerifyEmail.jsx').then(m => ({ default: m.VerifyEmail })));
 
 const StudentDashboard = lazy(() => import('../pages/student/StudentDashboard.jsx').then(m => ({ default: m.StudentDashboard })));
 const TeacherDashboard = lazy(() => import('../pages/teacher/TeacherDashboard.jsx').then(m => ({ default: m.TeacherDashboard })));
@@ -42,6 +43,7 @@ export const AppRoutes = () => {
           <Route path="/register" element={<Register />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/reset-password" element={<ResetPassword />} />
+          <Route path="/verify-email" element={<VerifyEmail />} />
         </Route>
 
         {/* Protected Dashboard Routes */}
