@@ -10,26 +10,22 @@ const resend = process.env.RESEND_API_KEY && process.env.RESEND_API_KEY !== "you
 // Initialize SMTP transporter if SMTP credentials are present
 const transporter = (process.env.SMTP_USER && process.env.SMTP_PASS)
   ? nodemailer.createTransport({
-      service: "gmail",
-      auth: {
-        user: process.env.SMTP_USER,
-        pass: process.env.SMTP_PASS,
-      },
-    })
+    service: "gmail",
+    auth: {
+      user: process.env.SMTP_USER,
+      pass: process.env.SMTP_PASS,
+    },
+  })
   : null;
 
 export const sendEmail = async ({ to, subject, html }) => {
   try {
-    // In dev/test, redirect all emails to SMTP_USER or a dummy email to prevent spam/Resend restriction
-    const recipient = process.env.SMTP_USER || "ary273010@gmail.com";
-    const finalSubject = `${subject} (Originally intended for: ${to})`;
-
     if (resend) {
       logger.info(`Sending email via Resend HTTPS API (Port 443)...`);
       const { data, error } = await resend.emails.send({
         from: "AI Learning Platform <onboarding@resend.dev>",
-        to: recipient,
-        subject: finalSubject,
+        to: to,
+        subject: subject,
         html: html
       });
 
@@ -37,18 +33,18 @@ export const sendEmail = async ({ to, subject, html }) => {
         throw new Error(error.message);
       }
 
-      logger.info(`Email redirected and sent via Resend to ${recipient}: ${data.id}`);
+      logger.info(`Email sent via Resend to ${to}: ${data.id}`);
       return true;
     } else if (transporter) {
       logger.info(`Sending email via Nodemailer SMTP...`);
       const info = await transporter.sendMail({
         from: `"AI Learning Platform" <${process.env.SMTP_USER}>`,
-        to: recipient,
-        subject: finalSubject,
+        to: to,
+        subject: subject,
         html,
       });
 
-      logger.info(`Email redirected and sent via SMTP to ${recipient}: ${info.messageId}`);
+      logger.info(`Email sent via SMTP to ${to}: ${info.messageId}`);
       return true;
     } else {
       throw new Error("No email service configured. Please provide RESEND_API_KEY or SMTP credentials.");
