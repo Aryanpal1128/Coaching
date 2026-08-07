@@ -10,7 +10,8 @@ import {
   useGetConversationsQuery,
   useGetMessagesQuery,
   useGetUsersQuery,
-  useToggleReactionMutation
+  useToggleReactionMutation,
+  useSendMessageMutation
 } from '../../redux/api/messageApi.js';
 
 const AVATAR_COLORS = [
@@ -73,6 +74,7 @@ export const Messages = () => {
   const messagesEndRef = useRef(null);
 
   const [toggleReactionApi] = useToggleReactionMutation();
+  const [sendMessageApi] = useSendMessageMutation();
 
   // API queries
   const { data: convData, refetch: refetchConvs } = useGetConversationsQuery(undefined, { pollingInterval: 10000 });
@@ -181,36 +183,123 @@ export const Messages = () => {
     setReplyingTo(null);
   };
 
-  const handleSend = (e) => {
+  const handleSend = async (e) => {
     e.preventDefault();
     if (!text.trim() || !partner || !socket) return;
 
     const tempId = `temp-${Date.now()}`;
-    
+    const messageText = text.trim();
+    const parentMsg = replyingTo;
+
     // Optimistic UI
     setLiveMessages((prev) => [
       ...prev,
       {
         _id: tempId,
-        text: text.trim(),
+        text: messageText,
         isMe: true,
         sender: user,
-        parentMessage: replyingTo ? { _id: replyingTo._id, text: replyingTo.text, sender: replyingTo.sender } : null,
+        parentMessage: parentMsg ? { _id: parentMsg._id, text: parentMsg.text, sender: parentMsg.sender } : null,
         reactions: [],
-        createdAt: new Date().toISOString()
+        createdAt: new Date().toISOString(),
+        status: 'sending'
       }
     ]);
-
-    socket.emit('send_direct_message', {
-      senderId: user._id,
-      recipientId: partner._id,
-      text: text.trim(),
-      parentMessageId: replyingTo ? replyingTo._id : null
-    });
 
     setText('');
     setReplyingTo(null);
     stopTyping();
+
+    try {
+      const res = await sendMessageApi({
+        recipientId: partner._id,
+        text: messageText,
+        parentMessageId: parentMsg ? parentMsg._id : null
+      }).unwrap();
+
+      // On success, replace the optimistic message with the database version
+      setLiveMessages((prev) =>
+        prev.map((m) =>
+          m._id === tempId
+            ? {
+                _id: res.data._id,
+                text: res.data.text,
+                isMe: true,
+                sender: res.data.sender,
+                parentMessage: res.data.parentMessage,
+                reactions: res.data.reactions || [],
+                createdAt: res.data.createdAt,
+                status: 'sent'
+              }
+            : m
+        )
+      );
+
+      // Emit socket event with skipSave: true and messagePayload to deliver in real-time
+      socket.emit('send_direct_message', {
+        senderId: user._id,
+        recipientId: partner._id,
+        text: messageText,
+        parentMessageId: parentMsg ? parentMsg._id : null,
+        skipSave: true,
+        messagePayload: res.data
+      });
+
+    } catch (err) {
+      // Mark as failed
+      setLiveMessages((prev) =>
+        prev.map((m) => (m._id === tempId ? { ...m, status: 'failed' } : m))
+      );
+    }
+  };
+
+  const handleRetry = async (failedMsg) => {
+    // Set status back to 'sending'
+    setLiveMessages((prev) =>
+      prev.map((m) => (m._id === failedMsg._id ? { ...m, status: 'sending' } : m))
+    );
+
+    try {
+      const res = await sendMessageApi({
+        recipientId: partner._id,
+        text: failedMsg.text,
+        parentMessageId: failedMsg.parentMessage ? failedMsg.parentMessage._id : null
+      }).unwrap();
+
+      // Replace with database version on success
+      setLiveMessages((prev) =>
+        prev.map((m) =>
+          m._id === failedMsg._id
+            ? {
+                _id: res.data._id,
+                text: res.data.text,
+                isMe: true,
+                sender: res.data.sender,
+                parentMessage: res.data.parentMessage,
+                reactions: res.data.reactions || [],
+                createdAt: res.data.createdAt,
+                status: 'sent'
+              }
+            : m
+        )
+      );
+
+      // Emit socket event with skipSave: true and messagePayload to deliver in real-time
+      socket.emit('send_direct_message', {
+        senderId: user._id,
+        recipientId: partner._id,
+        text: failedMsg.text,
+        parentMessageId: failedMsg.parentMessage ? failedMsg.parentMessage._id : null,
+        skipSave: true,
+        messagePayload: res.data
+      });
+
+    } catch (err) {
+      // Mark as failed again
+      setLiveMessages((prev) =>
+        prev.map((m) => (m._id === failedMsg._id ? { ...m, status: 'failed' } : m))
+      );
+    }
   };
 
   const handleToggleReaction = async (messageId, emoji) => {
@@ -445,16 +534,41 @@ export const Messages = () => {
                         </div>
                       )}
 
-                      <div className={`shadow-sm px-3.5 py-2.5 ${
-                        m.isMe
+                      <div className={`shadow-sm px-3.5 py-2.5 transition-opacity duration-200 ${
+                        m.status === 'sending'
+                          ? 'opacity-60 bg-brand-700/80 text-brand-100 rounded-br-sm'
+                          : m.status === 'failed'
+                          ? 'opacity-85 border border-red-500/35 bg-red-500/10 text-red-700 dark:text-red-450 rounded-br-sm animate-pulse'
+                          : m.isMe
                           ? 'bg-brand-600 text-white rounded-br-sm'
                           : 'bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 rounded-bl-sm border border-slate-200 dark:border-slate-700'
                       } ${m.parentMessage ? 'rounded-b-2xl' : 'rounded-2xl'}`}>
                         <p className="text-xs leading-relaxed break-words">{m.text}</p>
-                        <p className={`text-[8px] mt-1 text-right ${m.isMe ? 'text-indigo-200' : 'text-slate-400'}`}>
+                        <p className={`text-[8px] mt-1 text-right ${
+                          m.isMe && m.status !== 'failed'
+                            ? 'text-indigo-200'
+                            : m.status === 'failed'
+                            ? 'text-red-400'
+                            : 'text-slate-400'
+                        }`}>
                           {fmtTime(m.createdAt)}
                         </p>
                       </div>
+
+                      {m.isMe && m.status === 'sending' && (
+                        <p className="text-[10px] text-slate-400 text-right mt-1 animate-pulse">
+                          Sending...
+                        </p>
+                      )}
+                      {m.isMe && m.status === 'failed' && (
+                        <button
+                          type="button"
+                          onClick={() => handleRetry(m)}
+                          className="text-[10px] text-red-500 font-extrabold flex items-center justify-end gap-1 mt-1 hover:underline ml-auto"
+                        >
+                          <span>⚠️ Failed to send — tap to retry</span>
+                        </button>
+                      )}
 
                       {/* Display Emoji Reactions */}
                       {m.reactions && m.reactions.length > 0 && (

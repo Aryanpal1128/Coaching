@@ -1,6 +1,8 @@
 import { asyncHandler } from '../utils/asyncHandler.js';
 import { ApiResponse } from '../utils/ApiResponse.js';
 import * as messageService from '../services/message.service.js';
+import { getIO } from '../sockets/socketManager.js';
+import logger from '../config/logger.js';
 
 // GET /messages/conversations — list of conversations
 export const getConversations = asyncHandler(async (req, res) => {
@@ -16,12 +18,37 @@ export const getMessages = asyncHandler(async (req, res) => {
 
 // POST /messages/:recipientId — send a message (HTTP fallback)
 export const sendMessage = asyncHandler(async (req, res) => {
-  const { text } = req.body;
+  const { text, parentMessageId } = req.body;
   if (!text?.trim()) {
     return res.status(400).json(new ApiResponse(400, null, 'Message text required'));
   }
-  const message = await messageService.saveMessage(req.user._id, req.params.recipientId, text);
-  return res.status(201).json(new ApiResponse(201, message, 'Message sent'));
+  const message = await messageService.saveMessage(
+    req.user._id,
+    req.params.recipientId,
+    text,
+    parentMessageId
+  );
+
+  const payload = {
+    _id: message._id,
+    sender: message.sender,
+    recipient: req.params.recipientId,
+    text: message.text,
+    parentMessage: message.parentMessage,
+    reactions: message.reactions || [],
+    createdAt: message.createdAt,
+    read: false
+  };
+
+  // Broadcast to recipient in real-time if they are online
+  try {
+    const io = getIO();
+    io.to(`user:${req.params.recipientId}`).emit('receive_direct_message', payload);
+  } catch (err) {
+    logger.warn(`Could not broadcast message over socket: ${err.message}`);
+  }
+
+  return res.status(201).json(new ApiResponse(201, payload, 'Message sent'));
 });
 
 // GET /messages/users — list all users to start a new conversation

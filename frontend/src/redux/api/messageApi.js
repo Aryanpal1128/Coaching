@@ -20,6 +20,17 @@ export const messageApi = apiSlice.injectEndpoints({
         method: 'POST',
         body: { emoji }
       })
+    }),
+    sendMessage: builder.mutation({
+      query: ({ recipientId, text, parentMessageId }) => ({
+        url: `/messages/${recipientId}`,
+        method: 'POST',
+        body: { text, parentMessageId }
+      }),
+      invalidatesTags: (result, error, { recipientId }) => [
+        { type: 'Message', id: recipientId },
+        'Message'
+      ]
     })
   })
 });
@@ -28,5 +39,6 @@ export const {
   useGetConversationsQuery,
   useGetMessagesQuery,
   useGetUsersQuery,
-  useToggleReactionMutation
+  useToggleReactionMutation,
+  useSendMessageMutation
 } = messageApi;

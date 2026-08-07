@@ -17,23 +17,28 @@ export const setupMessageSocket = (io, socket) => {
   });
 
   // Send a direct message
-  socket.on('send_direct_message', async ({ recipientId, text, senderId, parentMessageId = null }) => {
+  socket.on('send_direct_message', async ({ recipientId, text, senderId, parentMessageId = null, skipSave = false, messagePayload = null }) => {
     if (!text?.trim() || !recipientId || !senderId) return;
 
     try {
-      // Save to DB
-      const message = await saveMessage(senderId, recipientId, text, parentMessageId);
+      let payload;
+      if (skipSave && messagePayload) {
+        payload = messagePayload;
+      } else {
+        // Save to DB
+        const message = await saveMessage(senderId, recipientId, text, parentMessageId);
 
-      const payload = {
-        _id: message._id,
-        sender: message.sender,
-        recipient: recipientId,
-        text: message.text,
-        parentMessage: message.parentMessage,
-        reactions: message.reactions || [],
-        createdAt: message.createdAt,
-        read: false
-      };
+        payload = {
+          _id: message._id,
+          sender: message.sender,
+          recipient: recipientId,
+          text: message.text,
+          parentMessage: message.parentMessage,
+          reactions: message.reactions || [],
+          createdAt: message.createdAt,
+          read: false
+        };
+      }
 
       // Deliver to recipient if online (their personal room)
       io.to(`user:${recipientId}`).emit('receive_direct_message', payload);
