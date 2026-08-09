@@ -1,15 +1,24 @@
 import React, { useState } from 'react';
 import { useSelector } from 'react-redux';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { Card } from '../../components/common/Card.jsx';
 import { Badge } from '../../components/common/Badge.jsx';
 import { Button } from '../../components/common/Button.jsx';
 import { StatCard } from '../../components/common/StatCard.jsx';
 import {
   Mail, Trophy, Award, BookOpen, CheckCircle, Flame,
-  Edit, Camera, HelpCircle, MessageSquare, Cpu
+  Edit, Camera, HelpCircle, MessageSquare, Cpu, Bookmark, UserPlus, UserCheck, UserX, Users, X
 } from 'lucide-react';
 import { useGetUserProfileQuery } from '../../redux/api/authApi.js';
+import { QuestionCard } from '../../components/questions/QuestionCard.jsx';
+import { useSearchQuestionsQuery } from '../../redux/api/questionApi.js';
+import {
+  useFollowUserMutation,
+  useUnfollowUserMutation,
+  useGetFollowersQuery,
+  useGetFollowingQuery,
+  useGetFollowCountsQuery
+} from '../../redux/api/followApi.js';
 
 const BADGES_LIST = [
   { name: '🌱 Beginner', desc: 'Joined platform', unlocked: true },
@@ -20,15 +29,15 @@ const BADGES_LIST = [
   { name: '🏆 Legend', desc: 'Top 3 Leaderboard', unlocked: false }
 ];
 
-const ACTIVITY_TABS = ['Overview', 'Questions', 'Answers'];
-
 const getInitials = (name = '') =>
   name.split(' ').map((n) => n[0]).join('').slice(0, 2).toUpperCase();
 
 export const UserProfile = () => {
   const { userId } = useParams();
+  const navigate = useNavigate();
   const { user: currentUser } = useSelector((state) => state.auth);
   const [activeTab, setActiveTab] = useState('Overview');
+  const [followModalType, setFollowModalType] = useState(null); // 'followers' | 'following' | null
 
   const activeUserId = userId || currentUser?._id;
   const isOwnProfile = !userId || userId === currentUser?._id;
@@ -37,8 +46,35 @@ export const UserProfile = () => {
     skip: !activeUserId
   });
 
+  const { data: countsData } = useGetFollowCountsQuery(activeUserId, {
+    skip: !activeUserId
+  });
+  const followersCount = countsData?.data?.followers || 0;
+  const followingCount = countsData?.data?.following || 0;
+  const isFollowingUser = countsData?.data?.isFollowing || false;
+
+  const [followUser, { isLoading: isFollowingLoading }] = useFollowUserMutation();
+  const [unfollowUser, { isLoading: isUnfollowingLoading }] = useUnfollowUserMutation();
+
   const user = isOwnProfile ? currentUser : profileResponse?.data?.user;
   const profile = profileResponse?.data?.profile;
+
+  const isStudent = user?.role === 'STUDENT';
+  const tabs = isStudent
+    ? ['Overview', 'Questions Asked', 'Saved Questions']
+    : ['Overview', 'Questions Asked'];
+
+  const { data: askedQuestionsRes, isLoading: askedLoading } = useSearchQuestionsQuery(
+    { askedBy: activeUserId },
+    { skip: !activeUserId }
+  );
+  const askedQuestions = askedQuestionsRes?.data?.questions || [];
+
+  const { data: savedQuestionsRes, isLoading: savedLoading } = useSearchQuestionsQuery(
+    { bookmarkedBy: activeUserId },
+    { skip: !activeUserId || !isStudent }
+  );
+  const savedQuestions = savedQuestionsRes?.data?.questions || [];
 
   if (isLoading) {
     return (
@@ -112,14 +148,26 @@ export const UserProfile = () => {
               </p>
             )}
 
-            {/* Reputation stats row */}
+            {/* Followers & Following counts row */}
             <div className="mt-4 flex flex-wrap items-center justify-center sm:justify-start gap-4 text-xs">
               <span className="flex items-center gap-1.5 font-bold text-amber-500">
                 <Trophy className="w-4 h-4" /> {user?.reputation || 0} Reputation Pts
               </span>
-              <span className="flex items-center gap-1.5 font-semibold text-brand-500">
-                <Award className="w-4 h-4" /> {user?.badge || '🌱 Beginner'}
-              </span>
+              <button
+                onClick={() => setFollowModalType('followers')}
+                className="flex items-center gap-1 font-bold text-slate-700 dark:text-slate-200 hover:text-brand-500 transition-colors"
+              >
+                <Users className="w-3.5 h-3.5 text-purple-500" />
+                <span>{followersCount}</span>
+                <span className="text-slate-400 font-normal">Followers</span>
+              </button>
+              <button
+                onClick={() => setFollowModalType('following')}
+                className="flex items-center gap-1 font-bold text-slate-700 dark:text-slate-200 hover:text-brand-500 transition-colors"
+              >
+                <span>{followingCount}</span>
+                <span className="text-slate-400 font-normal">Following</span>
+              </button>
             </div>
 
             {/* Progress bar to next level */}
@@ -137,10 +185,42 @@ export const UserProfile = () => {
             </div>
           </div>
 
-          {isOwnProfile && (
+          {isOwnProfile ? (
             <Button variant="outline" size="sm" className="shrink-0">
               <Edit className="w-3.5 h-3.5 mr-1.5" /> Edit Profile
             </Button>
+          ) : (
+            <div className="shrink-0 flex items-center gap-2">
+              <Button
+                onClick={() => navigate('/messages', { state: { startChatWith: user } })}
+                size="sm"
+                variant="outline"
+                className="flex items-center gap-1.5 border-brand-500/30 text-brand-600 dark:text-brand-400 hover:bg-brand-50 dark:hover:bg-brand-950/40"
+              >
+                <MessageSquare className="w-4 h-4" /> Message
+              </Button>
+
+              {isFollowingUser ? (
+                <Button
+                  onClick={() => unfollowUser(activeUserId)}
+                  disabled={isUnfollowingLoading}
+                  variant="outline"
+                  size="sm"
+                  className="flex items-center gap-1.5 border-brand-500/40 text-brand-500 hover:bg-red-50 hover:border-red-500 hover:text-red-500"
+                >
+                  <UserCheck className="w-4 h-4" /> Following
+                </Button>
+              ) : (
+                <Button
+                  onClick={() => followUser(activeUserId)}
+                  disabled={isFollowingLoading}
+                  size="sm"
+                  className="flex items-center gap-1.5"
+                >
+                  <UserPlus className="w-4 h-4" /> Follow
+                </Button>
+              )}
+            </div>
           )}
         </div>
       </Card>
@@ -162,7 +242,7 @@ export const UserProfile = () => {
 
       {/* Tabs */}
       <div className="flex items-center gap-2 border-b border-slate-200 dark:border-slate-800 pb-3">
-        {ACTIVITY_TABS.map((tab) => (
+        {tabs.map((tab) => (
           <button
             key={tab}
             onClick={() => setActiveTab(tab)}
@@ -267,21 +347,124 @@ export const UserProfile = () => {
         </div>
       )}
 
-      {activeTab === 'Questions' && (
-        <Card>
-          <p className="text-sm text-slate-500 text-center py-8">
-            Database connected: view question logs in Q&A Feed tab.
-          </p>
-        </Card>
+      {activeTab === 'Questions Asked' && (
+        <div className="space-y-4">
+          {askedLoading ? (
+            <div className="space-y-4 animate-pulse">
+              {[1, 2].map((i) => (
+                <div key={i} className="h-32 bg-slate-100 dark:bg-slate-800 rounded-2xl" />
+              ))}
+            </div>
+          ) : askedQuestions.length === 0 ? (
+            <Card className="p-8 text-center">
+              <HelpCircle className="w-10 h-10 text-slate-300 dark:text-slate-600 mx-auto mb-2" />
+              <p className="text-sm font-semibold text-slate-500 dark:text-slate-400">No questions asked yet</p>
+            </Card>
+          ) : (
+            askedQuestions.map((q) => (
+              <QuestionCard key={q._id} question={q} />
+            ))
+          )}
+        </div>
       )}
 
-      {activeTab === 'Answers' && (
-        <Card>
-          <p className="text-sm text-slate-500 text-center py-8">
-            Database connected: view solution logs in Q&A Feed tab.
-          </p>
-        </Card>
+      {activeTab === 'Saved Questions' && isStudent && (
+        <div className="space-y-4">
+          {savedLoading ? (
+            <div className="space-y-4 animate-pulse">
+              {[1, 2].map((i) => (
+                <div key={i} className="h-32 bg-slate-100 dark:bg-slate-800 rounded-2xl" />
+              ))}
+            </div>
+          ) : savedQuestions.length === 0 ? (
+            <Card className="p-8 text-center">
+              <Bookmark className="w-10 h-10 text-slate-300 dark:text-slate-600 mx-auto mb-2" />
+              <p className="text-sm font-semibold text-slate-500 dark:text-slate-400">No saved questions yet</p>
+            </Card>
+          ) : (
+            savedQuestions.map((q) => (
+              <QuestionCard key={q._id} question={q} />
+            ))
+          )}
+        </div>
       )}
+
+      {/* Followers / Following Modal */}
+      {followModalType && (
+        <FollowListModal
+          userId={activeUserId}
+          type={followModalType}
+          onClose={() => setFollowModalType(null)}
+        />
+      )}
+    </div>
+  );
+};
+
+const FollowListModal = ({ userId, type, onClose }) => {
+  const isFollowers = type === 'followers';
+  const { data: followersRes, isLoading: followersLoading } = useGetFollowersQuery(userId, { skip: !isFollowers });
+  const { data: followingRes, isLoading: followingLoading } = useGetFollowingQuery(userId, { skip: isFollowers });
+
+  const list = isFollowers ? followersRes?.data?.users || [] : followingRes?.data?.users || [];
+  const isLoading = isFollowers ? followersLoading : followingLoading;
+
+  return (
+    <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl shadow-2xl w-full max-w-md overflow-hidden animate-in fade-in zoom-in-95 duration-150">
+        <div className="p-4 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
+          <h3 className="text-sm font-extrabold text-slate-900 dark:text-slate-100 capitalize flex items-center gap-2">
+            <Users className="w-4 h-4 text-brand-500" /> {type}
+          </h3>
+          <button
+            onClick={onClose}
+            className="p-1.5 text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-colors"
+          >
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+
+        <div className="max-h-96 overflow-y-auto p-4 space-y-3">
+          {isLoading ? (
+            <div className="space-y-3 animate-pulse">
+              {[1, 2, 3].map((i) => (
+                <div key={i} className="h-12 bg-slate-100 dark:bg-slate-800 rounded-xl" />
+              ))}
+            </div>
+          ) : list.length === 0 ? (
+            <p className="text-center text-xs text-slate-400 py-8">No {type} yet</p>
+          ) : (
+            list.map((u) => (
+              <div key={u._id} className="flex items-center justify-between gap-3 p-2 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
+                <Link
+                  to={`/profile/${u._id}`}
+                  onClick={onClose}
+                  className="flex items-center gap-3 min-w-0 flex-1"
+                >
+                  <img
+                    src={u.avatar || 'https://res.cloudinary.com/demo/image/upload/v1571218039/sample.jpg'}
+                    alt={u.name}
+                    className="w-9 h-9 rounded-full object-cover border border-slate-300 dark:border-slate-700 shrink-0"
+                  />
+                  <div className="min-w-0 flex-1">
+                    <p className="text-xs font-bold text-slate-900 dark:text-slate-100 truncate hover:underline">
+                      {u.name}
+                    </p>
+                    <p className="text-[10px] text-slate-500 capitalize">{u.role}</p>
+                  </div>
+                </Link>
+                <Link
+                  to={`/profile/${u._id}`}
+                  onClick={onClose}
+                  className="px-3 py-1 rounded-xl bg-brand-500/10 text-brand-500 hover:bg-brand-500/20 text-xs font-bold shrink-0"
+                >
+                  View
+                </Link>
+              </div>
+            ))
+          )}
+        </div>
+      </div>
     </div>
   );
 };

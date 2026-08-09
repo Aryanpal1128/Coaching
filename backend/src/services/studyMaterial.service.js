@@ -1,5 +1,7 @@
 import { StudyMaterial } from '../models/StudyMaterial.js';
 import { Subject } from '../models/Subject.js';
+import { StudentProfile } from '../models/StudentProfile.js';
+import { TeacherProfile } from '../models/TeacherProfile.js';
 import { uploadToCloudinary, deleteFromCloudinary, getResourceType } from '../middlewares/upload.middleware.js';
 import { ApiError } from '../utils/ApiError.js';
 
@@ -47,6 +49,34 @@ export const getStudyMaterials = async ({ subjectId, fileType, teacherId, search
     .populate('teacher', 'name avatar')
     .populate('subject', 'name')
     .sort({ createdAt: -1 });
+};
+
+/**
+ * Get recommended study materials for logged in user based on profile subjects or followers.
+ */
+export const getRecommendedMaterials = async (userId) => {
+  let userSubjects = [];
+  
+  const studentProfile = await StudentProfile.findOne({ user: userId });
+  if (studentProfile && studentProfile.subjectsOfInterest?.length > 0) {
+    userSubjects = studentProfile.subjectsOfInterest;
+  } else {
+    const teacherProfile = await TeacherProfile.findOne({ user: userId });
+    if (teacherProfile && teacherProfile.subjectsTaught?.length > 0) {
+      userSubjects = teacherProfile.subjectsTaught;
+    }
+  }
+
+  const filter = {};
+  if (userSubjects.length > 0) {
+    filter.subject = { $in: userSubjects };
+  }
+
+  return StudyMaterial.find(filter)
+    .populate('teacher', 'name avatar')
+    .populate('subject', 'name')
+    .sort({ createdAt: -1 })
+    .limit(20);
 };
 
 /**

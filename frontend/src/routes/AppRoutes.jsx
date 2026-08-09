@@ -18,12 +18,14 @@ const AdminDashboard = lazy(() => import('../pages/admin/AdminDashboard.jsx').th
 const QuestionFeed = lazy(() => import('../pages/questions/QuestionFeed.jsx').then(m => ({ default: m.QuestionFeed })));
 const QuestionDetails = lazy(() => import('../pages/questions/QuestionDetails.jsx').then(m => ({ default: m.QuestionDetails })));
 const AskQuestion = lazy(() => import('../pages/questions/AskQuestion.jsx').then(m => ({ default: m.AskQuestion })));
+const SavedQuestions = lazy(() => import('../pages/questions/SavedQuestions.jsx').then(m => ({ default: m.SavedQuestions })));
 
 const Leaderboard = lazy(() => import('../pages/leaderboard/Leaderboard.jsx').then(m => ({ default: m.Leaderboard })));
 const UserProfile = lazy(() => import('../pages/profile/UserProfile.jsx').then(m => ({ default: m.UserProfile })));
 const LiveClasses = lazy(() => import('../pages/liveClasses/LiveClasses.jsx').then(m => ({ default: m.LiveClasses })));
 const StudyMaterials = lazy(() => import('../pages/studyMaterials/StudyMaterials.jsx').then(m => ({ default: m.StudyMaterials })));
 const Messages = lazy(() => import('../pages/messaging/Messages.jsx').then(m => ({ default: m.Messages })));
+const SearchResults = lazy(() => import('../pages/search/SearchResults.jsx').then(m => ({ default: m.SearchResults })));
 
 export const AppRoutes = () => {
   return (
@@ -60,6 +62,7 @@ export const AppRoutes = () => {
             <Route path="/questions" element={<QuestionFeed />} />
             <Route path="/questions/:id" element={<QuestionDetails />} />
             <Route path="/ask-question" element={<AskQuestion />} />
+            <Route path="/saved" element={<SavedQuestions />} />
 
             <Route path="/leaderboard" element={<Leaderboard />} />
             <Route path="/profile" element={<UserProfile />} />
@@ -67,6 +70,7 @@ export const AppRoutes = () => {
             <Route path="/live-classes" element={<LiveClasses />} />
             <Route path="/study-materials" element={<StudyMaterials />} />
             <Route path="/messages" element={<Messages />} />
+            <Route path="/search" element={<SearchResults />} />
           </Route>
         </Route>
 

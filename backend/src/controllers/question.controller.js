@@ -42,6 +42,12 @@ export const bookmarkQuestion = asyncHandler(async (req, res) => {
   return res.status(200).json(new ApiResponse(200, result, 'Question bookmark status updated'));
 });
 
+export const getSavedQuestions = asyncHandler(async (req, res) => {
+  const { page, limit } = req.query;
+  const result = await questionService.getSavedQuestions(req.user._id, { page, limit });
+  return res.status(200).json(new ApiResponse(200, result, 'Saved questions fetched'));
+});
+
 import { evaluateQuestionWithAI } from '../services/aiEvaluation.service.js';
 
 export const suggestQuestionImprovements = asyncHandler(async (req, res) => {

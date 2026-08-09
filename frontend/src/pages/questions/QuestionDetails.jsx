@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useSelector } from 'react-redux';
-import { useGetQuestionByIdQuery } from '../../redux/api/questionApi.js';
+import { useGetQuestionByIdQuery, useSaveQuestionMutation } from '../../redux/api/questionApi.js';
+import { useGetUserProfileQuery } from '../../redux/api/authApi.js';
 import { useGetAnswersForQuestionQuery, useSubmitAnswerMutation } from '../../redux/api/answerApi.js';
 import { Card } from '../../components/common/Card.jsx';
 import { Badge } from '../../components/common/Badge.jsx';
@@ -61,6 +62,41 @@ export const QuestionDetails = () => {
 
   const question = questionRes?.data || FALLBACK_QUESTION;
   const answers = answersRes?.data || FALLBACK_ANSWERS;
+
+  const [saveQuestion, { isLoading: isSaving }] = useSaveQuestionMutation();
+  const { data: profileResponse } = useGetUserProfileQuery(user?._id, {
+    skip: !user?._id
+  });
+
+  const userObj = profileResponse?.data?.user || user;
+  const isSaved = userObj?.savedQuestions?.includes(question._id);
+
+  const handleSave = async (e) => {
+    e.preventDefault();
+    if (!user) {
+      toast.error('Please login to save questions');
+      return;
+    }
+    try {
+      const res = await saveQuestion(question._id).unwrap();
+      const status = res?.data?.isSaved !== undefined ? res.data.isSaved : !isSaved;
+      toast.success(status ? 'Question saved' : 'Question removed from saved');
+    } catch (err) {
+      toast.error('Failed to update saved status');
+    }
+  };
+
+  const handleShare = (e) => {
+    e.preventDefault();
+    const shareUrl = window.location.href;
+    navigator.clipboard.writeText(shareUrl)
+      .then(() => {
+        toast.success('Link copied to clipboard!');
+      })
+      .catch(() => {
+        toast.error('Failed to copy link');
+      });
+  };
 
   const handleSubmitAnswer = async (e) => {
     e.preventDefault();
@@ -190,10 +226,24 @@ export const QuestionDetails = () => {
           </div>
 
           <div className="flex items-center gap-2">
-            <button className="p-2 rounded-xl text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
-              <Bookmark className="w-4 h-4" />
+            <button
+              onClick={handleSave}
+              disabled={isSaving}
+              className={`p-2 rounded-xl transition-colors ${
+                isSaved
+                  ? 'bg-brand-50 dark:bg-brand-950/40 text-brand-600 dark:text-brand-400 hover:bg-brand-100 dark:hover:bg-brand-900/60'
+                  : 'text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-600'
+              }`}
+              title={isSaved ? 'Remove Saved Question' : 'Save Question'}
+              aria-label={isSaved ? 'Remove Saved Question' : 'Save Question'}
+            >
+              <Bookmark className="w-4 h-4" fill={isSaved ? 'currentColor' : 'none'} />
             </button>
-            <button className="p-2 rounded-xl text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
+            <button
+              onClick={handleShare}
+              className="p-2 rounded-xl text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-600 transition-colors"
+              title="Share Question"
+            >
               <Share2 className="w-4 h-4" />
             </button>
           </div>

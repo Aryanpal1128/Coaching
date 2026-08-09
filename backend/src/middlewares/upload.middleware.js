@@ -16,9 +16,35 @@ const fileFilter = (req, file, cb) => {
     'application/msword',
     'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
     'application/vnd.ms-powerpoint',
-    'application/vnd.openxmlformats-officedocument.presentationml.presentation'
   ];
   if (allowedMimeTypes.includes(file.mimetype)) {
+    cb(null, true);
+  } else {
+    cb(new ApiError(400, `Unsupported file type: ${file.mimetype}`), false);
+  }
+};
+
+const chatAllowedMimeTypes = [
+  'image/jpeg',
+  'image/png',
+  'image/webp',
+  'image/gif',
+  'video/mp4',
+  'video/quicktime',
+  'video/webm',
+  'audio/webm',
+  'audio/mp4',
+  'audio/mpeg',
+  'audio/ogg',
+  'application/pdf',
+  'application/msword',
+  'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+  'application/vnd.ms-powerpoint',
+  'application/vnd.openxmlformats-officedocument.presentationml.presentation'
+];
+
+const chatFileFilter = (req, file, cb) => {
+  if (chatAllowedMimeTypes.includes(file.mimetype)) {
     cb(null, true);
   } else {
     cb(new ApiError(400, `Unsupported file type: ${file.mimetype}`), false);
@@ -29,6 +55,12 @@ export const upload = multer({
   storage,
   fileFilter,
   limits: { fileSize: 20 * 1024 * 1024 } // 20 MB
+});
+
+export const uploadChatMedia = multer({
+  storage,
+  fileFilter: chatFileFilter,
+  limits: { fileSize: 100 * 1024 * 1024 } // 100 MB for videos/chat attachments
 });
 
 /**
@@ -74,5 +106,6 @@ export const deleteFromCloudinary = async (publicId, resourceType = 'raw') => {
  */
 export const getResourceType = (mimetype) => {
   if (mimetype.startsWith('image/')) return 'image';
+  if (mimetype.startsWith('video/') || mimetype.startsWith('audio/')) return 'video';
   return 'raw'; // PDFs, DOCs treated as raw
 };

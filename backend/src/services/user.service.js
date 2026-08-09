@@ -4,7 +4,7 @@ import { TeacherProfile } from '../models/TeacherProfile.js';
 import { ApiError } from '../utils/ApiError.js';
 
 export const getUserProfile = async (userId) => {
-  const user = await User.findById(userId).select('name avatar role level reputation badge createdAt');
+  const user = await User.findById(userId).select('name avatar role level reputation badge savedQuestions createdAt');
   if (!user) {
     throw new ApiError(404, 'User not found');
   }

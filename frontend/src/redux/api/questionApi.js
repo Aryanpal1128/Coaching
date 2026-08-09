@@ -35,12 +35,19 @@ export const questionApi = apiSlice.injectEndpoints({
       }),
       invalidatesTags: (result, error, id) => [{ type: 'Question', id }]
     }),
-    bookmarkQuestion: builder.mutation({
+    saveQuestion: builder.mutation({
       query: (id) => ({
         url: `/questions/${id}/bookmark`,
         method: 'POST'
       }),
-      invalidatesTags: ['Question']
+      invalidatesTags: ['Question', 'User']
+    }),
+    getSavedQuestions: builder.query({
+      query: (params) => ({
+        url: '/questions/saved/list',
+        params
+      }),
+      providesTags: ['Question']
     })
   })
 });
@@ -51,5 +58,6 @@ export const {
   useGetQuestionByIdQuery,
   useCreateQuestionMutation,
   useFollowQuestionMutation,
-  useBookmarkQuestionMutation
+  useSaveQuestionMutation,
+  useGetSavedQuestionsQuery
 } = questionApi;

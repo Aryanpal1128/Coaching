@@ -1,40 +1,39 @@
 import React, { useEffect, useState } from 'react';
 import { useSocket } from '../../context/SocketContext.jsx';
-import { Bell, Check, Sparkles, MessageSquare, Video, Trophy } from 'lucide-react';
+import { Bell, Sparkles, MessageSquare, Video, Trophy, UserPlus } from 'lucide-react';
+import { useGetNotificationsQuery, useMarkAsReadMutation } from '../../redux/api/notificationApi.js';
+import { Link } from 'react-router-dom';
 
 export const NotificationDropdown = ({ onClose }) => {
   const socket = useSocket();
-  const [notifications, setNotifications] = useState([
-    {
-      _id: '1',
-      title: 'AI Answer Evaluation Completed',
-      message: 'Your answer for Graph Algorithms achieved 92% Accuracy!',
-      type: 'AI_EVALUATION_COMPLETED',
-      createdAt: new Date(),
-      isRead: false
-    },
-    {
-      _id: '2',
-      title: 'Prof. Turing Scheduled Live Class',
-      message: 'Advanced Graph Algorithms starts at 10:00 AM',
-      type: 'TEACHER_LIVE_CLASS',
-      createdAt: new Date(),
-      isRead: false
+  const { data: notifData } = useGetNotificationsQuery();
+  const [markAsRead] = useMarkAsReadMutation();
+
+  const [liveNotifications, setLiveNotifications] = useState([]);
+
+  useEffect(() => {
+    if (notifData?.data) {
+      setLiveNotifications(notifData.data);
     }
-  ]);
+  }, [notifData]);
 
   useEffect(() => {
     if (!socket) return;
 
     socket.on('new_notification', (newNotif) => {
-      setNotifications((prev) => [newNotif, ...prev]);
+      setLiveNotifications((prev) => [newNotif, ...prev]);
     });
 
     return () => socket.off('new_notification');
   }, [socket]);
 
   const markAllRead = () => {
-    setNotifications((prev) => prev.map((n) => ({ ...n, isRead: true })));
+    liveNotifications.forEach((n) => {
+      if (!n.isRead && n._id) {
+        markAsRead(n._id);
+      }
+    });
+    setLiveNotifications((prev) => prev.map((n) => ({ ...n, isRead: true })));
   };
 
   const getIcon = (type) => {
@@ -45,6 +44,8 @@ export const NotificationDropdown = ({ onClose }) => {
         return <Video className="w-4 h-4 text-emerald-400" />;
       case 'BADGE_EARNED':
         return <Trophy className="w-4 h-4 text-amber-400" />;
+      case 'NEW_FOLLOWER':
+        return <UserPlus className="w-4 h-4 text-brand-400" />;
       default:
         return <MessageSquare className="w-4 h-4 text-brand-400" />;
     }
@@ -68,10 +69,10 @@ export const NotificationDropdown = ({ onClose }) => {
       </div>
 
       <div className="max-h-80 overflow-y-auto divide-y divide-slate-100 dark:divide-slate-800/60">
-        {notifications.length === 0 ? (
+        {liveNotifications.length === 0 ? (
           <div className="p-6 text-center text-xs text-slate-500">No notifications yet</div>
         ) : (
-          notifications.map((n) => (
+          liveNotifications.map((n) => (
             <div
               key={n._id}
               className={`p-3.5 flex items-start gap-3 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors ${
@@ -88,6 +89,16 @@ export const NotificationDropdown = ({ onClose }) => {
                 <p className="text-[11px] text-slate-500 dark:text-slate-400 line-clamp-2 mt-0.5">
                   {n.message}
                 </p>
+
+                {n.link && (
+                  <Link
+                    to={n.link}
+                    onClick={onClose}
+                    className="inline-block text-[10px] font-bold text-brand-500 hover:underline mt-1"
+                  >
+                    View profile →
+                  </Link>
+                )}
               </div>
             </div>
           ))
@@ -96,3 +107,4 @@ export const NotificationDropdown = ({ onClose }) => {
     </div>
   );
 };
+

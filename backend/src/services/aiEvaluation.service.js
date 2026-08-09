@@ -1,5 +1,27 @@
-import { GoogleGenerativeAI } from '@google/generative-ai';
+import { GoogleGenAI } from '@google/genai';
 import logger from '../config/logger.js';
+
+const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+const is503Error = (error) => {
+  if (!error) return false;
+  const status = error.status || error.statusCode || error.code;
+  
+  if (status && status !== 503 && status !== '503' && status !== 'UNAVAILABLE') {
+    return false;
+  }
+  
+  if (status === 503 || status === '503' || status === 'UNAVAILABLE') {
+    return true;
+  }
+  
+  const msg = String(error.message || '');
+  if (msg.includes('429') || msg.includes('404') || msg.toLowerCase().includes('quota') || msg.toLowerCase().includes('not found')) {
+    return false;
+  }
+  
+  return msg.includes('503') || msg.includes('UNAVAILABLE') || msg.toLowerCase().includes('overloaded');
+};
 
 export const evaluateAnswerWithAI = async (questionTitle, questionDescription, answerText) => {
   const apiKey = process.env.GEMINI_API_KEY;
@@ -9,11 +31,9 @@ export const evaluateAnswerWithAI = async (questionTitle, questionDescription, a
     return generateMockEvaluation(answerText);
   }
 
-  try {
-    const genAI = new GoogleGenerativeAI(apiKey);
-    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+  const ai = new GoogleGenAI({ apiKey });
 
-    const prompt = `
+  const prompt = `
 You are an expert academic evaluator. Evaluate the student/teacher answer provided for the question.
 Return ONLY a valid JSON object matching the exact schema below.
 
@@ -33,13 +53,16 @@ JSON Schema format:
 }
 `;
 
-    const result = await model.generateContent({
-      contents: [{ role: 'user', parts: [{ text: prompt }] }],
-      generationConfig: {
-        responseMimeType: "application/json",
-      },
+  const makeRequest = async () => {
+    const response = await ai.models.generateContent({
+      model: 'gemini-flash-latest',
+      contents: prompt,
+      config: {
+        responseMimeType: 'application/json'
+      }
     });
-    const responseText = result.response.text().trim();
+
+    const responseText = response.text ? response.text.trim() : '';
     
     // Clean response in case model returned markdown codeblocks
     const cleanJson = responseText.replace(/```json/g, '').replace(/```/g, '').trim();
@@ -55,7 +78,22 @@ JSON Schema format:
       shortSummary: evaluation.shortSummary || 'Well-written and accurate explanation.',
       evaluatedAt: new Date()
     };
+  };
+
+  try {
+    return await makeRequest();
   } catch (error) {
+    if (is503Error(error)) {
+      logger.warn(`AI Evaluation encountered 503 UNAVAILABLE error: ${error.message}. Retrying in 2 seconds...`);
+      await sleep(2000);
+      try {
+        return await makeRequest();
+      } catch (retryError) {
+        logger.error(`AI Evaluation retry failed: ${retryError.message}. Fallback mock evaluation generated.`);
+        return generateMockEvaluation(answerText);
+      }
+    }
+
     logger.error(`AI Evaluation failed: ${error.message}. Fallback mock evaluation generated.`);
     return generateMockEvaluation(answerText);
   }
@@ -89,13 +127,12 @@ export const evaluateQuestionWithAI = async (title, description) => {
     return generateMockQuestionSuggestions(title, description);
   }
 
-  try {
-    const genAI = new GoogleGenerativeAI(apiKey);
-    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+  const ai = new GoogleGenAI({ apiKey });
 
-    const prompt = `
+  const prompt = `
 You are an AI learning coach. Review the student's proposed academic question.
 Analyze if it has any errors (grammatical, spelling, technical, conceptual) or lacks clarity, and suggest improvements.
+Also infer the difficulty level ("Easy", "Medium", or "Hard") and 2 to 5 relevant tags based on the question context.
 Return ONLY a valid JSON object matching the exact schema below.
 
 Question Title: "${title}"
@@ -108,19 +145,33 @@ JSON Schema format:
   "conceptualIssues": ["array of conceptual/technical inaccuracies or lacks of context, or empty array"],
   "suggestedTitle": "an improved, clearer, or corrected version of the title",
   "suggestedDescription": "an improved, clearer, or corrected version of the description",
+  "suggestedDifficulty": "one of 'Easy', 'Medium', 'Hard'",
+  "suggestedTags": ["array of 2-5 short, relevant lowercase tag strings"],
   "generalFeedback": "helpful coaching feedback to the student on how to write better questions"
 }
 `;
 
-    const result = await model.generateContent({
-      contents: [{ role: 'user', parts: [{ text: prompt }] }],
-      generationConfig: {
-        responseMimeType: "application/json",
-      },
+  const makeRequest = async () => {
+    const response = await ai.models.generateContent({
+      model: 'gemini-flash-latest',
+      contents: prompt,
+      config: {
+        responseMimeType: 'application/json'
+      }
     });
-    const responseText = result.response.text().trim();
+
+    const responseText = response.text ? response.text.trim() : '';
     const cleanJson = responseText.replace(/```json/g, '').replace(/```/g, '').trim();
     const evaluation = JSON.parse(cleanJson);
+
+    const validDifficulties = ['Easy', 'Medium', 'Hard'];
+    const suggestedDifficulty = validDifficulties.includes(evaluation.suggestedDifficulty)
+      ? evaluation.suggestedDifficulty
+      : 'Medium';
+
+    const suggestedTags = Array.isArray(evaluation.suggestedTags)
+      ? evaluation.suggestedTags.map((t) => String(t).toLowerCase().trim()).filter(Boolean)
+      : [];
 
     return {
       isGood: evaluation.isGood !== false,
@@ -128,9 +179,26 @@ JSON Schema format:
       conceptualIssues: evaluation.conceptualIssues || [],
       suggestedTitle: evaluation.suggestedTitle || title,
       suggestedDescription: evaluation.suggestedDescription || description,
+      suggestedDifficulty,
+      suggestedTags,
       generalFeedback: evaluation.generalFeedback || 'Your question is clear and well-structured.'
     };
+  };
+
+  try {
+    return await makeRequest();
   } catch (error) {
+    if (is503Error(error)) {
+      logger.warn(`AI Question Evaluation encountered 503 UNAVAILABLE error: ${error.message}. Retrying in 2 seconds...`);
+      await sleep(2000);
+      try {
+        return await makeRequest();
+      } catch (retryError) {
+        logger.error(`AI Question Evaluation retry failed: ${retryError.message}. Fallback mock evaluation generated.`);
+        return generateMockQuestionSuggestions(title, description);
+      }
+    }
+
     logger.error(`AI Question Evaluation failed: ${error.message}. Fallback mock evaluation generated.`);
     return generateMockQuestionSuggestions(title, description);
   }
@@ -241,6 +309,8 @@ const generateMockQuestionSuggestions = (title, description) => {
     conceptualIssues,
     suggestedTitle,
     suggestedDescription,
+    suggestedDifficulty: 'Medium',
+    suggestedTags: [],
     generalFeedback: isGood 
       ? "Excellent query! The question has clear context and a defined objective."
       : "We identified spelling errors and sentence formatting issues. Review the suggestions below to correct them."

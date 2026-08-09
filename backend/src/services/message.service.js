@@ -22,9 +22,10 @@ export const getConversations = async (userId) => {
       msg.sender._id.toString() === userId.toString() ? msg.recipient : msg.sender;
     const partnerId = partner._id.toString();
     if (!convMap.has(partnerId)) {
+      const displayMsg = msg.text || (msg.attachments?.length > 0 ? `[${msg.attachments[0].type}]` : 'Attachment');
       convMap.set(partnerId, {
         user: partner,
-        lastMessage: msg.text,
+        lastMessage: displayMsg,
         lastMessageAt: msg.createdAt,
         unread: 0
       });
@@ -76,15 +77,16 @@ export const getMessages = async (userId, partnerId) => {
 /**
  * Save a message to the database.
  */
-export const saveMessage = async (senderId, recipientId, text, parentMessageId = null) => {
+export const saveMessage = async (senderId, recipientId, text, parentMessageId = null, attachments = []) => {
   const recipient = await User.findById(recipientId);
   if (!recipient) throw new ApiError(404, 'Recipient not found');
 
   const message = await Message.create({
     sender: senderId,
     recipient: recipientId,
-    text: text.trim(),
-    parentMessage: parentMessageId || null
+    text: (text || '').trim(),
+    parentMessage: parentMessageId || null,
+    attachments
   });
 
   return message.populate([

@@ -10,6 +10,9 @@ const router = Router();
 // GET all study materials (any authenticated user)
 router.get('/', authenticate, studyMaterialController.getStudyMaterials);
 
+// GET recommended study materials (any authenticated user)
+router.get('/recommended', authenticate, studyMaterialController.getRecommendedMaterials);
+
 // POST upload study material (teacher/admin only) — multipart file upload
 router.post(
   '/',

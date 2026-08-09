@@ -3,9 +3,52 @@ import { Link } from 'react-router-dom';
 import { Card } from '../common/Card.jsx';
 import { Badge } from '../common/Badge.jsx';
 import { Eye, MessageSquare, ThumbsUp, Bookmark, Share2 } from 'lucide-react';
+import { useSelector } from 'react-redux';
+import { useGetUserProfileQuery } from '../../redux/api/authApi.js';
+import { useSaveQuestionMutation } from '../../redux/api/questionApi.js';
+import toast from 'react-hot-toast';
 
 export const QuestionCard = ({ question }) => {
   if (!question) return null;
+
+  const { user: currentUser } = useSelector((state) => state.auth);
+  const { data: profileResponse } = useGetUserProfileQuery(currentUser?._id, {
+    skip: !currentUser?._id
+  });
+  const [saveQuestion, { isLoading: isSaving }] = useSaveQuestionMutation();
+
+  const user = profileResponse?.data?.user || currentUser;
+  const isSaved = user?.savedQuestions?.includes(question._id);
+
+  const handleSave = async (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!currentUser) {
+      toast.error('Please login to save questions');
+      return;
+    }
+    try {
+      const res = await saveQuestion(question._id).unwrap();
+      const status = res?.data?.isSaved !== undefined ? res.data.isSaved : !isSaved;
+      toast.success(status ? 'Question saved' : 'Question removed from saved');
+    } catch (err) {
+      toast.error('Failed to update saved status');
+    }
+  };
+
+  const handleShare = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const shareUrl = `${window.location.origin}/questions/${question._id}`;
+    navigator.clipboard.writeText(shareUrl)
+      .then(() => {
+        toast.success('Link copied to clipboard!');
+      })
+      .catch(() => {
+        toast.error('Failed to copy link');
+      });
+  };
+
 
   const getDifficultyVariant = (diff) => {
     switch (diff) {
@@ -107,10 +150,24 @@ export const QuestionCard = ({ question }) => {
               Answer Question →
             </span>
           </Link>
-          <button className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
-            <Bookmark className="w-4 h-4" />
+          <button
+            onClick={handleSave}
+            disabled={isSaving}
+            className={`p-1.5 rounded-lg transition-colors ${
+              isSaved
+                ? 'bg-brand-50 dark:bg-brand-950/40 text-brand-600 dark:text-brand-400 hover:bg-brand-100 dark:hover:bg-brand-900/60'
+                : 'hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 hover:text-slate-600'
+            }`}
+            title={isSaved ? 'Remove Saved Question' : 'Save Question'}
+            aria-label={isSaved ? 'Remove Saved Question' : 'Save Question'}
+          >
+            <Bookmark className="w-4 h-4" fill={isSaved ? 'currentColor' : 'none'} />
           </button>
-          <button className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
+          <button
+            onClick={handleShare}
+            className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 hover:text-slate-600 transition-colors"
+            title="Share Question"
+          >
             <Share2 className="w-4 h-4" />
           </button>
         </div>

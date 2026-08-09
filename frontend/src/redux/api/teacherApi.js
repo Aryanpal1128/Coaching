@@ -14,6 +14,10 @@ export const teacherApi = apiSlice.injectEndpoints({
       },
       providesTags: ['StudyMaterial']
     }),
+    getRecommendedMaterials: builder.query({
+      query: () => '/study-materials/recommended',
+      providesTags: ['StudyMaterial']
+    }),
     uploadStudyMaterial: builder.mutation({
       query: (formData) => ({
         url: '/study-materials',
@@ -41,6 +45,7 @@ export const teacherApi = apiSlice.injectEndpoints({
 
 export const {
   useGetStudyMaterialsQuery,
+  useGetRecommendedMaterialsQuery,
   useUploadStudyMaterialMutation,
   useDeleteStudyMaterialMutation,
   useGetSubjectsQuery

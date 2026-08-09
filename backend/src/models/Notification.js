@@ -21,7 +21,8 @@ const notificationSchema = new mongoose.Schema(
         'TEACHER_NOTES',
         'ASSIGNMENT_POSTED',
         'BADGE_EARNED',
-        'AI_EVALUATION_COMPLETED'
+        'AI_EVALUATION_COMPLETED',
+        'NEW_FOLLOWER'
       ],
       required: true
     },

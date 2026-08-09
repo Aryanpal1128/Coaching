@@ -254,6 +254,59 @@ export const AskQuestion = () => {
                 </button>
               </div>
             )}
+
+            {/* Suggested Difficulty */}
+            {suggestions.suggestedDifficulty && (
+              <div className="bg-white dark:bg-slate-950 border border-slate-100 dark:border-slate-900 p-3 rounded-xl flex items-center justify-between gap-3">
+                <div className="space-y-1">
+                  <span className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Suggested Difficulty:</span>
+                  <p className="text-xs font-semibold text-slate-900 dark:text-slate-100">
+                    <span className="inline-block px-2 py-0.5 rounded text-[11px] font-bold bg-brand-500/10 text-brand-500">
+                      {suggestions.suggestedDifficulty}
+                    </span>
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setDifficulty(suggestions.suggestedDifficulty);
+                    toast.success('Suggested difficulty applied!');
+                  }}
+                  className="text-[10px] font-bold text-brand-600 hover:text-brand-700 bg-brand-50 dark:bg-brand-950/40 px-2.5 py-1.5 rounded-lg shrink-0 transition-colors"
+                >
+                  Apply
+                </button>
+              </div>
+            )}
+
+            {/* Suggested Tags */}
+            {suggestions.suggestedTags && suggestions.suggestedTags.length > 0 && (
+              <div className="bg-white dark:bg-slate-950 border border-slate-100 dark:border-slate-900 p-3 rounded-xl flex items-center justify-between gap-3">
+                <div className="space-y-1 overflow-hidden">
+                  <span className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Suggested Tags:</span>
+                  <div className="flex flex-wrap gap-1.5 pt-0.5">
+                    {suggestions.suggestedTags.map((tag) => (
+                      <span
+                        key={tag}
+                        className="inline-flex items-center bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 px-2 py-0.5 rounded text-[11px] font-medium"
+                      >
+                        #{tag}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setTags(suggestions.suggestedTags);
+                    toast.success('Suggested tags applied!');
+                  }}
+                  className="text-[10px] font-bold text-brand-600 hover:text-brand-700 bg-brand-50 dark:bg-brand-950/40 px-2.5 py-1.5 rounded-lg shrink-0 transition-colors"
+                >
+                  Apply
+                </button>
+              </div>
+            )}
           </div>
         )}
 

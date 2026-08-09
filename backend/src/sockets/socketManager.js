@@ -3,6 +3,7 @@ import logger from '../config/logger.js';
 import { setupLiveClassSocket } from './liveClassSocket.js';
 import { setupNotificationSocket } from './notificationSocket.js';
 import { setupMessageSocket } from './messageSocket.js';
+import { setupCallSocket } from './callSocket.js';
 
 let ioInstance = null;
 
@@ -43,6 +44,7 @@ export const initSocket = (server) => {
     setupLiveClassSocket(ioInstance, socket);
     setupNotificationSocket(ioInstance, socket);
     setupMessageSocket(ioInstance, socket);
+    setupCallSocket(ioInstance, socket);
 
     socket.on('disconnect', () => {
       logger.info(`Socket disconnected: ${socket.id}`);

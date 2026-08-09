@@ -17,6 +17,11 @@ export const getStudyMaterials = asyncHandler(async (req, res) => {
   return res.status(200).json(new ApiResponse(200, materials, 'Study materials fetched'));
 });
 
+export const getRecommendedMaterials = asyncHandler(async (req, res) => {
+  const materials = await studyMaterialService.getRecommendedMaterials(req.user._id);
+  return res.status(200).json(new ApiResponse(200, materials, 'Recommended materials fetched'));
+});
+
 export const deleteStudyMaterial = asyncHandler(async (req, res) => {
   const result = await studyMaterialService.deleteStudyMaterial(req.user._id, req.params.id);
   return res.status(200).json(new ApiResponse(200, result, 'Study material deleted'));

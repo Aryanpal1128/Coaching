@@ -11,6 +11,8 @@ import studyMaterialRoutes from './studyMaterial.routes.js';
 import subjectRoutes from './subject.routes.js';
 import messageRoutes from './message.routes.js';
 import userRoutes from './user.routes.js';
+import followRoutes from './follow.routes.js';
+import configRoutes from './config.routes.js';
 
 const router = Router();
 
@@ -26,5 +28,7 @@ router.use('/study-materials', studyMaterialRoutes);
 router.use('/subjects', subjectRoutes);
 router.use('/messages', messageRoutes);
 router.use('/users', userRoutes);
+router.use('/follow', followRoutes);
+router.use('/config', configRoutes);
 
 export default router;

@@ -31,6 +31,17 @@ export const messageApi = apiSlice.injectEndpoints({
         { type: 'Message', id: recipientId },
         'Message'
       ]
+    }),
+    sendAttachment: builder.mutation({
+      query: ({ recipientId, formData }) => ({
+        url: `/messages/${recipientId}/attachment`,
+        method: 'POST',
+        body: formData
+      }),
+      invalidatesTags: (result, error, { recipientId }) => [
+        { type: 'Message', id: recipientId },
+        'Message'
+      ]
     })
   })
 });
@@ -40,5 +51,6 @@ export const {
   useGetMessagesQuery,
   useGetUsersQuery,
   useToggleReactionMutation,
-  useSendMessageMutation
+  useSendMessageMutation,
+  useSendAttachmentMutation
 } = messageApi;

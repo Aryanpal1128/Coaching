@@ -2,7 +2,7 @@ import { saveMessage, toggleReaction } from '../services/message.service.js';
 import logger from '../config/logger.js';
 
 // Track online users: userId → socketId
-const onlineUsers = new Map();
+export const onlineUsers = new Map();
 
 export const setupMessageSocket = (io, socket) => {
   // Register user as online

@@ -59,6 +59,12 @@ const userSchema = new mongoose.Schema(
       type: String,
       default: '🌱 Beginner'
     },
+    savedQuestions: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Question'
+      }
+    ],
     lastActiveAt: {
       type: Date,
       default: Date.now

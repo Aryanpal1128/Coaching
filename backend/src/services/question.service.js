@@ -77,12 +77,18 @@ export const deleteQuestion = async (questionId, userId, userRole) => {
 };
 
 export const searchQuestions = async (filters, pagination) => {
-  const { query, tag, subject, difficulty, askedBy, isSolved, sortBy } = filters;
+  const { query, tag, subject, difficulty, askedBy, isSolved, sortBy, bookmarkedBy } = filters;
   const page = parseInt(pagination.page || 1);
   const limit = parseInt(pagination.limit || 10);
   const skip = (page - 1) * limit;
 
   const filterCriteria = {};
+
+  if (bookmarkedBy) {
+    const userObj = await User.findById(bookmarkedBy);
+    const savedIds = userObj ? userObj.savedQuestions || [] : [];
+    filterCriteria._id = { $in: savedIds };
+  }
 
   if (query) {
     const regexQuery = { $regex: query, $options: 'i' };
@@ -172,17 +178,46 @@ export const followQuestion = async (questionId, userId) => {
   return { isFollowing: !isFollowing, followersCount: question.followers.length };
 };
 
-export const bookmarkQuestion = async (questionId, userId) => {
-  const profile = await StudentProfile.findOne({ user: userId });
-  if (!profile) throw new ApiError(404, 'Student profile not found');
+export const getSavedQuestions = async (userId, pagination) => {
+  const page = parseInt(pagination.page || 1);
+  const limit = parseInt(pagination.limit || 10);
+  const skip = (page - 1) * limit;
 
-  const isBookmarked = profile.bookmarkedQuestions.includes(questionId);
-  if (isBookmarked) {
-    profile.bookmarkedQuestions.pull(questionId);
-  } else {
-    profile.bookmarkedQuestions.push(questionId);
+  const userObj = await User.findById(userId);
+  const savedIds = userObj ? userObj.savedQuestions || [] : [];
+
+  const questions = await Question.find({ _id: { $in: savedIds } })
+    .populate('askedBy', 'name avatar reputation level badge')
+    .populate('subject', 'name')
+    .sort({ createdAt: -1 })
+    .skip(skip)
+    .limit(limit);
+
+  const total = savedIds.length;
+
+  return {
+    questions,
+    total,
+    page,
+    pages: Math.ceil(total / limit)
+  };
+};
+
+export const bookmarkQuestion = async (questionId, userId) => {
+  const userObj = await User.findById(userId);
+  if (!userObj) throw new ApiError(404, 'User not found');
+
+  if (!userObj.savedQuestions) {
+    userObj.savedQuestions = [];
   }
 
-  await profile.save();
-  return { isBookmarked: !isBookmarked };
+  const isSaved = userObj.savedQuestions.includes(questionId);
+  if (isSaved) {
+    userObj.savedQuestions.pull(questionId);
+  } else {
+    userObj.savedQuestions.push(questionId);
+  }
+
+  await userObj.save();
+  return { isSaved: !isSaved };
 };
