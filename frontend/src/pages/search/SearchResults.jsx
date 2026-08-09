@@ -208,7 +208,13 @@ export const SearchResults = () => {
                           {u.role}
                         </Badge>
                       </div>
-                      <p className="text-[10px] text-slate-500 truncate mt-0.5">{u.email}</p>
+                      {u.username ? (
+                        <p className="text-[10px] font-semibold text-brand-600 dark:text-brand-400 truncate mt-0.5">
+                          @{u.username}
+                        </p>
+                      ) : (
+                        <p className="text-[10px] text-slate-500 truncate mt-0.5">{u.email}</p>
+                      )}
                     </div>
                   </Link>
                 ))}

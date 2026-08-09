@@ -45,6 +45,7 @@ const seedDatabase = async () => {
     // 3. Create Admin User
     const admin = await User.create({
       name: 'System Admin',
+      username: 'admin',
       email: 'admin@ailearning.com',
       password: 'adminPassword123',
       role: 'ADMIN',
@@ -54,6 +55,7 @@ const seedDatabase = async () => {
     // 4. Create Teacher User
     const teacher = await User.create({
       name: 'Prof. Alan Turing',
+      username: 'alanturing',
       email: 'teacher@ailearning.com',
       password: 'teacherPassword123',
       role: 'TEACHER',
@@ -67,6 +69,7 @@ const seedDatabase = async () => {
     // 5. Create Student User
     const student = await User.create({
       name: 'Ada Lovelace',
+      username: 'adalovelace',
       email: 'student@ailearning.com',
       password: 'studentPassword123',
       role: 'STUDENT',

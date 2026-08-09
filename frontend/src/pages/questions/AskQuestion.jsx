@@ -4,7 +4,7 @@ import { Card } from '../../components/common/Card.jsx';
 import { Input } from '../../components/common/Input.jsx';
 import { Button } from '../../components/common/Button.jsx';
 import { useCreateQuestionMutation, useSuggestQuestionMutation } from '../../redux/api/questionApi.js';
-import { HelpCircle, Sparkles, Plus, X, AlertTriangle, Lightbulb } from 'lucide-react';
+import { HelpCircle, Sparkles, Plus, X, AlertTriangle, Lightbulb, Undo2, Check } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 export const AskQuestion = () => {
@@ -14,10 +14,30 @@ export const AskQuestion = () => {
   const [tagInput, setTagInput] = useState('');
   const [tags, setTags] = useState(['algorithms']);
   const [suggestions, setSuggestions] = useState(null);
+  const [previousValues, setPreviousValues] = useState({});
 
   const [createQuestion, { isLoading }] = useCreateQuestionMutation();
   const [suggestQuestion, { isLoading: isSuggesting }] = useSuggestQuestionMutation();
   const navigate = useNavigate();
+
+  const STATUS_MESSAGES = [
+    "Analyzing your question...",
+    "Checking context & tags...",
+    "Evaluating grammar & clarity...",
+    "Almost done..."
+  ];
+  const [statusIdx, setStatusIdx] = useState(0);
+
+  React.useEffect(() => {
+    if (!isSuggesting) {
+      setStatusIdx(0);
+      return;
+    }
+    const interval = setInterval(() => {
+      setStatusIdx((prev) => (prev + 1) % STATUS_MESSAGES.length);
+    }, 1800);
+    return () => clearInterval(interval);
+  }, [isSuggesting]);
 
   const handleAddTag = (e) => {
     if (e.key === 'Enter' || e.key === ',') {
@@ -41,9 +61,38 @@ export const AskQuestion = () => {
     try {
       const res = await suggestQuestion({ title: title.trim(), description: description.trim() }).unwrap();
       setSuggestions(res.data);
+      setPreviousValues({});
       toast.success('AI suggestions generated!');
     } catch (err) {
       toast.error('Failed to get AI suggestions');
+    }
+  };
+
+  const handleToggleFieldSuggestion = (field, suggestedValue, setter, fieldLabel) => {
+    const isApplied = previousValues[field] !== undefined;
+
+    if (isApplied) {
+      const originalValue = previousValues[field];
+      setter(originalValue);
+      setPreviousValues((prev) => {
+        const next = { ...prev };
+        delete next[field];
+        return next;
+      });
+      toast.success(`Reverted ${fieldLabel}`);
+    } else {
+      let currentValue;
+      if (field === 'title') currentValue = title;
+      else if (field === 'description') currentValue = description;
+      else if (field === 'difficulty') currentValue = difficulty;
+      else if (field === 'tags') currentValue = tags;
+
+      setPreviousValues((prev) => ({
+        ...prev,
+        [field]: currentValue
+      }));
+      setter(suggestedValue);
+      toast.success(`Suggested ${fieldLabel} applied!`);
     }
   };
 
@@ -216,7 +265,7 @@ export const AskQuestion = () => {
             )}
 
             {/* Suggested Title */}
-            {suggestions.suggestedTitle && suggestions.suggestedTitle !== title && (
+            {suggestions.suggestedTitle && (suggestions.suggestedTitle !== title || previousValues.title !== undefined) && (
               <div className="bg-white dark:bg-slate-950 border border-slate-100 dark:border-slate-900 p-3 rounded-xl flex items-start justify-between gap-3">
                 <div className="space-y-1">
                   <span className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Suggested Title:</span>
@@ -224,19 +273,24 @@ export const AskQuestion = () => {
                 </div>
                 <button
                   type="button"
-                  onClick={() => {
-                    setTitle(suggestions.suggestedTitle);
-                    toast.success('Suggested title applied!');
-                  }}
-                  className="text-[10px] font-bold text-brand-600 hover:text-brand-700 bg-brand-50 dark:bg-brand-950/40 px-2.5 py-1.5 rounded-lg shrink-0 transition-colors"
+                  onClick={() => handleToggleFieldSuggestion('title', suggestions.suggestedTitle, setTitle, 'title')}
+                  className="text-[10px] font-bold text-brand-600 hover:text-brand-700 bg-brand-50 dark:bg-brand-950/40 px-2.5 py-1.5 rounded-lg shrink-0 transition-colors flex items-center gap-1"
                 >
-                  Apply
+                  {previousValues.title !== undefined ? (
+                    <>
+                      <Undo2 className="w-3 h-3" /> Revert
+                    </>
+                  ) : (
+                    <>
+                      <Check className="w-3 h-3" /> Apply
+                    </>
+                  )}
                 </button>
               </div>
             )}
 
             {/* Suggested Description */}
-            {suggestions.suggestedDescription && suggestions.suggestedDescription !== description && (
+            {suggestions.suggestedDescription && (suggestions.suggestedDescription !== description || previousValues.description !== undefined) && (
               <div className="bg-white dark:bg-slate-950 border border-slate-100 dark:border-slate-900 p-3 rounded-xl flex items-start justify-between gap-3">
                 <div className="space-y-1 overflow-hidden">
                   <span className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Suggested Description:</span>
@@ -244,19 +298,24 @@ export const AskQuestion = () => {
                 </div>
                 <button
                   type="button"
-                  onClick={() => {
-                    setDescription(suggestions.suggestedDescription);
-                    toast.success('Suggested description applied!');
-                  }}
-                  className="text-[10px] font-bold text-brand-600 hover:text-brand-700 bg-brand-50 dark:bg-brand-950/40 px-2.5 py-1.5 rounded-lg shrink-0 transition-colors"
+                  onClick={() => handleToggleFieldSuggestion('description', suggestions.suggestedDescription, setDescription, 'description')}
+                  className="text-[10px] font-bold text-brand-600 hover:text-brand-700 bg-brand-50 dark:bg-brand-950/40 px-2.5 py-1.5 rounded-lg shrink-0 transition-colors flex items-center gap-1"
                 >
-                  Apply
+                  {previousValues.description !== undefined ? (
+                    <>
+                      <Undo2 className="w-3 h-3" /> Revert
+                    </>
+                  ) : (
+                    <>
+                      <Check className="w-3 h-3" /> Apply
+                    </>
+                  )}
                 </button>
               </div>
             )}
 
             {/* Suggested Difficulty */}
-            {suggestions.suggestedDifficulty && (
+            {suggestions.suggestedDifficulty && (suggestions.suggestedDifficulty !== difficulty || previousValues.difficulty !== undefined) && (
               <div className="bg-white dark:bg-slate-950 border border-slate-100 dark:border-slate-900 p-3 rounded-xl flex items-center justify-between gap-3">
                 <div className="space-y-1">
                   <span className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Suggested Difficulty:</span>
@@ -268,13 +327,18 @@ export const AskQuestion = () => {
                 </div>
                 <button
                   type="button"
-                  onClick={() => {
-                    setDifficulty(suggestions.suggestedDifficulty);
-                    toast.success('Suggested difficulty applied!');
-                  }}
-                  className="text-[10px] font-bold text-brand-600 hover:text-brand-700 bg-brand-50 dark:bg-brand-950/40 px-2.5 py-1.5 rounded-lg shrink-0 transition-colors"
+                  onClick={() => handleToggleFieldSuggestion('difficulty', suggestions.suggestedDifficulty, setDifficulty, 'difficulty')}
+                  className="text-[10px] font-bold text-brand-600 hover:text-brand-700 bg-brand-50 dark:bg-brand-950/40 px-2.5 py-1.5 rounded-lg shrink-0 transition-colors flex items-center gap-1"
                 >
-                  Apply
+                  {previousValues.difficulty !== undefined ? (
+                    <>
+                      <Undo2 className="w-3 h-3" /> Revert
+                    </>
+                  ) : (
+                    <>
+                      <Check className="w-3 h-3" /> Apply
+                    </>
+                  )}
                 </button>
               </div>
             )}
@@ -297,13 +361,18 @@ export const AskQuestion = () => {
                 </div>
                 <button
                   type="button"
-                  onClick={() => {
-                    setTags(suggestions.suggestedTags);
-                    toast.success('Suggested tags applied!');
-                  }}
-                  className="text-[10px] font-bold text-brand-600 hover:text-brand-700 bg-brand-50 dark:bg-brand-950/40 px-2.5 py-1.5 rounded-lg shrink-0 transition-colors"
+                  onClick={() => handleToggleFieldSuggestion('tags', suggestions.suggestedTags, setTags, 'tags')}
+                  className="text-[10px] font-bold text-brand-600 hover:text-brand-700 bg-brand-50 dark:bg-brand-950/40 px-2.5 py-1.5 rounded-lg shrink-0 transition-colors flex items-center gap-1"
                 >
-                  Apply
+                  {previousValues.tags !== undefined ? (
+                    <>
+                      <Undo2 className="w-3 h-3" /> Revert
+                    </>
+                  ) : (
+                    <>
+                      <Check className="w-3 h-3" /> Apply
+                    </>
+                  )}
                 </button>
               </div>
             )}
@@ -315,10 +384,20 @@ export const AskQuestion = () => {
             type="button" 
             variant="outline" 
             onClick={handleGetSuggestions} 
-            isLoading={isSuggesting} 
+            disabled={isSuggesting}
             size="md"
           >
-            <Sparkles className="w-4 h-4 mr-2 text-brand-500 fill-brand-500/25" /> Check with AI
+            {isSuggesting ? (
+              <span className="flex items-center gap-2">
+                <Sparkles className="w-4 h-4 text-brand-500 fill-brand-500/25 animate-spin" />
+                <span>{STATUS_MESSAGES[statusIdx]}</span>
+              </span>
+            ) : (
+              <span className="flex items-center gap-2">
+                <Sparkles className="w-4 h-4 text-brand-500 fill-brand-500/25" />
+                <span>Check with AI</span>
+              </span>
+            )}
           </Button>
           <Button type="submit" isLoading={isLoading} size="md">
             <Plus className="w-4 h-4 mr-1.5" /> Post Question

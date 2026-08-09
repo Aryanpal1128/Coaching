@@ -8,6 +8,35 @@ import { ROLES } from '../constants/roles.js';
 import logger from '../config/logger.js';
 import { OAuth2Client } from 'google-auth-library';
 
+export const generateUniqueUsername = async (name) => {
+  let base = (name || 'user')
+    .toLowerCase()
+    .replace(/[^a-z0-9_]/g, '') || 'user';
+
+  if (base.length < 3) {
+    base = base.padEnd(3, '0');
+  } else if (base.length > 15) {
+    base = base.slice(0, 15);
+  }
+
+  let username = base;
+  let isUnique = false;
+  let attempts = 0;
+
+  while (!isUnique && attempts < 100) {
+    const existing = await User.findOne({ username });
+    if (!existing) {
+      isUnique = true;
+    } else {
+      const randomNum = Math.floor(10 + Math.random() * 9899);
+      username = `${base.slice(0, 15)}${randomNum}`;
+      attempts++;
+    }
+  }
+
+  return username;
+};
+
 export const registerUser = async (userData) => {
   const { name, email, password, role } = userData;
 
@@ -69,8 +98,10 @@ export const verifyOTPToken = async (pendingToken, submittedOtp) => {
   }
 
   // Create user in DB now that email is verified
+  const username = await generateUniqueUsername(name);
   user = await User.create({
     name,
+    username,
     email,
     password, // will be hashed by mongoose pre-save hook
     role: role || 'STUDENT',
@@ -219,8 +250,10 @@ export const googleAuth = async (idToken, role) => {
   if (!user) {
     const userRole = role && Object.values(ROLES).includes(role) ? role : ROLES.STUDENT;
     // Create new Google Auth user, already verified by Google
+    const username = await generateUniqueUsername(name);
     user = await User.create({
       name,
+      username,
       email,
       password: Math.random().toString(36).slice(-10), // random safe password
       role: userRole,

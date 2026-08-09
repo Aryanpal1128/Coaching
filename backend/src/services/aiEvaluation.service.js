@@ -129,36 +129,37 @@ export const evaluateQuestionWithAI = async (title, description) => {
 
   const ai = new GoogleGenAI({ apiKey });
 
-  const prompt = `
-You are an AI learning coach. Review the student's proposed academic question.
-Analyze if it has any errors (grammatical, spelling, technical, conceptual) or lacks clarity, and suggest improvements.
-Also infer the difficulty level ("Easy", "Medium", or "Hard") and 2 to 5 relevant tags based on the question context.
-Return ONLY a valid JSON object matching the exact schema below.
+  const prompt = `Review this question and return JSON:
+Title: "${title}"
+Description: "${description}"
 
-Question Title: "${title}"
-Question Context: "${description}"
-
-JSON Schema format:
+JSON schema:
 {
   "isGood": boolean,
-  "grammarIssues": ["array of grammar/spelling errors found, or empty array"],
-  "conceptualIssues": ["array of conceptual/technical inaccuracies or lacks of context, or empty array"],
-  "suggestedTitle": "an improved, clearer, or corrected version of the title",
-  "suggestedDescription": "an improved, clearer, or corrected version of the description",
-  "suggestedDifficulty": "one of 'Easy', 'Medium', 'Hard'",
-  "suggestedTags": ["array of 2-5 short, relevant lowercase tag strings"],
-  "generalFeedback": "helpful coaching feedback to the student on how to write better questions"
-}
-`;
+  "grammarIssues": ["string"],
+  "conceptualIssues": ["string"],
+  "suggestedTitle": "string",
+  "suggestedDescription": "string",
+  "suggestedDifficulty": "Easy"|"Medium"|"Hard",
+  "suggestedTags": ["string"],
+  "generalFeedback": "string"
+}`;
 
   const makeRequest = async () => {
-    const response = await ai.models.generateContent({
-      model: 'gemini-flash-latest',
-      contents: prompt,
-      config: {
-        responseMimeType: 'application/json'
-      }
-    });
+    const timeoutPromise = new Promise((_, reject) =>
+      setTimeout(() => reject(new Error('AI request timeout after 8000ms')), 8000)
+    );
+
+    const response = await Promise.race([
+      ai.models.generateContent({
+        model: 'gemini-flash-latest',
+        contents: prompt,
+        config: {
+          responseMimeType: 'application/json'
+        }
+      }),
+      timeoutPromise
+    ]);
 
     const responseText = response.text ? response.text.trim() : '';
     const cleanJson = responseText.replace(/```json/g, '').replace(/```/g, '').trim();

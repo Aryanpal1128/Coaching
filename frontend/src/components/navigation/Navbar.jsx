@@ -241,7 +241,13 @@ export const Navbar = ({ toggleSidebar }) => {
                               <p className="text-xs font-bold text-slate-900 dark:text-slate-100 truncate">
                                 {u.name}
                               </p>
-                              <p className="text-[10px] text-slate-500 truncate">{u.email}</p>
+                              {u.username ? (
+                                <p className="text-[10px] font-semibold text-brand-600 dark:text-brand-400 truncate">
+                                  @{u.username}
+                                </p>
+                              ) : (
+                                <p className="text-[10px] text-slate-500 truncate">{u.email}</p>
+                              )}
                             </div>
                             <Badge
                               variant={

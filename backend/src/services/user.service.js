@@ -4,7 +4,7 @@ import { TeacherProfile } from '../models/TeacherProfile.js';
 import { ApiError } from '../utils/ApiError.js';
 
 export const getUserProfile = async (userId) => {
-  const user = await User.findById(userId).select('name avatar role level reputation badge savedQuestions createdAt');
+  const user = await User.findById(userId).select('name username avatar role level reputation badge savedQuestions createdAt');
   if (!user) {
     throw new ApiError(404, 'User not found');
   }
@@ -32,4 +32,30 @@ export const getUserProfile = async (userId) => {
     user,
     profile
   };
+};
+
+export const updateUsername = async (userId, newUsername) => {
+  if (!newUsername || typeof newUsername !== 'string') {
+    throw new ApiError(400, 'Username is required');
+  }
+
+  const clean = newUsername.trim().toLowerCase();
+  const usernameRegex = /^[a-zA-Z0-9_]{3,20}$/;
+
+  if (!usernameRegex.test(clean)) {
+    throw new ApiError(400, 'Username must be 3-20 characters long and contain only letters, numbers, and underscores');
+  }
+
+  const existing = await User.findOne({ username: clean, _id: { $ne: userId } });
+  if (existing) {
+    throw new ApiError(400, 'Username is already taken');
+  }
+
+  const updatedUser = await User.findByIdAndUpdate(
+    userId,
+    { username: clean },
+    { new: true, runValidators: true }
+  ).select('name username avatar role email level reputation badge');
+
+  return updatedUser;
 };

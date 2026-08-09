@@ -9,7 +9,8 @@ import {
   Mail, Trophy, Award, BookOpen, CheckCircle, Flame,
   Edit, Camera, HelpCircle, MessageSquare, Cpu, Bookmark, UserPlus, UserCheck, UserX, Users, X
 } from 'lucide-react';
-import { useGetUserProfileQuery } from '../../redux/api/authApi.js';
+import { useGetUserProfileQuery, useUpdateUsernameMutation } from '../../redux/api/authApi.js';
+import toast from 'react-hot-toast';
 import { QuestionCard } from '../../components/questions/QuestionCard.jsx';
 import { useSearchQuestionsQuery } from '../../redux/api/questionApi.js';
 import {
@@ -39,6 +40,10 @@ export const UserProfile = () => {
   const [activeTab, setActiveTab] = useState('Overview');
   const [followModalType, setFollowModalType] = useState(null); // 'followers' | 'following' | null
 
+  const [isEditingUsername, setIsEditingUsername] = useState(false);
+  const [newUsernameVal, setNewUsernameVal] = useState('');
+  const [updateUsername, { isLoading: isUpdatingUsername }] = useUpdateUsernameMutation();
+
   const activeUserId = userId || currentUser?._id;
   const isOwnProfile = !userId || userId === currentUser?._id;
 
@@ -58,6 +63,23 @@ export const UserProfile = () => {
 
   const user = isOwnProfile ? currentUser : profileResponse?.data?.user;
   const profile = profileResponse?.data?.profile;
+
+  const handleOpenEditUsername = () => {
+    setNewUsernameVal(user?.username || '');
+    setIsEditingUsername(true);
+  };
+
+  const handleSaveUsername = async (e) => {
+    e.preventDefault();
+    if (!newUsernameVal.trim()) return;
+    try {
+      await updateUsername({ username: newUsernameVal.trim() }).unwrap();
+      toast.success('Username updated successfully!');
+      setIsEditingUsername(false);
+    } catch (err) {
+      toast.error(err?.data?.message || 'Failed to update username');
+    }
+  };
 
   const isStudent = user?.role === 'STUDENT';
   const tabs = isStudent
@@ -132,6 +154,20 @@ export const UserProfile = () => {
               <Badge variant="emerald">{user?.level || 'Beginner'}</Badge>
             </div>
 
+            {user?.username && (
+              <p className="text-xs font-bold text-brand-600 dark:text-brand-400 flex items-center justify-center sm:justify-start gap-1">
+                <span>@{user.username}</span>
+                {isOwnProfile && (
+                  <button
+                    onClick={handleOpenEditUsername}
+                    className="text-[10px] text-slate-400 hover:text-brand-500 underline ml-1 font-normal"
+                  >
+                    Edit
+                  </button>
+                )}
+              </p>
+            )}
+
             {isOwnProfile && user?.email && (
               <p className="text-xs text-slate-400 flex items-center justify-center sm:justify-start gap-1.5 mt-1">
                 <Mail className="w-3.5 h-3.5" /> {user.email}
@@ -186,8 +222,8 @@ export const UserProfile = () => {
           </div>
 
           {isOwnProfile ? (
-            <Button variant="outline" size="sm" className="shrink-0">
-              <Edit className="w-3.5 h-3.5 mr-1.5" /> Edit Profile
+            <Button onClick={handleOpenEditUsername} variant="outline" size="sm" className="shrink-0">
+              <Edit className="w-3.5 h-3.5 mr-1.5" /> Edit Username
             </Button>
           ) : (
             <div className="shrink-0 flex items-center gap-2">
@@ -390,6 +426,40 @@ export const UserProfile = () => {
       )}
 
       {/* Followers / Following Modal */}
+      {isEditingUsername && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 max-w-md w-full shadow-2xl animate-in fade-in zoom-in-95 duration-150">
+            <div className="flex items-center justify-between mb-4 border-b border-slate-100 dark:border-slate-800 pb-3">
+              <h3 className="font-extrabold text-slate-900 dark:text-slate-100 text-sm">Change Username</h3>
+              <button onClick={() => setIsEditingUsername(false)} className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-1 rounded-lg">
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+            <form onSubmit={handleSaveUsername} className="space-y-4">
+              <div>
+                <label className="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1.5">New Username</label>
+                <div className="relative">
+                  <span className="absolute left-3 top-2.5 text-xs text-slate-400 font-bold">@</span>
+                  <input
+                    type="text"
+                    value={newUsernameVal}
+                    onChange={(e) => setNewUsernameVal(e.target.value)}
+                    className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl pl-7 pr-3 py-2 text-xs font-semibold text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-brand-500"
+                    placeholder="username (3-20 chars)"
+                    required
+                  />
+                </div>
+                <p className="text-[10px] text-slate-400 mt-1.5">3–20 characters. Letters, numbers, and underscores only.</p>
+              </div>
+              <div className="flex justify-end gap-2 pt-2">
+                <Button type="button" variant="outline" size="sm" onClick={() => setIsEditingUsername(false)}>Cancel</Button>
+                <Button type="submit" size="sm" isLoading={isUpdatingUsername}>Save Username</Button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
       {followModalType && (
         <FollowListModal
           userId={activeUserId}

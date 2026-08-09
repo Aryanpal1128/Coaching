@@ -98,7 +98,7 @@ export const searchQuestions = async (filters, pagination) => {
     const subjectIds = matchingSubjects.map(s => s._id);
 
     // Find matching users (authors) to include in question search
-    const matchingUsers = await User.find({ name: regexQuery }).select('_id');
+    const matchingUsers = await User.find({ $or: [{ name: regexQuery }, { username: regexQuery }] }).select('_id');
     const userIds = matchingUsers.map(u => u._id);
 
     filterCriteria.$or = [

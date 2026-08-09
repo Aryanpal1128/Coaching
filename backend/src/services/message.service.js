@@ -12,8 +12,8 @@ export const getConversations = async (userId) => {
     $or: [{ sender: userId }, { recipient: userId }]
   })
     .sort({ createdAt: -1 })
-    .populate('sender', 'name avatar role')
-    .populate('recipient', 'name avatar role');
+    .populate('sender', 'name username avatar role')
+    .populate('recipient', 'name username avatar role');
 
   // Build a map of unique conversation partners
   const convMap = new Map();
@@ -128,10 +128,12 @@ export const toggleReaction = async (messageId, userId, emoji) => {
 export const getUsers = async (currentUserId, search = '') => {
   const filter = { _id: { $ne: currentUserId } };
   if (search) {
+    const cleanSearch = search.startsWith('@') ? search.slice(1) : search;
     filter.$or = [
       { name: { $regex: search, $options: 'i' } },
-      { email: { $regex: search, $options: 'i' } }
+      { email: { $regex: search, $options: 'i' } },
+      { username: { $regex: cleanSearch, $options: 'i' } }
     ];
   }
-  return User.find(filter).select('name avatar role email').limit(20);
+  return User.find(filter).select('name username avatar role email').limit(20);
 };

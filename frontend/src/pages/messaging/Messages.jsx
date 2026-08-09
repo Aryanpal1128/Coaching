@@ -5,13 +5,12 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { apiSlice } from '../../redux/api/apiSlice.js';
 import { Card } from '../../components/common/Card.jsx';
 import { Button } from '../../components/common/Button.jsx';
-import { Send, ArrowLeft, Search, UserPlus, X, MessageSquare, CornerUpLeft, Paperclip, FileText, Download, Film, Image as ImageIcon, Phone, Video, Mic, Play, Pause, Square } from 'lucide-react';
+import { Send, ArrowLeft, Search, X, MessageSquare, CornerUpLeft, Paperclip, FileText, Download, Film, Image as ImageIcon, Phone, Video, Mic, Play, Pause, Square } from 'lucide-react';
 import { useSocket } from '../../context/SocketContext.jsx';
 import { useCall } from '../../context/CallContext.jsx';
 import {
   useGetConversationsQuery,
   useGetMessagesQuery,
-  useGetUsersQuery,
   useToggleReactionMutation,
   useSendMessageMutation,
   useSendAttachmentMutation
@@ -157,8 +156,6 @@ export const Messages = () => {
   const [typing, setTyping] = useState(false);
   const [partnerTyping, setPartnerTyping] = useState(false);
   const [onlineUsers, setOnlineUsers] = useState(new Set());
-  const [showNewChat, setShowNewChat] = useState(false);
-  const [userSearch, setUserSearch] = useState('');
   const [contactSearch, setContactSearch] = useState('');
 
   // Handle direct navigation to a user chat (e.g. from UserProfile)
@@ -167,7 +164,6 @@ export const Messages = () => {
       const targetUser = location.state.startChatWith;
       setPartner(targetUser);
       setShowChat(true);
-      setShowNewChat(false);
       // Clear route state to avoid re-triggering
       navigate(location.pathname, { replace: true, state: {} });
     }
@@ -269,8 +265,7 @@ export const Messages = () => {
     refetchOnMountOrArgChange: true
   });
 
-  const { data: usersData } = useGetUsersQuery(userSearch, { skip: !showNewChat });
-  const allUsers = usersData?.data || [];
+
 
   // Load history into live messages when partner changes
   useEffect(() => {
@@ -897,13 +892,6 @@ export const Messages = () => {
           <div className="p-4 border-b border-slate-200 dark:border-slate-800">
             <div className="flex items-center justify-between mb-3">
               <h2 className="text-sm font-extrabold text-slate-900 dark:text-slate-100">Messages</h2>
-              <button
-                onClick={() => { setShowNewChat(true); setShowChat(true); }}
-                className="p-1.5 rounded-xl text-brand-500 hover:bg-brand-500/10 transition-colors"
-                title="New conversation"
-              >
-                <UserPlus className="w-4 h-4" />
-              </button>
             </div>
             <div className="relative">
               <Search className="absolute left-3 top-2.5 w-3.5 h-3.5 text-slate-400" />
@@ -922,12 +910,6 @@ export const Messages = () => {
               <div className="p-6 text-center text-slate-400 text-xs">
                 <MessageSquare className="w-8 h-8 mx-auto mb-2 opacity-30" />
                 <p>No conversations yet.</p>
-                <button
-                  onClick={() => { setShowNewChat(true); setShowChat(true); }}
-                  className="mt-2 text-brand-500 hover:underline font-semibold"
-                >
-                  Start a new chat →
-                </button>
               </div>
             )}
             {filteredConvs.map((conv) => (
@@ -961,63 +943,11 @@ export const Messages = () => {
           </div>
         </div>
 
-        {/* ── Chat / New Chat Panel ─────────────────────── */}
+        {/* ── Chat Panel ─────────────────────── */}
         <div className={`flex-1 flex flex-col min-w-0 ${!showChat && !partner ? 'hidden sm:flex' : 'flex'}`}>
 
-          {/* NEW CHAT: User Search */}
-          {showNewChat && (
-            <div className="flex flex-col h-full">
-              <div className="p-4 border-b border-slate-200 dark:border-slate-800 flex items-center gap-3">
-                <button onClick={() => { setShowNewChat(false); setShowChat(false); }} className="p-2 rounded-xl text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 sm:hidden">
-                  <ArrowLeft className="w-4 h-4" />
-                </button>
-                <h3 className="text-xs font-bold text-slate-900 dark:text-slate-100">New Conversation</h3>
-                <button onClick={() => { setShowNewChat(false); setShowChat(!!partner); }} className="ml-auto p-1.5 text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl hidden sm:block">
-                  <X className="w-4 h-4" />
-                </button>
-              </div>
-              <div className="p-4 border-b border-slate-200 dark:border-slate-800">
-                <div className="relative">
-                  <Search className="absolute left-3 top-2.5 w-3.5 h-3.5 text-slate-400" />
-                  <input
-                    autoFocus
-                    type="text"
-                    placeholder="Search by name..."
-                    value={userSearch}
-                    onChange={(e) => setUserSearch(e.target.value)}
-                    className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl pl-9 pr-4 py-2 text-xs text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-brand-500"
-                  />
-                </div>
-              </div>
-              <div className="flex-1 overflow-y-auto divide-y divide-slate-100 dark:divide-slate-800/60">
-                {allUsers.map((u) => (
-                  <button
-                    key={u._id}
-                    onClick={() => handleSelectPartner(u)}
-                    className="w-full text-left p-3.5 flex items-center gap-3 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors"
-                  >
-                    <div className="relative">
-                      <Avatar user={u} />
-                      {isOnline(u._id) && (
-                        <span className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-emerald-500 rounded-full border-2 border-white dark:border-slate-900" />
-                      )}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-xs font-bold text-slate-900 dark:text-slate-100">{u.name}</p>
-                      <p className="text-[10px] text-slate-500">{u.role}</p>
-                    </div>
-                    {isOnline(u._id) && <span className="text-[10px] text-emerald-500 font-semibold">Online</span>}
-                  </button>
-                ))}
-                {allUsers.length === 0 && userSearch && (
-                  <p className="text-center text-xs text-slate-400 py-8">No users found</p>
-                )}
-              </div>
-            </div>
-          )}
-
           {/* CHAT VIEW */}
-          {!showNewChat && partner && (
+          {partner && (
             <>
               {/* Chat header */}
               <div className="p-3.5 border-b border-slate-200 dark:border-slate-800 flex items-center gap-3 bg-white dark:bg-slate-900">
@@ -1443,19 +1373,13 @@ export const Messages = () => {
           )}
 
           {/* Empty state */}
-          {!showNewChat && !partner && (
+          {!partner && (
             <div className="flex-1 hidden sm:flex flex-col items-center justify-center text-center p-8 text-slate-400">
               <div className="w-16 h-16 rounded-2xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center mb-4">
                 <MessageSquare className="w-7 h-7 text-slate-300 dark:text-slate-600" />
               </div>
               <h3 className="font-bold text-slate-600 dark:text-slate-300 text-sm">Your Messages</h3>
-              <p className="text-xs mt-1 max-w-xs">Select a conversation or start a new one with the <strong>+</strong> button</p>
-              <button
-                onClick={() => { setShowNewChat(true); setShowChat(true); }}
-                className="mt-4 flex items-center gap-2 px-4 py-2 text-xs font-bold text-brand-500 bg-brand-500/10 rounded-xl hover:bg-brand-500/20 transition-colors"
-              >
-                <UserPlus className="w-4 h-4" /> New Conversation
-              </button>
+              <p className="text-xs mt-1 max-w-xs">Select an existing conversation, or start a new message directly from any user's profile page or search results.</p>
             </div>
           )}
         </div>
