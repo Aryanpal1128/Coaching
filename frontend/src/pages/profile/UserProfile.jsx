@@ -677,7 +677,7 @@ export const UserProfile = () => {
             </div>
             
             {/* Books Stack Illustration */}
-            <svg className="w-32 h-32 shrink-0 hidden sm:block text-brand-500 self-center" viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <svg className="w-20 h-20 sm:w-32 sm:h-32 shrink-0 text-brand-500 self-center" viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg">
               {/* Potted Plant */}
               <rect x="15" y="85" width="14" height="18" rx="3" fill="#3B82F6" opacity="0.8"/>
               <path d="M22 65 C20 75 16 85 16 85" stroke="#10B981" strokeWidth="2.5" strokeLinecap="round"/>
@@ -746,7 +746,7 @@ export const UserProfile = () => {
             </div>
             
             {/* Gold Trophy Illustration */}
-            <svg className="w-32 h-32 shrink-0 hidden sm:block self-center" viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <svg className="w-20 h-20 sm:w-32 sm:h-32 shrink-0 self-center" viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg">
               {/* Gold Trophy */}
               <path d="M40 40 H80 V62 C80 72 72 80 60 80 C48 80 40 72 40 62 Z" fill="#EAB308" stroke="#CA8A04" strokeWidth="1.5"/>
               <path d="M60 80 V94" stroke="#CA8A04" strokeWidth="3" strokeLinecap="round"/>
