@@ -34,8 +34,8 @@ import {
 } from 'lucide-react';
 import {
   useGetUserProfileQuery,
-  useUpdateProfileMutation
-} from '../../redux/api/userApi.js';
+  useUpdateUserProfileMutation
+} from '../../redux/api/authApi.js';
 import {
   useFollowUserMutation,
   useUnfollowUserMutation,
@@ -51,7 +51,7 @@ import {
   useVerifyRoomPaymentMutation,
   useGetMyEnrollmentsQuery
 } from '../../redux/api/roomApi.js';
-import { updateCredentials } from '../../redux/slices/authSlice.js';
+import { updateUser } from '../../redux/slices/authSlice.js';
 import { handleRazorpayPayment } from '../../utils/razorpay.js';
 import toast from 'react-hot-toast';
 
@@ -96,7 +96,7 @@ export const UserProfile = () => {
 
   const [followUser, { isLoading: isFollowingLoading }] = useFollowUserMutation();
   const [unfollowUser, { isLoading: isUnfollowingLoading }] = useUnfollowUserMutation();
-  const [updateProfile, { isLoading: isSavingProfile }] = useUpdateProfileMutation();
+  const [updateProfile, { isLoading: isSavingProfile }] = useUpdateUserProfileMutation();
 
   const { data: subjectsRes } = useGetSubjectsQuery();
   const subjectsList = subjectsRes?.data || [];
@@ -232,7 +232,7 @@ export const UserProfile = () => {
 
       const res = await updateProfile(formData).unwrap();
       if (res.data?.user && isOwnProfile) {
-        dispatch(updateCredentials({ user: res.data.user }));
+        dispatch(updateUser(res.data.user));
       }
       toast.success('Profile updated successfully! 🎉');
       setIsEditingProfile(false);
@@ -262,7 +262,7 @@ export const UserProfile = () => {
 
       const res = await updateProfile(formData).unwrap();
       if (res.data?.user) {
-        dispatch(updateCredentials({ user: res.data.user }));
+        dispatch(updateUser(res.data.user));
       }
       toast.success('Avatar updated successfully!');
       refetch();
