@@ -434,7 +434,7 @@ export const UserProfile = () => {
           )}
 
           {/* Stats Row Container */}
-          <div className="border border-slate-200 dark:border-[#1e294b]/60 bg-slate-50 dark:bg-[#070b14]/50 rounded-2xl p-4 max-w-md mx-auto mt-5 flex justify-around items-center">
+          <div className="border border-slate-200 dark:border-[#1e294b]/60 bg-slate-50 dark:bg-[#070b14]/50 rounded-2xl p-4 max-w-md mx-auto mt-5 flex flex-col min-[400px]:flex-row justify-around items-center gap-4 min-[400px]:gap-2">
             {/* Reputation Points */}
             <div className="flex items-center gap-3">
               <Trophy className="w-5 h-5 text-amber-500 shrink-0" />
@@ -444,7 +444,7 @@ export const UserProfile = () => {
               </div>
             </div>
             {/* Divider */}
-            <div className="w-px h-8 bg-slate-200 dark:bg-slate-800" />
+            <div className="hidden min-[400px]:block w-px h-8 bg-slate-200 dark:bg-slate-800" />
             {/* Followers */}
             <button onClick={() => setFollowModalType('followers')} className="flex items-center gap-3 hover:opacity-80 transition-opacity">
               <User className="w-5 h-5 text-purple-500 shrink-0" />
@@ -454,7 +454,7 @@ export const UserProfile = () => {
               </div>
             </button>
             {/* Divider */}
-            <div className="w-px h-8 bg-slate-200 dark:bg-slate-800" />
+            <div className="hidden min-[400px]:block w-px h-8 bg-slate-200 dark:bg-slate-800" />
             {/* Following */}
             <button onClick={() => setFollowModalType('following')} className="flex items-center gap-3 hover:opacity-80 transition-opacity">
               <Users className="w-5 h-5 text-brand-500 shrink-0" />
@@ -657,7 +657,7 @@ export const UserProfile = () => {
       {activeTab === 'Overview' && (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Bio & Details */}
-          <Card className="flex flex-row justify-between items-start gap-4 p-6 sm:p-7 relative overflow-hidden bg-white dark:bg-[#0b1329] border border-slate-200 dark:border-[#1e294b]">
+          <Card className="flex flex-col-reverse min-[480px]:flex-row justify-between items-center min-[480px]:items-start gap-6 p-6 sm:p-7 relative overflow-hidden bg-white dark:bg-[#0b1329] border border-slate-200 dark:border-[#1e294b]">
             <div className="space-y-4 flex-1 min-w-0">
               <h3 className="text-sm font-extrabold text-slate-900 dark:text-white flex items-center gap-2">
                 <div className="p-1.5 rounded-lg bg-brand-500/10 text-brand-500 shrink-0">
@@ -711,7 +711,7 @@ export const UserProfile = () => {
           </Card>
 
           {/* Achievements */}
-          <Card className="flex flex-row justify-between items-start gap-4 p-6 sm:p-7 relative overflow-hidden bg-white dark:bg-[#0b1329] border border-slate-200 dark:border-[#1e294b]">
+          <Card className="flex flex-col-reverse min-[480px]:flex-row justify-between items-center min-[480px]:items-start gap-6 p-6 sm:p-7 relative overflow-hidden bg-white dark:bg-[#0b1329] border border-slate-200 dark:border-[#1e294b]">
             <div className="space-y-4 flex-1 min-w-0">
               <h3 className="text-sm font-extrabold text-slate-900 dark:text-white flex items-center gap-2">
                 <div className="p-1.5 rounded-lg bg-amber-500/10 text-amber-500 shrink-0">
