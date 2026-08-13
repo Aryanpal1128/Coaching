@@ -30,7 +30,11 @@ import {
   Lock,
   DollarSign,
   ShieldCheck,
-  Sparkles
+  Sparkles,
+  LayoutGrid,
+  Bookmark,
+  TrendingUp,
+  GraduationCap
 } from 'lucide-react';
 import {
   useGetUserProfileQuery,
@@ -348,23 +352,29 @@ export const UserProfile = () => {
   return (
     <div className="space-y-6 max-w-4xl mx-auto">
       {/* Profile Hero Card */}
-      <Card className="p-6 sm:p-8">
-        <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6">
+      <div className="overflow-hidden border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-md relative rounded-2xl flex flex-col p-0 pb-6">
+        {/* Banner with dot-grid pattern */}
+        <div className="h-32 sm:h-40 w-full bg-gradient-to-r from-brand-900/60 to-indigo-900/60 relative overflow-hidden bg-[radial-gradient(rgba(255,255,255,0.05)_1px,transparent_1px)] [background-size:16px_16px]">
+          <div className="absolute inset-0 bg-gradient-to-t from-slate-900/60 to-transparent" />
+        </div>
+
+        {/* Center profile wrapper */}
+        <div className="px-6 pb-2 text-center -mt-16 sm:-mt-20 relative z-10">
           {/* Avatar */}
-          <div className="relative shrink-0">
+          <div className="relative inline-block shrink-0">
             {displayAvatar ? (
               <img
                 src={displayAvatar}
                 alt={user?.name}
-                className="w-24 h-24 sm:w-28 sm:h-28 rounded-full object-cover border-4 border-brand-500 shadow-xl"
+                className="w-28 h-28 sm:w-32 sm:h-32 rounded-full object-cover border-4 border-white dark:border-slate-900 shadow-2xl ring-4 ring-brand-500/10"
               />
             ) : (
-              <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-full bg-gradient-to-tr from-brand-600 to-indigo-600 flex items-center justify-center text-white text-3xl font-extrabold border-4 border-brand-500 shadow-xl">
+              <div className="w-28 h-28 sm:w-32 sm:h-32 rounded-full bg-gradient-to-tr from-brand-600 to-indigo-600 flex items-center justify-center text-white text-4xl font-extrabold border-4 border-white dark:border-slate-900 shadow-2xl ring-4 ring-brand-500/10">
                 {getInitials(user?.name)}
               </div>
             )}
             {isUploadingAvatar && (
-              <div className="absolute inset-0 rounded-full bg-slate-900/60 backdrop-blur-[1px] flex items-center justify-center z-10 border-4 border-brand-500">
+              <div className="absolute inset-0 rounded-full bg-slate-900/60 backdrop-blur-[1px] flex items-center justify-center z-10 border-4 border-white dark:border-slate-900">
                 <Loader2 className="w-6 h-6 text-white animate-spin" />
               </div>
             )}
@@ -382,116 +392,117 @@ export const UserProfile = () => {
                   onClick={handleAvatarClick}
                   disabled={isUploadingAvatar}
                   title="Upload profile picture"
-                  className="absolute bottom-0 right-0 p-1.5 rounded-full bg-white dark:bg-slate-800 border-2 border-brand-500 shadow-md hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors disabled:opacity-50 z-20 cursor-pointer"
+                  className="absolute bottom-1 right-1 p-2 rounded-full bg-brand-600 hover:bg-brand-500 text-white shadow-lg transition-transform hover:scale-105 active:scale-95 z-20 cursor-pointer"
                 >
-                  <Camera className="w-3.5 h-3.5 text-brand-500" />
+                  <Camera className="w-3.5 h-3.5" />
                 </button>
               </>
             )}
           </div>
 
-          {/* Info */}
-          <div className="flex-1 min-w-0 text-center sm:text-left">
-            <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2 mb-1">
-              <h2 className="text-2xl font-extrabold text-slate-900 dark:text-slate-100">
-                {user?.name || 'Your Profile'}
-              </h2>
-              <Badge variant="blue">{user?.role || 'STUDENT'}</Badge>
-              <Badge variant="emerald">{user?.level || 'Beginner'}</Badge>
-            </div>
+          {/* Name */}
+          <h2 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white mt-3 tracking-wide uppercase">
+            {user?.name || 'Your Profile'}
+          </h2>
 
-            {user?.username && (
-              <p className="text-xs font-bold text-brand-600 dark:text-brand-400 flex items-center justify-center sm:justify-start gap-1">
-                <span>@{user.username}</span>
-                {isOwnProfile && (
-                  <button
-                    onClick={handleOpenEditProfile}
-                    className="text-[10px] text-slate-400 hover:text-brand-500 underline ml-1 font-normal cursor-pointer"
-                  >
-                    Edit
-                  </button>
-                )}
-              </p>
-            )}
-
-            {isOwnProfile && user?.email && (
-              <p className="text-xs text-slate-400 flex items-center justify-center sm:justify-start gap-1.5 mt-1">
-                <Mail className="w-3.5 h-3.5" /> {user.email}
-              </p>
-            )}
-
-            {profile?.title && (
-              <p className="text-xs text-slate-500 font-semibold mt-1">{profile.title}</p>
-            )}
-
-            {profile?.bio && (
-              <p className="text-xs text-slate-400 mt-2 max-w-xl italic">
-                "{profile.bio}"
-              </p>
-            )}
-
-            {/* Followers & Following counts row */}
-            <div className="mt-4 flex flex-wrap items-center justify-center sm:justify-start gap-4 text-xs">
-              <span className="flex items-center gap-1.5 font-bold text-amber-500">
-                <Trophy className="w-4 h-4" /> {user?.reputation || 0} Reputation Pts
-              </span>
-              <button
-                onClick={() => setFollowModalType('followers')}
-                className="flex items-center gap-1 font-bold text-slate-700 dark:text-slate-200 hover:text-brand-500 transition-colors cursor-pointer"
-              >
-                <Users className="w-3.5 h-3.5 text-purple-500" />
-                <span>{followersCount}</span>
-                <span className="text-slate-400 font-normal">Followers</span>
-              </button>
-              <button
-                onClick={() => setFollowModalType('following')}
-                className="flex items-center gap-1 font-bold text-slate-700 dark:text-slate-200 hover:text-brand-500 transition-colors cursor-pointer"
-              >
-                <span>{followingCount}</span>
-                <span className="text-slate-400 font-normal">Following</span>
-              </button>
-            </div>
+          {/* Badges */}
+          <div className="flex items-center justify-center gap-2 mt-2 flex-wrap">
+            <span className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full text-[10px] font-extrabold bg-brand-500/10 text-brand-600 dark:text-brand-400 border border-brand-500/20">
+              <GraduationCap className="w-3.5 h-3.5" />
+              {user?.role || 'STUDENT'}
+            </span>
+            <span className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full text-[10px] font-extrabold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
+              <TrendingUp className="w-3.5 h-3.5" />
+              {user?.level || 'Beginner'}
+            </span>
           </div>
 
-          {isOwnProfile ? (
-            <Button onClick={handleOpenEditProfile} variant="outline" size="sm" className="shrink-0">
-              <Edit className="w-3.5 h-3.5 mr-1.5" /> Edit Profile
-            </Button>
-          ) : (
-            <div className="shrink-0 flex items-center gap-2">
-              <Button
-                onClick={() => navigate('/messages', { state: { startChatWith: user } })}
-                size="sm"
-                variant="outline"
-                className="flex items-center gap-1.5 border-brand-500/30 text-brand-600 dark:text-brand-400 hover:bg-brand-50 dark:hover:bg-brand-950/40"
-              >
-                <MessageSquare className="w-4 h-4" /> Message
-              </Button>
-
-              {isFollowingUser ? (
-                <Button
-                  onClick={() => unfollowUser(activeUserId)}
-                  disabled={isUnfollowingLoading}
-                  variant="outline"
-                  size="sm"
-                  className="flex items-center gap-1.5 border-brand-500/40 text-brand-500 hover:bg-red-50 hover:border-red-500 hover:text-red-500"
+          {/* Username */}
+          {user?.username && (
+            <p className="text-xs font-bold text-brand-500 mt-2.5 flex items-center justify-center gap-1">
+              <span>@{user.username}</span>
+              {isOwnProfile && (
+                <button
+                  onClick={handleOpenEditProfile}
+                  className="text-xs text-slate-400 hover:text-slate-200 underline font-normal cursor-pointer ml-1"
                 >
-                  <UserCheck className="w-4 h-4" /> Following
-                </Button>
-              ) : (
-                <Button
-                  onClick={() => followUser(activeUserId)}
-                  disabled={isFollowingLoading}
-                  size="sm"
-                  className="flex items-center gap-1.5"
-                >
-                  <UserPlus className="w-4 h-4" /> Follow
-                </Button>
+                  Edit
+                </button>
               )}
-            </div>
+            </p>
           )}
+
+          {/* Stats Row Container */}
+          <div className="border border-slate-200 dark:border-slate-800/80 bg-slate-50 dark:bg-slate-900/40 rounded-2xl p-4 max-w-md mx-auto mt-5 flex justify-around items-center">
+            {/* Reputation Points */}
+            <div className="flex items-center gap-3">
+              <Trophy className="w-5 h-5 text-amber-500 shrink-0" />
+              <div className="text-left">
+                <p className="text-sm font-extrabold text-slate-900 dark:text-white leading-tight">{user?.reputation || 0}</p>
+                <p className="text-[9px] text-slate-400 uppercase tracking-wider font-bold">Reputation Pts</p>
+              </div>
+            </div>
+            {/* Divider */}
+            <div className="w-px h-8 bg-slate-200 dark:bg-slate-800" />
+            {/* Followers */}
+            <button onClick={() => setFollowModalType('followers')} className="flex items-center gap-3 hover:opacity-80 transition-opacity">
+              <User className="w-5 h-5 text-purple-500 shrink-0" />
+              <div className="text-left">
+                <p className="text-sm font-extrabold text-slate-900 dark:text-white leading-tight">{followersCount}</p>
+                <p className="text-[9px] text-slate-400 uppercase tracking-wider font-bold">Followers</p>
+              </div>
+            </button>
+            {/* Divider */}
+            <div className="w-px h-8 bg-slate-200 dark:bg-slate-800" />
+            {/* Following */}
+            <button onClick={() => setFollowModalType('following')} className="flex items-center gap-3 hover:opacity-80 transition-opacity">
+              <Users className="w-5 h-5 text-brand-500 shrink-0" />
+              <div className="text-left">
+                <p className="text-sm font-extrabold text-slate-900 dark:text-white leading-tight">{followingCount}</p>
+                <p className="text-[9px] text-slate-400 uppercase tracking-wider font-bold">Following</p>
+              </div>
+            </button>
+          </div>
+
+          {/* Action buttons */}
+          <div className="mt-5 flex justify-center">
+            {isOwnProfile ? (
+              <Button onClick={handleOpenEditProfile} variant="outline" className="rounded-full border-slate-350 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-900 dark:text-white font-extrabold text-xs px-6 py-2 flex items-center gap-1.5 shadow-xs">
+                <Edit className="w-3.5 h-3.5" /> Edit Profile
+              </Button>
+            ) : (
+              <div className="flex items-center gap-3">
+                <Button
+                  onClick={() => navigate('/messages', { state: { startChatWith: user } })}
+                  variant="outline"
+                  className="rounded-full border-slate-350 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-900 dark:text-white font-extrabold text-xs px-6 py-2 flex items-center gap-1.5 shadow-xs"
+                >
+                  <MessageSquare className="w-3.5 h-3.5" /> Message
+                </Button>
+                
+                {isFollowingUser ? (
+                  <Button
+                    onClick={() => unfollowUser(activeUserId)}
+                    disabled={isUnfollowingLoading}
+                    variant="outline"
+                    className="rounded-full border-red-500/40 text-red-500 hover:bg-red-50 dark:hover:bg-red-950/20 font-extrabold text-xs px-6 py-2 flex items-center gap-1.5"
+                  >
+                    <UserCheck className="w-3.5 h-3.5" /> Following
+                  </Button>
+                ) : (
+                  <Button
+                    onClick={() => followUser(activeUserId)}
+                    disabled={isFollowingLoading}
+                    className="rounded-full bg-brand-600 hover:bg-brand-500 text-white font-extrabold text-xs px-6 py-2 flex items-center gap-1.5 shadow-md shadow-brand-500/20"
+                  >
+                    <UserPlus className="w-3.5 h-3.5" /> Follow
+                  </Button>
+                )}
+              </div>
+            )}
+          </div>
         </div>
-      </Card>
+      </div>
 
       {/* Edit Profile Modal */}
       {isEditingProfile && (
@@ -616,57 +627,146 @@ export const UserProfile = () => {
       )}
 
       {/* Tabs Header */}
-      <div ref={tabsRef} className="flex items-center gap-2 border-b border-slate-200 dark:border-slate-800 pb-3 flex-wrap">
-        {tabs.map((tab) => (
-          <button
-            key={tab}
-            onClick={() => setActiveTab(tab)}
-            className={`px-4 py-2 rounded-xl text-xs font-extrabold transition-all cursor-pointer ${
-              activeTab === tab
-                ? 'bg-brand-600 text-white shadow-md shadow-brand-500/20'
-                : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700'
-            }`}
-          >
-            {tab}
-          </button>
-        ))}
+      <div ref={tabsRef} className="flex items-center gap-6 border-b border-slate-200 dark:border-slate-800 pb-px overflow-x-auto justify-around sm:justify-start">
+        {tabs.map((tab) => {
+          let icon = <LayoutGrid className="w-4 h-4" />;
+          if (tab === 'Questions Asked') icon = <HelpCircle className="w-4 h-4" />;
+          if (tab === 'Saved Questions') icon = <Bookmark className="w-4 h-4" />;
+          if (tab === 'My Enrollments' || tab === 'Paid Rooms') icon = <BookOpen className="w-4 h-4" />;
+
+          const active = activeTab === tab;
+          return (
+            <button
+              key={tab}
+              onClick={() => setActiveTab(tab)}
+              className={`flex items-center gap-2 py-3 px-1 text-xs font-extrabold border-b-2 transition-all cursor-pointer ${
+                active
+                  ? 'border-brand-500 text-brand-600 dark:text-brand-400 font-extrabold'
+                  : 'border-transparent text-slate-400 hover:text-slate-200'
+              }`}
+            >
+              {icon}
+              <span>{tab}</span>
+            </button>
+          );
+        })}
       </div>
 
       {/* Tab Content: Overview */}
       {activeTab === 'Overview' && (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Bio & Details */}
-          <Card className="space-y-3">
-            <h3 className="text-sm font-extrabold text-slate-900 dark:text-slate-100 flex items-center gap-2">
-              <BookOpen className="w-4 h-4 text-brand-500" /> About
-            </h3>
-            <p className="text-xs text-slate-600 dark:text-slate-300">
-              {profile?.bio || 'No bio added yet.'}
-            </p>
-            {profile?.institution && (
-              <div className="pt-2 text-xs">
-                <span className="font-bold text-slate-400 uppercase tracking-wider text-[10px]">Institution:</span>
-                <p className="font-semibold text-slate-800 dark:text-slate-200 mt-0.5">{profile.institution}</p>
-              </div>
-            )}
-            {profile?.stream && (
-              <div className="pt-2 text-xs">
-                <span className="font-bold text-slate-400 uppercase tracking-wider text-[10px]">Stream:</span>
-                <p className="font-semibold text-slate-800 dark:text-slate-200 mt-0.5">{profile.stream}</p>
-              </div>
-            )}
+          <Card className="flex flex-row justify-between items-start gap-4 p-6 sm:p-7 relative overflow-hidden bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
+            <div className="space-y-4 flex-1 min-w-0">
+              <h3 className="text-sm font-extrabold text-slate-900 dark:text-white flex items-center gap-2">
+                <div className="p-1.5 rounded-lg bg-brand-500/10 text-brand-500 shrink-0">
+                  <User className="w-4 h-4" />
+                </div>
+                <span>About</span>
+              </h3>
+              <p className="text-xs text-slate-605 dark:text-slate-300 leading-relaxed font-medium">
+                {profile?.bio || 'Passionate learner with a strong interest in exploring new concepts and building a solid foundation in academics.'}
+              </p>
+              {(profile?.institution || user?.institution) && (
+                <div className="pt-2 text-xs">
+                  <span className="font-bold text-slate-400 uppercase tracking-wider text-[9px]">Institution</span>
+                  <p className="font-semibold text-slate-800 dark:text-slate-200 mt-0.5">{profile.institution || user.institution || 'General Academy'}</p>
+                </div>
+              )}
+            </div>
+            
+            {/* Books Stack Illustration */}
+            <svg className="w-32 h-32 shrink-0 hidden sm:block text-brand-500 self-center" viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+              {/* Potted Plant */}
+              <rect x="15" y="85" width="14" height="18" rx="3" fill="#3B82F6" opacity="0.8"/>
+              <path d="M22 65 C20 75 16 85 16 85" stroke="#10B981" strokeWidth="2.5" strokeLinecap="round"/>
+              <path d="M22 65 C24 75 28 85 28 85" stroke="#10B981" strokeWidth="2.5" strokeLinecap="round"/>
+              <circle cx="22" cy="62" r="6" fill="#10B981"/>
+              <circle cx="16" cy="70" r="5" fill="#059669"/>
+              <circle cx="28" cy="72" r="5" fill="#059669"/>
+              
+              {/* Stack of books */}
+              {/* Book 1 (Bottom, Green) */}
+              <path d="M45 80 H105 V92 H45 Z" fill="#059669" stroke="#047857" strokeWidth="1.5"/>
+              <path d="M45 80 C40 80 40 92 45 92" fill="#10B981"/>
+              <rect x="52" y="84" width="45" height="4" rx="1" fill="#047857" opacity="0.6"/>
+
+              {/* Book 2 (Middle, Orange) */}
+              <path d="M42 66 H102 V78 H42 Z" fill="#EA580C" stroke="#C2410C" strokeWidth="1.5"/>
+              <path d="M42 66 C37 66 37 78 42 78" fill="#F97316"/>
+              <rect x="49" y="70" width="45" height="4" rx="1" fill="#C2410C" opacity="0.6"/>
+
+              {/* Book 3 (Top, Blue) */}
+              <path d="M48 52 H108 V64 H48 Z" fill="#2563EB" stroke="#1D4ED8" strokeWidth="1.5"/>
+              <path d="M48 52 C43 52 43 64 48 64" fill="#3B82F6"/>
+              <rect x="55" y="56" width="45" height="4" rx="1" fill="#1D4ED8" opacity="0.6"/>
+
+              {/* Graduation Cap */}
+              <path d="M78 28 L110 38 L78 48 L46 38 Z" fill="#1E293B" stroke="#475569" strokeWidth="1.5"/>
+              <rect x="68" y="44" width="20" height="10" fill="#0F172A" stroke="#334155" strokeWidth="1.5"/>
+              <path d="M94 38 L98 52" stroke="#F59E0B" strokeWidth="2" strokeLinecap="round"/>
+              <circle cx="98" cy="54" r="2.5" fill="#F59E0B"/>
+            </svg>
           </Card>
 
-          {/* Badges / Stats */}
-          <Card className="space-y-3">
-            <h3 className="text-sm font-extrabold text-slate-900 dark:text-slate-100 flex items-center gap-2">
-              <Award className="w-4 h-4 text-amber-500" /> Achievements
-            </h3>
-            <div className="flex flex-wrap gap-2">
-              <Badge variant="amber">🔥 {user?.reputation || 0} Pts</Badge>
-              <Badge variant="emerald">Level: {user?.level || 'Beginner'}</Badge>
-              {isTeacher && <Badge variant="indigo">Instructor</Badge>}
+          {/* Achievements */}
+          <Card className="flex flex-row justify-between items-start gap-4 p-6 sm:p-7 relative overflow-hidden bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
+            <div className="space-y-4 flex-1 min-w-0">
+              <h3 className="text-sm font-extrabold text-slate-900 dark:text-white flex items-center gap-2">
+                <div className="p-1.5 rounded-lg bg-amber-500/10 text-amber-500 shrink-0">
+                  <Award className="w-4 h-4" />
+                </div>
+                <span>Achievements</span>
+              </h3>
+              
+              <div className="grid grid-cols-1 gap-3">
+                {/* Rep Points sub-card */}
+                <div className="flex items-center gap-3 p-3 bg-slate-50 dark:bg-slate-950/40 rounded-xl border border-slate-100 dark:border-slate-850">
+                  <div className="p-2 bg-amber-500/10 text-amber-500 rounded-lg">
+                    <Flame className="w-4 h-4 fill-current" />
+                  </div>
+                  <div>
+                    <p className="text-xs font-extrabold text-slate-900 dark:text-white">{user?.reputation || 0} Pts</p>
+                    <p className="text-[10px] text-slate-400 font-semibold mt-0.5">Reputation Points</p>
+                  </div>
+                </div>
+
+                {/* Level sub-card */}
+                <div className="flex items-center gap-3 p-3 bg-slate-50 dark:bg-slate-950/40 rounded-xl border border-slate-100 dark:border-slate-850">
+                  <div className="p-2 bg-emerald-500/10 text-emerald-500 rounded-lg">
+                    <TrendingUp className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <p className="text-xs font-extrabold text-slate-900 dark:text-white">Level: {user?.level || 'Beginner'}</p>
+                    <p className="text-[10px] text-slate-400 font-semibold mt-0.5">Keep learning and grow!</p>
+                  </div>
+                </div>
+              </div>
             </div>
+            
+            {/* Gold Trophy Illustration */}
+            <svg className="w-32 h-32 shrink-0 hidden sm:block self-center" viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+              {/* Gold Trophy */}
+              <path d="M40 40 H80 V62 C80 72 72 80 60 80 C48 80 40 72 40 62 Z" fill="#EAB308" stroke="#CA8A04" strokeWidth="1.5"/>
+              <path d="M60 80 V94" stroke="#CA8A04" strokeWidth="3" strokeLinecap="round"/>
+              <path d="M45 94 H75" stroke="#CA8A04" strokeWidth="3" strokeLinecap="round"/>
+              <rect x="42" y="94" width="36" height="8" rx="2" fill="#475569"/>
+              
+              {/* Handles */}
+              <path d="M40 46 H32 V58 H40" stroke="#CA8A04" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
+              <path d="M80 46 H88 V58 H80" stroke="#CA8A04" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
+              
+              {/* Star on Trophy */}
+              <path d="M60 50 L62 55 L67 55 L63 58 L65 63 L60 60 L55 63 L57 58 L53 55 L58 55 Z" fill="#FFF" opacity="0.9"/>
+              
+              {/* Confetti */}
+              <circle cx="25" cy="30" r="2" fill="#3B82F6"/>
+              <circle cx="95" cy="35" r="1.5" fill="#EF4444"/>
+              <rect x="30" y="70" width="3" height="3" fill="#10B981" transform="rotate(45 30 70)"/>
+              <rect x="88" y="75" width="2.5" height="2.5" fill="#EAB308" transform="rotate(30 88 75)"/>
+              <path d="M28 50 Q31 52 34 50" stroke="#EC4899" strokeWidth="1" fill="none"/>
+              <path d="M92 58 Q95 60 98 58" stroke="#3B82F6" strokeWidth="1" fill="none"/>
+            </svg>
           </Card>
         </div>
       )}
