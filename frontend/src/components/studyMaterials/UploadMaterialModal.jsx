@@ -1,18 +1,20 @@
 import React, { useState, useRef } from 'react';
-import { X, Upload, FileText, BookOpen, AlertCircle } from 'lucide-react';
+import { X, Upload, FileText, Lock, Globe } from 'lucide-react';
 import { Button } from '../common/Button.jsx';
-import { useUploadStudyMaterialMutation } from '../../redux/api/teacherApi.js';
-import { useGetSubjectsQuery } from '../../redux/api/teacherApi.js';
+import { useUploadStudyMaterialMutation, useGetSubjectsQuery } from '../../redux/api/teacherApi.js';
+import { useGetMyRoomsQuery } from '../../redux/api/roomApi.js';
 import toast from 'react-hot-toast';
 
-const FILE_TYPES = ['PDF', 'DOC', 'IMAGE', 'PPT', 'OTHER'];
+const FILE_TYPES = ['PDF', 'DOC', 'IMAGE', 'PPT', 'VIDEO', 'OTHER'];
 
 export const UploadMaterialModal = ({ onClose }) => {
   const [form, setForm] = useState({
     title: '',
     description: '',
     subjectId: '',
-    fileType: 'PDF'
+    fileType: 'PDF',
+    accessType: 'public',
+    roomId: ''
   });
   const [selectedFile, setSelectedFile] = useState(null);
   const [dragOver, setDragOver] = useState(false);
@@ -20,13 +22,26 @@ export const UploadMaterialModal = ({ onClose }) => {
 
   const { data: subjectsData } = useGetSubjectsQuery();
   const subjects = subjectsData?.data || [];
+
+  const { data: roomsData } = useGetMyRoomsQuery();
+  const myRooms = roomsData?.data || [];
+
   const [uploadMaterial, { isLoading }] = useUploadStudyMaterialMutation();
 
   const handleChange = (e) =>
     setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
 
   const handleFileChange = (file) => {
-    if (file) setSelectedFile(file);
+    if (file) {
+      setSelectedFile(file);
+      if (file.type.startsWith('video/')) {
+        setForm((prev) => ({ ...prev, fileType: 'VIDEO' }));
+      } else if (file.type.startsWith('image/')) {
+        setForm((prev) => ({ ...prev, fileType: 'IMAGE' }));
+      } else if (file.type === 'application/pdf') {
+        setForm((prev) => ({ ...prev, fileType: 'PDF' }));
+      }
+    }
   };
 
   const handleDrop = (e) => {
@@ -47,6 +62,9 @@ export const UploadMaterialModal = ({ onClose }) => {
     if (!selectedFile) return toast.error('Please select a file');
     if (!form.title.trim()) return toast.error('Title is required');
     if (!form.subjectId) return toast.error('Please select a subject');
+    if (form.accessType === 'paid' && !form.roomId) {
+      return toast.error('Please select a paid Room for this material');
+    }
 
     const formData = new FormData();
     formData.append('file', selectedFile);
@@ -54,6 +72,10 @@ export const UploadMaterialModal = ({ onClose }) => {
     formData.append('description', form.description);
     formData.append('subjectId', form.subjectId);
     formData.append('fileType', form.fileType);
+    formData.append('accessType', form.accessType);
+    if (form.accessType === 'paid' && form.roomId) {
+      formData.append('room', form.roomId);
+    }
 
     try {
       await uploadMaterial(formData).unwrap();
@@ -75,7 +97,7 @@ export const UploadMaterialModal = ({ onClose }) => {
             </div>
             <div>
               <h2 className="text-base font-bold text-slate-100">Upload Study Material</h2>
-              <p className="text-xs text-slate-400">Uploaded to Cloudinary — instant access for students</p>
+              <p className="text-xs text-slate-400">Uploaded to Cloudinary — instant streaming & access for students</p>
             </div>
           </div>
           <button onClick={onClose} className="p-2 rounded-xl text-slate-400 hover:bg-slate-800 transition-colors">
@@ -102,7 +124,7 @@ export const UploadMaterialModal = ({ onClose }) => {
               ref={fileInputRef}
               type="file"
               className="hidden"
-              accept=".pdf,.doc,.docx,.ppt,.pptx,.jpg,.jpeg,.png,.webp,.gif"
+              accept=".pdf,.doc,.docx,.ppt,.pptx,.jpg,.jpeg,.png,.webp,.gif,.mp4,.webm,.mov,.mkv"
               onChange={(e) => handleFileChange(e.target.files[0])}
             />
             {selectedFile ? (
@@ -116,7 +138,7 @@ export const UploadMaterialModal = ({ onClose }) => {
               <div className="flex flex-col items-center gap-2">
                 <Upload className="w-8 h-8 text-slate-500" />
                 <p className="text-sm font-semibold text-slate-300">Drop file here or click to browse</p>
-                <p className="text-xs text-slate-500">PDF, DOC, PPTX, Images — max 20 MB</p>
+                <p className="text-xs text-slate-500">PDF, DOC, PPTX, Images, Videos — max 250 MB</p>
               </div>
             )}
           </div>
@@ -170,6 +192,66 @@ export const UploadMaterialModal = ({ onClose }) => {
             </div>
           </div>
 
+          {/* Access Control Options (Public vs Paid Room) */}
+          <div className="space-y-2 p-3.5 bg-slate-800/60 rounded-xl border border-slate-700/60">
+            <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider">
+              Access Type
+            </label>
+            <div className="grid grid-cols-2 gap-2">
+              <button
+                type="button"
+                onClick={() => setForm((prev) => ({ ...prev, accessType: 'public', roomId: '' }))}
+                className={`flex items-center justify-center gap-2 p-2.5 rounded-xl border text-xs font-bold transition-all cursor-pointer ${
+                  form.accessType === 'public'
+                    ? 'bg-emerald-600/20 border-emerald-500 text-emerald-300'
+                    : 'bg-slate-800 border-slate-700 text-slate-400 hover:bg-slate-700'
+                }`}
+              >
+                <Globe className="w-4 h-4" />
+                <span>Public (Free)</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setForm((prev) => ({ ...prev, accessType: 'paid' }))}
+                className={`flex items-center justify-center gap-2 p-2.5 rounded-xl border text-xs font-bold transition-all cursor-pointer ${
+                  form.accessType === 'paid'
+                    ? 'bg-amber-600/20 border-amber-500 text-amber-300'
+                    : 'bg-slate-800 border-slate-700 text-slate-400 hover:bg-slate-700'
+                }`}
+              >
+                <Lock className="w-4 h-4" />
+                <span>Paid Room</span>
+              </button>
+            </div>
+
+            {form.accessType === 'paid' && (
+              <div className="pt-2 animate-in fade-in duration-150">
+                <label className="block text-[11px] font-bold text-amber-400 mb-1">
+                  Select Target Paid Room <span className="text-red-500">*</span>
+                </label>
+                {myRooms.length === 0 ? (
+                  <p className="text-xs text-amber-300/80 bg-amber-500/10 p-2 rounded-lg border border-amber-500/20">
+                    No paid rooms found. Create a paid room first under Teacher Dashboard or Profile.
+                  </p>
+                ) : (
+                  <select
+                    name="roomId"
+                    value={form.roomId}
+                    onChange={handleChange}
+                    className="w-full bg-slate-900 border border-amber-500/50 rounded-xl px-3 py-2 text-xs text-slate-100 focus:outline-none focus:ring-2 focus:ring-amber-500"
+                  >
+                    <option value="">Select Paid Room...</option>
+                    {myRooms.map((r) => (
+                      <option key={r._id} value={r._id}>
+                        {r.title} (₹{(r.price / 100).toFixed(0)})
+                      </option>
+                    ))}
+                  </select>
+                )}
+              </div>
+            )}
+          </div>
+
           {/* Description */}
           <div>
             <label className="block text-xs font-bold text-slate-400 mb-1.5 uppercase tracking-wider">
@@ -194,11 +276,11 @@ export const UploadMaterialModal = ({ onClose }) => {
           )}
 
           {/* Actions */}
-          <div className="flex gap-3 pt-2">
-            <Button type="button" variant="ghost" onClick={onClose} className="flex-1" disabled={isLoading}>
+          <div className="flex flex-col-reverse sm:flex-row gap-3 pt-2">
+            <Button type="button" variant="ghost" onClick={onClose} className="w-full sm:flex-1 justify-center" disabled={isLoading}>
               Cancel
             </Button>
-            <Button type="submit" className="flex-1 bg-emerald-600 hover:bg-emerald-500" disabled={isLoading || !selectedFile}>
+            <Button type="submit" className="w-full sm:flex-1 justify-center bg-emerald-600 hover:bg-emerald-500" disabled={isLoading || !selectedFile}>
               {isLoading ? 'Uploading...' : '📤 Upload Material'}
             </Button>
           </div>

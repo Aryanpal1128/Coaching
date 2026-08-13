@@ -12,6 +12,7 @@ import {
   Eye, MessageSquare, Send, Sparkles, AlertCircle,
   ChevronLeft, Clock, Bookmark, Share2, Tag
 } from 'lucide-react';
+import { ShareModal } from '../../components/common/ShareModal.jsx';
 import toast from 'react-hot-toast';
 
 const diffVariant = { Easy: 'emerald', Medium: 'amber', Hard: 'red' };
@@ -55,6 +56,7 @@ export const QuestionDetails = () => {
   const { id } = useParams();
   const { user } = useSelector((state) => state.auth);
   const [answerText, setAnswerText] = useState('');
+  const [isShareModalOpen, setIsShareModalOpen] = useState(false);
 
   const { data: questionRes, isLoading: qLoading, isError: qError } = useGetQuestionByIdQuery(id);
   const { data: answersRes, isLoading: aLoading } = useGetAnswersForQuestionQuery(id);
@@ -88,14 +90,11 @@ export const QuestionDetails = () => {
 
   const handleShare = (e) => {
     e.preventDefault();
-    const shareUrl = window.location.href;
-    navigator.clipboard.writeText(shareUrl)
-      .then(() => {
-        toast.success('Link copied to clipboard!');
-      })
-      .catch(() => {
-        toast.error('Failed to copy link');
-      });
+    if (!user) {
+      toast.error('Please login to share questions');
+      return;
+    }
+    setIsShareModalOpen(true);
   };
 
   const handleSubmitAnswer = async (e) => {
@@ -319,6 +318,13 @@ export const QuestionDetails = () => {
           ))
         )}
       </div>
+
+      <ShareModal
+        isOpen={isShareModalOpen}
+        onClose={() => setIsShareModalOpen(false)}
+        shareUrl={`${window.location.origin}/questions/${question._id}`}
+        shareTitle={question.title}
+      />
     </div>
   );
 };

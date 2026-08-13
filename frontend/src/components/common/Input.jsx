@@ -39,7 +39,7 @@ export const Input = ({
           required={required}
           className={`w-full bg-slate-50 dark:bg-slate-800/80 border ${
             error ? 'border-red-500 focus:ring-red-500' : 'border-slate-300 dark:border-slate-700 focus:ring-brand-500'
-          } text-slate-900 dark:text-slate-100 placeholder-slate-400 rounded-xl py-2.5 ${
+          } text-slate-900 dark:text-slate-100 placeholder-slate-400 placeholder:text-xs sm:placeholder:text-sm placeholder:truncate rounded-xl py-2.5 ${
             Icon ? 'pl-11' : 'pl-3.5'
           } ${isPassword ? 'pr-11' : 'pr-3.5'} text-sm focus:outline-none focus:ring-2 transition-all ${className}`}
           {...props}

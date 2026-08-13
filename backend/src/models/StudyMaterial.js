@@ -21,7 +21,7 @@ const studyMaterialSchema = new mongoose.Schema(
     },
     fileType: {
       type: String,
-      enum: ['PDF', 'IMAGE', 'DOC', 'PPT', 'OTHER'],
+      enum: ['PDF', 'IMAGE', 'DOC', 'PPT', 'VIDEO', 'OTHER'],
       default: 'PDF'
     },
     fileSize: {
@@ -42,6 +42,18 @@ const studyMaterialSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: 'Subject',
       required: true,
+      index: true
+    },
+    accessType: {
+      type: String,
+      enum: ['public', 'paid'],
+      default: 'public',
+      index: true
+    },
+    room: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Room',
+      default: null,
       index: true
     }
   },

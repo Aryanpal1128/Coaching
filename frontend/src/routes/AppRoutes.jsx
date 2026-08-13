@@ -26,6 +26,7 @@ const LiveClasses = lazy(() => import('../pages/liveClasses/LiveClasses.jsx').th
 const StudyMaterials = lazy(() => import('../pages/studyMaterials/StudyMaterials.jsx').then(m => ({ default: m.StudyMaterials })));
 const Messages = lazy(() => import('../pages/messaging/Messages.jsx').then(m => ({ default: m.Messages })));
 const SearchResults = lazy(() => import('../pages/search/SearchResults.jsx').then(m => ({ default: m.SearchResults })));
+const Onboarding = lazy(() => import('../pages/onboarding/Onboarding.jsx').then(m => ({ default: m.Onboarding })));
 
 export const AppRoutes = () => {
   return (
@@ -44,6 +45,11 @@ export const AppRoutes = () => {
           <Route path="/register" element={<Register />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/reset-password" element={<ResetPassword />} />
+        </Route>
+
+        {/* Protected Standalone Onboarding Route */}
+        <Route element={<ProtectedRoute />}>
+          <Route path="/onboarding" element={<Onboarding />} />
         </Route>
 
         {/* Protected Dashboard Routes */}

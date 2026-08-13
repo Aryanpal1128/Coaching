@@ -6,7 +6,7 @@ import { Link } from 'react-router-dom';
 
 export const NotificationDropdown = ({ onClose }) => {
   const socket = useSocket();
-  const { data: notifData } = useGetNotificationsQuery();
+  const { data: notifData, refetch } = useGetNotificationsQuery();
   const [markAsRead] = useMarkAsReadMutation();
 
   const [liveNotifications, setLiveNotifications] = useState([]);
@@ -22,10 +22,17 @@ export const NotificationDropdown = ({ onClose }) => {
 
     socket.on('new_notification', (newNotif) => {
       setLiveNotifications((prev) => [newNotif, ...prev]);
+      refetch();
     });
 
     return () => socket.off('new_notification');
-  }, [socket]);
+  }, [socket, refetch]);
+
+  const handleNotificationClick = (item) => {
+    if (!item.isRead && item._id) {
+      markAsRead(item._id);
+    }
+  };
 
   const markAllRead = () => {
     liveNotifications.forEach((n) => {
@@ -75,7 +82,8 @@ export const NotificationDropdown = ({ onClose }) => {
           liveNotifications.map((n) => (
             <div
               key={n._id}
-              className={`p-3.5 flex items-start gap-3 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors ${
+              onClick={() => handleNotificationClick(n)}
+              className={`p-3.5 flex items-start gap-3 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors cursor-pointer ${
                 !n.isRead ? 'bg-brand-500/5' : ''
               }`}
             >

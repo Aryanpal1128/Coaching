@@ -17,6 +17,11 @@ export const getStudyMaterials = asyncHandler(async (req, res) => {
   return res.status(200).json(new ApiResponse(200, materials, 'Study materials fetched'));
 });
 
+export const getStudyMaterialById = asyncHandler(async (req, res) => {
+  const material = await studyMaterialService.getStudyMaterialById(req.params.id, req.user);
+  return res.status(200).json(new ApiResponse(200, material, 'Study material fetched'));
+});
+
 export const getRecommendedMaterials = asyncHandler(async (req, res) => {
   const materials = await studyMaterialService.getRecommendedMaterials(req.user._id);
   return res.status(200).json(new ApiResponse(200, materials, 'Recommended materials fetched'));

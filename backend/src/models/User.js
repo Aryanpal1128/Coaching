@@ -42,7 +42,15 @@ const userSchema = new mongoose.Schema(
       type: String,
       default: 'https://res.cloudinary.com/demo/image/upload/v1571218039/sample.jpg'
     },
+    avatarPublicId: {
+      type: String,
+      default: ''
+    },
     isVerified: {
+      type: Boolean,
+      default: false
+    },
+    isOnboarded: {
       type: Boolean,
       default: false
     },

@@ -1,9 +1,11 @@
 import React from 'react';
 import { useSelector } from 'react-redux';
+import { motion } from 'framer-motion';
 import { StatCard } from '../../components/common/StatCard.jsx';
 import { Card } from '../../components/common/Card.jsx';
 import { Badge } from '../../components/common/Badge.jsx';
-import { Trophy, HelpCircle, CheckCircle, Cpu, Zap, Award, ArrowUpRight, Video, BookOpen } from 'lucide-react';
+import { HelpCircle, CheckCircle, Zap, ArrowUpRight } from 'lucide-react';
+import { Trophy as PhosphorTrophy, VideoCamera, BookOpen as PhosphorBookOpen, CalendarCheck } from '@phosphor-icons/react';
 import { Link } from 'react-router-dom';
 import { useGetLiveClassesQuery } from '../../redux/api/liveClassApi.js';
 import { useGetStudyMaterialsQuery } from '../../redux/api/teacherApi.js';
@@ -16,7 +18,7 @@ export const StudentDashboard = () => {
   const { data: liveClassData } = useGetLiveClassesQuery({ status: 'LIVE' });
   const { data: scheduledData } = useGetLiveClassesQuery({ status: 'SCHEDULED' });
   const { data: materialsData } = useGetStudyMaterialsQuery({});
-  const { data: questionsData } = useSearchQuestionsQuery({ limit: 4 });
+  const { data: questionsData } = useSearchQuestionsQuery({ limit: 6 });
 
   const liveClasses = Array.isArray(liveClassData?.data)
     ? liveClassData.data
@@ -38,8 +40,13 @@ export const StudentDashboard = () => {
 
   return (
     <div className="space-y-6">
-      {/* Welcome Banner */}
-      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-brand-600 via-indigo-600 to-purple-600 p-6 sm:p-8 text-white shadow-xl shadow-brand-500/10">
+      {/* Welcome Banner — flat brand color */}
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.3 }}
+        className="relative overflow-hidden rounded-3xl bg-brand-600 dark:bg-brand-700 p-6 sm:p-8 text-white shadow-lg shadow-brand-500/10"
+      >
         <div className="relative z-10 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
           <div>
             <div className="flex items-center gap-2">
@@ -68,11 +75,16 @@ export const StudentDashboard = () => {
             <Zap className="w-4 h-4 text-amber-500 fill-amber-500" /> Ask Question
           </Link>
         </div>
-      </div>
+      </motion.div>
 
       {/* 🔴 Active Live Class Banner */}
       {liveClasses.length > 0 && (
-        <div className="bg-red-500/10 border border-red-500/30 rounded-3xl p-5 flex flex-col sm:flex-row items-center justify-between gap-4 animate-pulse">
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3, delay: 0.04 }}
+          className="bg-red-500/10 border border-red-500/30 rounded-3xl p-5 flex flex-col sm:flex-row items-center justify-between gap-4 animate-pulse"
+        >
           <div className="flex items-center gap-3 text-center sm:text-left">
             <span className="relative flex h-3 w-3 shrink-0">
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
@@ -91,171 +103,141 @@ export const StudentDashboard = () => {
           >
             Join Live Class Now →
           </Link>
-        </div>
+        </motion.div>
       )}
 
-      {/* Stat Cards — real user data */}
+      {/* Stat Cards — real user data with staggered entrance & distinct accent tints */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <StatCard
-          title="Reputation Points"
-          value={`${user?.reputation || 0} pts`}
-          icon={Trophy}
-          trend={user?.level || 'Keep going!'}
-          color="amber"
-        />
-        <StatCard
-          title="Live Now"
-          value={liveClasses.length.toString()}
-          icon={Video}
-          trend={liveClasses.length > 0 ? 'Classes in progress' : 'None active'}
-          color={liveClasses.length > 0 ? 'red' : 'slate'}
-        />
-        <StatCard
-          title="Study Materials"
-          value={materials.length.toString()}
-          icon={BookOpen}
-          trend="Available to download"
-          color="emerald"
-        />
-        <StatCard
-          title="Upcoming Classes"
-          value={upcomingClasses.length.toString()}
-          icon={CheckCircle}
-          trend="Scheduled sessions"
-          color="indigo"
-        />
-      </div>
+        {/* Card 1: Reputation Points (Teal/Emerald) */}
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3, delay: 0.06 }}
+        >
+          <StatCard
+            title="Reputation Points"
+            value={`${user?.reputation || 0} pts`}
+            icon={PhosphorTrophy}
+            trend={user?.level || 'Keep going!'}
+            color="emerald"
+          />
+        </motion.div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Live & Upcoming Classes */}
-        <Card>
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-base font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
-              <Video className="w-5 h-5 text-red-500" /> Live & Upcoming
-            </h3>
-            <Link to="/live-classes" className="text-xs font-bold text-brand-500 hover:underline flex items-center gap-1">
-              View All <ArrowUpRight className="w-3.5 h-3.5" />
-            </Link>
-          </div>
-          {[...liveClasses, ...upcomingClasses].length === 0 ? (
-            <div className="text-center py-8 text-slate-400">
-              <Video className="w-8 h-8 mx-auto mb-2 opacity-30" />
-              <p className="text-xs">No classes right now</p>
-              <Link to="/live-classes" className="text-xs text-brand-500 hover:underline mt-1 block">Browse all classes →</Link>
-            </div>
-          ) : (
-            <div className="space-y-3">
-              {[...liveClasses, ...upcomingClasses].slice(0, 3).map((cls) => (
-                <div key={cls._id} className={`p-3.5 rounded-2xl border flex items-start justify-between gap-3 ${cls.status === 'LIVE'
-                  ? 'bg-red-500/5 border-red-500/20'
-                  : 'bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-800'
-                  }`}>
-                  <div className="flex-1 min-w-0">
-                    <h4 className="text-xs font-bold text-slate-900 dark:text-slate-100 truncate">{cls.title}</h4>
-                    <p className="text-[11px] text-slate-500 mt-0.5">
-                      {cls.teacher?.name} • {cls.subject?.name}
-                    </p>
-                  </div>
-                  <div className="shrink-0">
-                    {cls.status === 'LIVE' ? (
-                      <Link to="/live-classes">
-                        <span className="flex items-center gap-1 text-[10px] font-bold text-red-500 bg-red-500/10 px-2 py-1 rounded-full">
-                          <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-ping" />
-                          JOIN
-                        </span>
-                      </Link>
-                    ) : (
-                      <Badge variant="amber" size="xs">
-                        {new Date(cls.scheduledAt).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}
-                      </Badge>
-                    )}
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </Card>
+        {/* Card 2: Live Now (Coral/Rose Red + Pulsing Dot when count > 0) */}
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3, delay: 0.12 }}
+        >
+          <StatCard
+            title="Live Now"
+            value={
+              <span className="inline-flex items-center gap-2">
+                {liveClasses.length > 0 && (
+                  <span className="relative flex h-2.5 w-2.5">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75"></span>
+                    <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-rose-500"></span>
+                  </span>
+                )}
+                {liveClasses.length.toString()}
+              </span>
+            }
+            icon={VideoCamera}
+            trend={liveClasses.length > 0 ? 'Classes in progress' : 'None active'}
+            color="rose"
+          />
+        </motion.div>
 
-        {/* Recent Study Materials */}
-        <Card>
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-base font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
-              <BookOpen className="w-5 h-5 text-emerald-500" /> Study Materials
-            </h3>
-            <Link to="/study-materials" className="text-xs font-bold text-brand-500 hover:underline flex items-center gap-1">
-              View All <ArrowUpRight className="w-3.5 h-3.5" />
-            </Link>
-          </div>
-          {materials.length === 0 ? (
-            <div className="text-center py-8 text-slate-400">
-              <BookOpen className="w-8 h-8 mx-auto mb-2 opacity-30" />
-              <p className="text-xs">No materials uploaded yet</p>
-            </div>
-          ) : (
-            <div className="space-y-3">
-              {materials.slice(0, 3).map((m) => (
-                <a
-                  key={m._id}
-                  href={m.fileUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="block p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 hover:border-brand-500/40 transition-all"
-                >
-                  <div className="flex items-center justify-between gap-2">
-                    <div className="flex-1 min-w-0">
-                      <h4 className="text-xs font-bold text-slate-900 dark:text-slate-100 truncate">{m.title}</h4>
-                      <p className="text-[11px] text-slate-500 mt-0.5">{m.teacher?.name} • {m.subject?.name}</p>
-                    </div>
-                    <Badge variant="blue" size="xs">{m.fileType}</Badge>
-                  </div>
-                </a>
-              ))}
-            </div>
-          )}
-        </Card>
+        {/* Card 3: Study Materials (Purple, Clickable -> /study-materials) */}
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3, delay: 0.18 }}
+        >
+          <Link to="/study-materials" className="block text-left font-normal">
+            <StatCard
+              title="Study Materials"
+              value={materials.length.toString()}
+              icon={PhosphorBookOpen}
+              trend="Available to download"
+              color="purple"
+              onClick={() => {}}
+            />
+          </Link>
+        </motion.div>
+
+        {/* Card 4: Upcoming Classes (Slate/Neutral, Clickable -> /live-classes) */}
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3, delay: 0.24 }}
+        >
+          <Link to="/live-classes" className="block text-left font-normal">
+            <StatCard
+              title="Upcoming Classes"
+              value={upcomingClasses.length.toString()}
+              icon={CalendarCheck}
+              trend="Scheduled sessions"
+              color="slate"
+              onClick={() => {}}
+            />
+          </Link>
+        </motion.div>
       </div>
 
       {/* Recent Questions from Q&A */}
-      <Card>
-        <div className="flex items-center justify-between mb-4">
-          <div>
-            <h3 className="text-base font-bold text-slate-900 dark:text-slate-100">Recent Q&A</h3>
-            <p className="text-xs text-slate-500">Latest questions from the community</p>
-          </div>
-          <Link to="/questions" className="text-xs font-bold text-brand-500 hover:underline flex items-center gap-1">
-            View All <ArrowUpRight className="w-4 h-4" />
-          </Link>
-        </div>
-        <div className="space-y-3">
-          {recentQuestions.length === 0 ? (
-            <div className="text-center py-6 text-slate-400">
-              <HelpCircle className="w-8 h-8 mx-auto mb-2 opacity-30" />
-              <p className="text-xs">No questions yet. Be the first to ask!</p>
-              <Link to="/ask-question" className="text-xs text-brand-500 hover:underline mt-1 block">Ask a question →</Link>
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.3, delay: 0.30 }}
+      >
+        <Card>
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <h3 className="text-base font-bold text-slate-900 dark:text-slate-100">Recent Q&A</h3>
+              <p className="text-xs text-slate-500">Latest questions from the community</p>
             </div>
-          ) : (
-            recentQuestions.map((q) => (
-              <div key={q._id} className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-800 flex items-center justify-between gap-4">
-                <div className="min-w-0">
-                  <Link
-                    to={`/questions/${q._id}`}
-                    className="text-xs font-bold text-slate-900 dark:text-slate-100 hover:text-brand-500 transition-colors line-clamp-1"
-                  >
-                    {q.title}
-                  </Link>
-                  <div className="flex items-center gap-2 mt-1">
-                    {q.subject?.name && <Badge variant="indigo" size="xs">{q.subject.name}</Badge>}
-                    <span className="text-[11px] text-slate-500">{q.answers?.length || 0} Answers</span>
-                  </div>
-                </div>
-                <Badge variant={q.difficulty === 'Hard' ? 'red' : q.difficulty === 'Easy' ? 'emerald' : 'amber'} size="xs">
-                  {q.difficulty || 'Medium'}
-                </Badge>
+            <Link to="/questions" className="text-xs font-bold text-brand-500 hover:underline flex items-center gap-1">
+              View All <ArrowUpRight className="w-4 h-4" />
+            </Link>
+          </div>
+          <div className="space-y-3">
+            {recentQuestions.length === 0 ? (
+              <div className="text-center py-6 text-slate-400">
+                <HelpCircle className="w-8 h-8 mx-auto mb-2 opacity-30" />
+                <p className="text-xs">No questions yet. Be the first to ask!</p>
+                <Link to="/ask-question" className="text-xs text-brand-500 hover:underline mt-1 block">Ask a question →</Link>
               </div>
-            ))
-          )}
-        </div>
-      </Card>
+            ) : (
+              recentQuestions.map((q, idx) => (
+                <motion.div
+                  key={q._id}
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.25, delay: 0.32 + idx * 0.04 }}
+                  className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-800 flex items-center justify-between gap-4 transition-all duration-150 hover:-translate-y-0.5 hover:border-brand-500/40 hover:shadow-sm"
+                >
+                  <div className="min-w-0">
+                    <Link
+                      to={`/questions/${q._id}`}
+                      className="text-xs font-bold text-slate-900 dark:text-slate-100 hover:text-brand-500 transition-colors line-clamp-1"
+                    >
+                      {q.title}
+                    </Link>
+                    <div className="flex items-center gap-2 mt-1">
+                      {q.subject?.name && <Badge variant="indigo" size="xs">{q.subject.name}</Badge>}
+                      <span className="text-[11px] text-slate-500">{q.answers?.length || 0} Answers</span>
+                    </div>
+                  </div>
+                  <Badge variant={q.difficulty === 'Hard' ? 'red' : q.difficulty === 'Easy' ? 'emerald' : 'amber'} size="xs">
+                    {q.difficulty || 'Medium'}
+                  </Badge>
+                </motion.div>
+              ))
+            )}
+          </div>
+        </Card>
+      </motion.div>
     </div>
   );
 };

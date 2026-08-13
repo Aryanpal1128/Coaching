@@ -16,6 +16,10 @@ const studentProfileSchema = new mongoose.Schema(
       type: String,
       default: 'General Academy'
     },
+    stream: {
+      type: String,
+      enum: ['Science', 'Commerce', 'Arts', 'Other']
+    },
     bio: {
       type: String,
       maxlength: 500,

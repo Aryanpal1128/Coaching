@@ -13,6 +13,9 @@ router.get('/', authenticate, studyMaterialController.getStudyMaterials);
 // GET recommended study materials (any authenticated user)
 router.get('/recommended', authenticate, studyMaterialController.getRecommendedMaterials);
 
+// GET single study material with paid enrollment check
+router.get('/:id', authenticate, studyMaterialController.getStudyMaterialById);
+
 // POST upload study material (teacher/admin only) — multipart file upload
 router.post(
   '/',

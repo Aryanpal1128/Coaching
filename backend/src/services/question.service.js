@@ -1,4 +1,5 @@
 import { Question } from '../models/Question.js';
+import { Answer } from '../models/Answer.js';
 import { StudentProfile } from '../models/StudentProfile.js';
 import { Tag } from '../models/Tag.js';
 import { Subject } from '../models/Subject.js';
@@ -77,7 +78,7 @@ export const deleteQuestion = async (questionId, userId, userRole) => {
 };
 
 export const searchQuestions = async (filters, pagination) => {
-  const { query, tag, subject, difficulty, askedBy, isSolved, sortBy, bookmarkedBy } = filters;
+  const { query, tag, subject, difficulty, askedBy, author, answeredBy, solvedBy, isSolved, sortBy, bookmarkedBy } = filters;
   const page = parseInt(pagination.page || 1);
   const limit = parseInt(pagination.limit || 10);
   const skip = (page - 1) * limit;
@@ -88,6 +89,32 @@ export const searchQuestions = async (filters, pagination) => {
     const userObj = await User.findById(bookmarkedBy);
     const savedIds = userObj ? userObj.savedQuestions || [] : [];
     filterCriteria._id = { $in: savedIds };
+  }
+
+  if (answeredBy) {
+    const answeredQuestionIds = await Answer.find({ author: answeredBy }).distinct('question');
+    if (filterCriteria._id) {
+      const existingIn = filterCriteria._id.$in || [];
+      const intersection = existingIn.filter((id) =>
+        answeredQuestionIds.some((aqId) => aqId.toString() === id.toString())
+      );
+      filterCriteria._id = { $in: intersection };
+    } else {
+      filterCriteria._id = { $in: answeredQuestionIds };
+    }
+  }
+
+  if (solvedBy) {
+    const solvedQuestionIds = await Answer.find({ author: solvedBy, isAccepted: true }).distinct('question');
+    if (filterCriteria._id) {
+      const existingIn = filterCriteria._id.$in || [];
+      const intersection = existingIn.filter((id) =>
+        solvedQuestionIds.some((sqId) => sqId.toString() === id.toString())
+      );
+      filterCriteria._id = { $in: intersection };
+    } else {
+      filterCriteria._id = { $in: solvedQuestionIds };
+    }
   }
 
   if (query) {
@@ -124,8 +151,9 @@ export const searchQuestions = async (filters, pagination) => {
   if (difficulty) {
     filterCriteria.difficulty = difficulty;
   }
-  if (askedBy) {
-    filterCriteria.askedBy = askedBy;
+  const effectiveAskedBy = askedBy || author;
+  if (effectiveAskedBy) {
+    filterCriteria.askedBy = effectiveAskedBy;
   }
   if (isSolved !== undefined) {
     filterCriteria.isSolved = isSolved === 'true';
@@ -178,13 +206,15 @@ export const followQuestion = async (questionId, userId) => {
   return { isFollowing: !isFollowing, followersCount: question.followers.length };
 };
 
-export const getSavedQuestions = async (userId, pagination) => {
-  const page = parseInt(pagination.page || 1);
-  const limit = parseInt(pagination.limit || 10);
+export const getSavedQuestions = async (userId, pagination = {}) => {
+  let page = parseInt(pagination?.page);
+  if (isNaN(page) || page < 1) page = 1;
+  let limit = parseInt(pagination?.limit);
+  if (isNaN(limit) || limit < 1) limit = 10;
   const skip = (page - 1) * limit;
 
   const userObj = await User.findById(userId);
-  const savedIds = userObj ? userObj.savedQuestions || [] : [];
+  const savedIds = userObj ? (userObj.savedQuestions || []).filter(Boolean) : [];
 
   const questions = await Question.find({ _id: { $in: savedIds } })
     .populate('askedBy', 'name avatar reputation level badge')

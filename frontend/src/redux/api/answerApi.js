@@ -35,6 +35,10 @@ export const answerApi = apiSlice.injectEndpoints({
         method: 'POST'
       }),
       invalidatesTags: ['Answer']
+    }),
+    getMyAnswers: builder.query({
+      query: () => '/answers/mine',
+      providesTags: ['Answer']
     })
   })
 });
@@ -44,5 +48,6 @@ export const {
   useSubmitAnswerMutation,
   useVoteAnswerMutation,
   useAcceptAnswerMutation,
-  useEndorseAnswerMutation
+  useEndorseAnswerMutation,
+  useGetMyAnswersQuery
 } = answerApi;

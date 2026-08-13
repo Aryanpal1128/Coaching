@@ -13,6 +13,7 @@ import messageRoutes from './message.routes.js';
 import userRoutes from './user.routes.js';
 import followRoutes from './follow.routes.js';
 import configRoutes from './config.routes.js';
+import roomRoutes from './room.routes.js';
 
 const router = Router();
 
@@ -30,5 +31,6 @@ router.use('/messages', messageRoutes);
 router.use('/users', userRoutes);
 router.use('/follow', followRoutes);
 router.use('/config', configRoutes);
+router.use('/rooms', roomRoutes);
 
 export default router;

@@ -70,7 +70,9 @@ export const Register = () => {
       dispatch(setCredentials({ user: res.data.user, accessToken: res.data.accessToken }));
       toast.success('Email verified successfully! Welcome to the platform.');
       
-      if (res.data.user.role === 'TEACHER') {
+      if (!res.data.user?.isOnboarded) {
+        navigate('/onboarding');
+      } else if (res.data.user.role === 'TEACHER') {
         navigate('/teacher-dashboard');
       } else if (res.data.user.role === 'ADMIN') {
         navigate('/admin-dashboard');

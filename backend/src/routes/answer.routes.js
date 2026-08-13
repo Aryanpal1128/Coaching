@@ -8,6 +8,7 @@ import { ROLES } from '../constants/roles.js';
 
 const router = Router();
 
+router.get('/mine', authenticate, answerController.getMyAnswers);
 router.get('/question/:questionId', answerController.getAnswersForQuestion);
 
 router.post(

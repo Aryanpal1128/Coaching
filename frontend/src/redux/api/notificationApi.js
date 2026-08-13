@@ -6,6 +6,10 @@ export const notificationApi = apiSlice.injectEndpoints({
       query: () => '/notifications',
       providesTags: ['Notification']
     }),
+    getUnreadCount: builder.query({
+      query: () => '/notifications/unread-count',
+      providesTags: ['Notification']
+    }),
     markAsRead: builder.mutation({
       query: (id) => ({
         url: `/notifications/${id}/read`,
@@ -18,5 +22,6 @@ export const notificationApi = apiSlice.injectEndpoints({
 
 export const {
   useGetNotificationsQuery,
+  useGetUnreadCountQuery,
   useMarkAsReadMutation
 } = notificationApi;

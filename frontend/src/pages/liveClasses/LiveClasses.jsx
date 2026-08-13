@@ -5,6 +5,7 @@ import { Badge } from '../../components/common/Badge.jsx';
 import { Button } from '../../components/common/Button.jsx';
 import { LiveClassCard } from '../../components/liveClasses/LiveClassCard.jsx';
 import { ScheduleClassModal } from '../../components/liveClasses/ScheduleClassModal.jsx';
+import { LockedContentModal } from '../../components/rooms/LockedContentModal.jsx';
 import {
   Video,
   Send,
@@ -108,12 +109,23 @@ export const LiveClasses = () => {
 
   const classes = data?.data || [];
 
-  // Auto-join if class ID is in URL query parameters
+  // Auto-join or auto-scroll if class ID is in URL query parameters
   useEffect(() => {
     if (joinClassId && classes.length > 0) {
       const cls = classes.find((c) => c._id === joinClassId);
-      if (cls && cls.status === 'LIVE') {
-        handleJoinClass(cls);
+      if (cls) {
+        if (cls.status === 'LIVE') {
+          handleJoinClass(cls);
+        } else {
+          setTimeout(() => {
+            const cardEl = document.getElementById(`class-card-${cls._id}`);
+            if (cardEl) {
+              cardEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+              cardEl.classList.add('ring-2', 'ring-brand-500');
+              setTimeout(() => cardEl.classList.remove('ring-2', 'ring-brand-500'), 3000);
+            }
+          }, 150);
+        }
         navigate('/live-classes', { replace: true });
       }
     }
@@ -167,21 +179,28 @@ export const LiveClasses = () => {
     };
   }, [socket, activeSession, user]);
 
+  const [lockedItem, setLockedItem] = useState(null);
+
   const handleJoinClass = async (cls) => {
-    setActiveSession(cls);
-    setMessages([
-      {
-        sender: 'System',
-        text: `You joined "${cls.title}". Welcome! 🎉`,
-        time: new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' }),
-        isSystem: true
-      }
-    ]);
-    // Record attendance
+    // Record attendance / access check
     try {
       await recordAttendance(cls._id).unwrap();
-    } catch {
-      // Attendance may already be recorded — ignore error
+      setActiveSession(cls);
+      setMessages([
+        {
+          sender: 'System',
+          text: `You joined "${cls.title}". Welcome! 🎉`,
+          time: new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' }),
+          isSystem: true
+        }
+      ]);
+    } catch (err) {
+      if (err?.status === 403 || err?.data?.message?.toLowerCase().includes('paid room')) {
+        setLockedItem(cls);
+      } else {
+        // Class may still be joined if error was non-blocking
+        setActiveSession(cls);
+      }
     }
   };
 
@@ -439,6 +458,19 @@ export const LiveClasses = () => {
       {/* Schedule Modal */}
       {showScheduleModal && (
         <ScheduleClassModal onClose={() => setShowScheduleModal(false)} />
+      )}
+
+      {/* Locked Content Modal */}
+      {lockedItem && (
+        <LockedContentModal
+          item={lockedItem}
+          user={user}
+          onClose={() => setLockedItem(null)}
+          onSuccess={() => {
+            setLockedItem(null);
+            refetch();
+          }}
+        />
       )}
     </div>
   );

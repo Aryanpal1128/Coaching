@@ -168,6 +168,34 @@ export const Messages = () => {
       navigate(location.pathname, { replace: true, state: {} });
     }
   }, [location.state, location.pathname, navigate]);
+
+  // Hide bottom navigation bar and top navbar when actively chatting on mobile
+  useEffect(() => {
+    const mobileNav = document.querySelector('nav.fixed.bottom-0');
+    const topNavbar = document.querySelector('header.sticky.top-0');
+    if (mobileNav) {
+      if (partner && showChat) {
+        mobileNav.classList.add('hidden');
+      } else {
+        mobileNav.classList.remove('hidden');
+      }
+    }
+    if (topNavbar) {
+      if (partner && showChat) {
+        topNavbar.classList.add('hidden');
+      } else {
+        topNavbar.classList.remove('hidden');
+      }
+    }
+    return () => {
+      if (mobileNav) {
+        mobileNav.classList.remove('hidden');
+      }
+      if (topNavbar) {
+        topNavbar.classList.remove('hidden');
+      }
+    };
+  }, [partner, showChat]);
   
   // Message Reply & Reaction States
   const [replyingTo, setReplyingTo] = useState(null);
@@ -883,8 +911,10 @@ export const Messages = () => {
   const isOnline = (userId) => onlineUsers.has(userId);
 
   return (
-    <div className="h-[calc(100vh-140px)] min-h-[500px]">
-      <div className="flex h-full rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm">
+    <div className={`min-h-[500px] -mx-4 -mt-4 -mb-24 sm:m-0 ${
+      partner && showChat ? 'h-screen' : 'h-[calc(100vh-128px)] sm:h-[calc(100vh-140px)]'
+    }`}>
+      <div className="flex h-full sm:rounded-2xl overflow-hidden sm:border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm">
 
         {/* ── Contacts Sidebar ─────────────────────────── */}
         <div className={`w-full sm:w-72 md:w-80 border-r border-slate-200 dark:border-slate-800 flex flex-col shrink-0 ${showChat ? 'hidden sm:flex' : 'flex'}`}>
@@ -1288,7 +1318,9 @@ export const Messages = () => {
 
               {/* Input */}
               {isRecording ? (
-                <div className="p-3 border-t border-slate-200 dark:border-slate-800 flex items-center gap-3 bg-red-500/5 dark:bg-slate-900 animate-in fade-in duration-150">
+                <div className={`p-3 border-t border-slate-200 dark:border-slate-800 flex items-center gap-3 bg-red-500/5 dark:bg-slate-900 animate-in fade-in duration-150 ${
+                  partner && showChat ? 'pb-[calc(0.75rem+env(safe-area-inset-bottom))]' : 'pb-16 md:pb-3'
+                }`}>
                   <div className="flex items-center gap-2">
                     <span className="w-3 h-3 rounded-full bg-red-500 animate-ping" />
                     <span className="text-xs font-bold text-red-500 font-mono">
@@ -1331,7 +1363,9 @@ export const Messages = () => {
               ) : (
                 <form
                   onSubmit={handleSend}
-                  className="p-3 border-t border-slate-200 dark:border-slate-800 flex items-center gap-2 bg-white dark:bg-slate-900"
+                  className={`p-3 border-t border-slate-200 dark:border-slate-800 flex items-center gap-2 bg-white dark:bg-slate-900 ${
+                    partner && showChat ? 'pb-[calc(0.75rem+env(safe-area-inset-bottom))]' : 'pb-16 md:pb-3'
+                  }`}
                 >
                   <input
                     type="file"

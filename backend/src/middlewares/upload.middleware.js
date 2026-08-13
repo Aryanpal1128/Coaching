@@ -12,12 +12,17 @@ const fileFilter = (req, file, cb) => {
     'image/png',
     'image/webp',
     'image/gif',
+    'video/mp4',
+    'video/quicktime',
+    'video/webm',
+    'video/x-matroska',
     'application/pdf',
     'application/msword',
     'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
     'application/vnd.ms-powerpoint',
+    'application/vnd.openxmlformats-officedocument.presentationml.presentation'
   ];
-  if (allowedMimeTypes.includes(file.mimetype)) {
+  if (allowedMimeTypes.includes(file.mimetype) || file.mimetype.startsWith('video/')) {
     cb(null, true);
   } else {
     cb(new ApiError(400, `Unsupported file type: ${file.mimetype}`), false);
@@ -44,7 +49,7 @@ const chatAllowedMimeTypes = [
 ];
 
 const chatFileFilter = (req, file, cb) => {
-  if (chatAllowedMimeTypes.includes(file.mimetype)) {
+  if (chatAllowedMimeTypes.includes(file.mimetype) || file.mimetype.startsWith('video/')) {
     cb(null, true);
   } else {
     cb(new ApiError(400, `Unsupported file type: ${file.mimetype}`), false);
@@ -54,7 +59,7 @@ const chatFileFilter = (req, file, cb) => {
 export const upload = multer({
   storage,
   fileFilter,
-  limits: { fileSize: 20 * 1024 * 1024 } // 20 MB
+  limits: { fileSize: 250 * 1024 * 1024 } // 250 MB for video/materials
 });
 
 export const uploadChatMedia = multer({

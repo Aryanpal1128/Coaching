@@ -148,7 +148,7 @@ export const AskQuestion = () => {
       <form onSubmit={handleSubmit} className="space-y-5">
         <Input
           label="Question Title"
-          placeholder="e.g. How does Red-Black Tree self-balancing work?"
+          placeholder="e.g. How does Red-Black Tree balancing work?"
           value={title}
           onChange={(e) => setTitle(e.target.value)}
           required
@@ -379,27 +379,28 @@ export const AskQuestion = () => {
           </div>
         )}
 
-        <div className="pt-2 flex items-center justify-between gap-4">
+        <div className="pt-2 pb-12 md:pb-0 flex flex-col-reverse sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
           <Button 
             type="button" 
             variant="outline" 
             onClick={handleGetSuggestions} 
             disabled={isSuggesting}
             size="md"
+            className="w-full sm:w-auto justify-center"
           >
             {isSuggesting ? (
-              <span className="flex items-center gap-2">
-                <Sparkles className="w-4 h-4 text-brand-500 fill-brand-500/25 animate-spin" />
+              <span className="flex items-center justify-center gap-2">
+                <Sparkles className="w-4 h-4 text-brand-500 fill-brand-500/25 animate-spin shrink-0" />
                 <span>{STATUS_MESSAGES[statusIdx]}</span>
               </span>
             ) : (
-              <span className="flex items-center gap-2">
-                <Sparkles className="w-4 h-4 text-brand-500 fill-brand-500/25" />
+              <span className="flex items-center justify-center gap-2">
+                <Sparkles className="w-4 h-4 text-brand-500 fill-brand-500/25 shrink-0" />
                 <span>Check with AI</span>
               </span>
             )}
           </Button>
-          <Button type="submit" isLoading={isLoading} size="md">
+          <Button type="submit" isLoading={isLoading} size="md" className="w-full sm:w-auto justify-center">
             <Plus className="w-4 h-4 mr-1.5" /> Post Question
           </Button>
         </div>

@@ -59,6 +59,33 @@ export const authApi = apiSlice.injectEndpoints({
         body: data
       }),
       invalidatesTags: ['User']
+    }),
+    updateAvatar: builder.mutation({
+      query: (formData) => ({
+        url: '/users/me/avatar',
+        method: 'PATCH',
+        body: formData
+      }),
+      invalidatesTags: ['User']
+    }),
+    checkUsernameAvailable: builder.query({
+      query: (value) => `/users/username-available?value=${encodeURIComponent(value)}`
+    }),
+    onboardUser: builder.mutation({
+      query: (formData) => ({
+        url: '/users/onboarding',
+        method: 'POST',
+        body: formData
+      }),
+      invalidatesTags: ['User']
+    }),
+    updateUserProfile: builder.mutation({
+      query: (formData) => ({
+        url: '/users/me/profile',
+        method: 'PATCH',
+        body: formData
+      }),
+      invalidatesTags: ['User']
     })
   })
 });
@@ -72,5 +99,10 @@ export const {
   useResetPasswordMutation,
   useVerifyOtpMutation,
   useGetUserProfileQuery,
-  useUpdateUsernameMutation
+  useUpdateUsernameMutation,
+  useUpdateAvatarMutation,
+  useCheckUsernameAvailableQuery,
+  useLazyCheckUsernameAvailableQuery,
+  useOnboardUserMutation,
+  useUpdateUserProfileMutation
 } = authApi;

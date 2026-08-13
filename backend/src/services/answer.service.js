@@ -237,3 +237,9 @@ export const addReply = async (userId, commentId, text) => {
   });
   return reply;
 };
+
+export const getMyAnswers = async (userId) => {
+  return Answer.find({ author: userId })
+    .populate('question', 'title _id subject difficulty askedBy')
+    .sort({ createdAt: -1 });
+};

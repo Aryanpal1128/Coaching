@@ -37,7 +37,9 @@ export const Login = () => {
       const res = await loginApi({ email: email.trim(), password }).unwrap();
       dispatch(setCredentials({ user: res.data.user, accessToken: res.data.accessToken }));
       toast.success('Welcome back!');
-      if (res.data.user.role === 'TEACHER') {
+      if (!res.data.user?.isOnboarded) {
+        navigate('/onboarding');
+      } else if (res.data.user.role === 'TEACHER') {
         navigate('/teacher-dashboard');
       } else if (res.data.user.role === 'ADMIN') {
         navigate('/admin-dashboard');
@@ -59,7 +61,9 @@ export const Login = () => {
       const res = await googleLoginApi({ idToken: credentialResponse.credential }).unwrap();
       dispatch(setCredentials({ user: res.data.user, accessToken: res.data.accessToken }));
       toast.success('Welcome back with Google!');
-      if (res.data.user.role === 'TEACHER') {
+      if (!res.data.user?.isOnboarded) {
+        navigate('/onboarding');
+      } else if (res.data.user.role === 'TEACHER') {
         navigate('/teacher-dashboard');
       } else if (res.data.user.role === 'ADMIN') {
         navigate('/admin-dashboard');

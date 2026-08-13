@@ -44,6 +44,18 @@ const liveClassSchema = new mongoose.Schema(
     attendeesCount: {
       type: Number,
       default: 0
+    },
+    accessType: {
+      type: String,
+      enum: ['public', 'paid'],
+      default: 'public',
+      index: true
+    },
+    room: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Room',
+      default: null,
+      index: true
     }
   },
   { timestamps: true }

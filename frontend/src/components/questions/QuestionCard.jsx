@@ -1,8 +1,9 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Card } from '../common/Card.jsx';
 import { Badge } from '../common/Badge.jsx';
 import { Eye, MessageSquare, ThumbsUp, Bookmark, Share2 } from 'lucide-react';
+import { ShareModal } from '../common/ShareModal.jsx';
 import { useSelector } from 'react-redux';
 import { useGetUserProfileQuery } from '../../redux/api/authApi.js';
 import { useSaveQuestionMutation } from '../../redux/api/questionApi.js';
@@ -12,6 +13,7 @@ export const QuestionCard = ({ question }) => {
   if (!question) return null;
 
   const { user: currentUser } = useSelector((state) => state.auth);
+  const [isShareModalOpen, setIsShareModalOpen] = useState(false);
   const { data: profileResponse } = useGetUserProfileQuery(currentUser?._id, {
     skip: !currentUser?._id
   });
@@ -39,14 +41,11 @@ export const QuestionCard = ({ question }) => {
   const handleShare = (e) => {
     e.preventDefault();
     e.stopPropagation();
-    const shareUrl = `${window.location.origin}/questions/${question._id}`;
-    navigator.clipboard.writeText(shareUrl)
-      .then(() => {
-        toast.success('Link copied to clipboard!');
-      })
-      .catch(() => {
-        toast.error('Failed to copy link');
-      });
+    if (!currentUser) {
+      toast.error('Please login to share questions');
+      return;
+    }
+    setIsShareModalOpen(true);
   };
 
 
@@ -128,8 +127,58 @@ export const QuestionCard = ({ question }) => {
         ))}
       </div>
 
-      {/* Footer Metrics & Actions */}
-      <div className="mt-4 pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-xs text-slate-500 dark:text-slate-400">
+      {/* Footer Metrics & Actions (Mobile Layout) */}
+      <div className="mt-4 pt-3 border-t border-slate-100 dark:border-slate-800 space-y-3 text-xs text-slate-500 dark:text-slate-400 sm:hidden">
+        {/* Row 1: Metrics */}
+        <div className="flex items-center justify-between">
+          <Link
+            to={`/questions/${question._id}`}
+            className="flex items-center gap-1.5 font-medium hover:text-brand-500 transition-colors"
+          >
+            <MessageSquare className="w-4 h-4 text-brand-500" />
+            {question.answersCount || 0} Answers
+          </Link>
+          <span className="flex items-center gap-1.5 font-medium">
+            <Eye className="w-4 h-4" />
+            {question.viewsCount || 0} Views
+          </span>
+        </div>
+
+        {/* Row 2: Actions */}
+        <div className="flex items-center justify-between">
+          <Link to={`/questions/${question._id}`}>
+            <span className="text-[11px] font-bold text-brand-600 hover:text-brand-700 bg-brand-50 dark:bg-brand-950/40 hover:bg-brand-100 dark:hover:bg-brand-900/60 px-3 py-1.5 rounded-lg transition-colors cursor-pointer whitespace-nowrap block">
+              Answer Question →
+            </span>
+          </Link>
+          <div className="flex items-center gap-1.5">
+            <button
+              onClick={handleSave}
+              disabled={isSaving}
+              className={`p-1.5 rounded-lg transition-colors ${
+                isSaved
+                  ? 'bg-brand-50 dark:bg-brand-950/40 text-brand-600 dark:text-brand-400 hover:bg-brand-100 dark:hover:bg-brand-900/60'
+                  : 'hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 hover:text-slate-600'
+              }`}
+              title={isSaved ? 'Remove Saved Question' : 'Save Question'}
+              aria-label={isSaved ? 'Remove Saved Question' : 'Save Question'}
+            >
+              <Bookmark className="w-4 h-4" fill={isSaved ? 'currentColor' : 'none'} />
+            </button>
+            <button
+              onClick={handleShare}
+              className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 hover:text-slate-600 transition-colors"
+              title="Share Question"
+            >
+              <Share2 className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Footer Metrics & Actions (Desktop Layout) */}
+      <div className="mt-4 pt-3 border-t border-slate-100 dark:border-slate-800 hidden sm:flex items-center justify-between text-xs text-slate-500 dark:text-slate-400">
+        {/* Left side: Metrics */}
         <div className="flex items-center gap-4">
           <Link
             to={`/questions/${question._id}`}
@@ -138,15 +187,16 @@ export const QuestionCard = ({ question }) => {
             <MessageSquare className="w-4 h-4 text-brand-500" />
             {question.answersCount || 0} Answers
           </Link>
-          <span className="flex items-center gap-1.5">
+          <span className="flex items-center gap-1.5 font-medium">
             <Eye className="w-4 h-4" />
             {question.viewsCount || 0} Views
           </span>
         </div>
 
+        {/* Right side: Actions */}
         <div className="flex items-center gap-2">
           <Link to={`/questions/${question._id}`}>
-            <span className="text-[11px] font-bold text-brand-600 hover:text-brand-700 bg-brand-50 dark:bg-brand-950/40 hover:bg-brand-100 dark:hover:bg-brand-900/60 px-3 py-1.5 rounded-lg transition-colors cursor-pointer mr-2">
+            <span className="text-[11px] font-bold text-brand-600 hover:text-brand-700 bg-brand-50 dark:bg-brand-950/40 hover:bg-brand-100 dark:hover:bg-brand-900/60 px-3 py-1.5 rounded-lg transition-colors cursor-pointer mr-2 whitespace-nowrap block">
               Answer Question →
             </span>
           </Link>
@@ -172,6 +222,13 @@ export const QuestionCard = ({ question }) => {
           </button>
         </div>
       </div>
+
+      <ShareModal
+        isOpen={isShareModalOpen}
+        onClose={() => setIsShareModalOpen(false)}
+        shareUrl={`${window.location.origin}/questions/${question._id}`}
+        shareTitle={question.title}
+      />
     </Card>
   );
 };

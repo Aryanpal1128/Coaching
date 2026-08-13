@@ -1,12 +1,14 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
-import { Sun, Moon, Bell, Search, User, LogOut, Menu, Shield, X, HelpCircle, BookOpen, Users, ArrowUpRight } from 'lucide-react';
+import { Sun, Moon, User, LogOut, Shield, X, HelpCircle, BookOpen, Users, ArrowUpRight } from 'lucide-react';
+import { MagnifyingGlass, Bell, ChatCircleDots } from '@phosphor-icons/react';
 import { useTheme } from '../../context/ThemeContext.jsx';
 import { logout } from '../../redux/slices/authSlice.js';
 import { NotificationDropdown } from './NotificationDropdown.jsx';
 import { useSearchQuestionsQuery } from '../../redux/api/questionApi.js';
-import { useGetUsersQuery } from '../../redux/api/messageApi.js';
+import { useGetUsersQuery, useGetConversationsQuery } from '../../redux/api/messageApi.js';
+import { useGetUnreadCountQuery } from '../../redux/api/notificationApi.js';
 import { useGetSubjectsQuery } from '../../redux/api/teacherApi.js';
 import { Badge } from '../common/Badge.jsx';
 
@@ -28,6 +30,21 @@ export const Navbar = ({ toggleSidebar }) => {
   const searchRef = useRef(null);
   const desktopInputRef = useRef(null);
   const mobileInputRef = useRef(null);
+
+  // Unread notifications query
+  const { data: unreadNotifRes } = useGetUnreadCountQuery();
+  const unreadNotifCount = unreadNotifRes?.data?.count || 0;
+
+  // Conversations query for unread messages badge
+  const { data: convsData } = useGetConversationsQuery();
+  const conversations = convsData?.data || [];
+  const unreadMsgCount = conversations.reduce((acc, c) => acc + (c.unreadCount || 0), 0);
+
+  const formatBadgeCount = (count) => {
+    if (!count || count <= 0) return null;
+    if (count > 5) return '5+';
+    return String(count);
+  };
 
   // Live queries for search dropdown
   const trimmedQuery = searchQuery.trim();
@@ -68,7 +85,17 @@ export const Navbar = ({ toggleSidebar }) => {
     }
   }, [location.pathname]);
 
-  // Close dropdowns on outside click
+  // Focus mobile search input when opened
+  useEffect(() => {
+    if (showMobileSearch) {
+      setTimeout(() => {
+        mobileInputRef.current?.focus();
+        setIsSearchFocused(true);
+      }, 50);
+    }
+  }, [showMobileSearch]);
+
+  // Close dropdowns on outside click/touch
   useEffect(() => {
     const handleClickOutside = (e) => {
       if (notifRef.current && !notifRef.current.contains(e.target)) {
@@ -79,10 +106,16 @@ export const Navbar = ({ toggleSidebar }) => {
       }
       if (searchRef.current && !searchRef.current.contains(e.target)) {
         setIsSearchFocused(false);
+        setShowMobileSearch(false);
+        setSearchQuery('');
       }
     };
     document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
+    document.addEventListener('touchstart', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('touchstart', handleClickOutside);
+    };
   }, []);
 
   const handleLogout = () => {
@@ -99,7 +132,11 @@ export const Navbar = ({ toggleSidebar }) => {
     }
   };
 
-  const handleClearSearch = (isMobile = false) => {
+  const handleClearSearch = (e, isMobile = false) => {
+    if (e) {
+      e.stopPropagation();
+      e.preventDefault();
+    }
     setSearchQuery('');
     if (isMobile && mobileInputRef.current) {
       mobileInputRef.current.focus();
@@ -116,20 +153,21 @@ export const Navbar = ({ toggleSidebar }) => {
   return (
     <header className="sticky top-0 z-30 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 px-4 py-3">
       <div className="flex items-center justify-between gap-3">
-        {/* Left: Mobile Menu Toggle + Search */}
+        {/* Left: Mobile Avatar & Search */}
         <div className="flex items-center gap-2 flex-1 min-w-0" ref={searchRef}>
-          <button
-            onClick={toggleSidebar}
-            className="p-2 rounded-xl text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 md:hidden shrink-0 transition-colors"
-            aria-label="Toggle sidebar"
-          >
-            <Menu className="w-5 h-5" />
-          </button>
+          {/* Mobile Profile Avatar on far left */}
+          <Link to="/profile" className="md:hidden shrink-0 pr-1">
+            <img
+              src={user?.avatar || 'https://res.cloudinary.com/demo/image/upload/v1571218039/sample.jpg'}
+              alt={user?.name || 'Profile'}
+              className="w-9 h-9 rounded-full border-2 border-brand-500 object-cover shadow-sm"
+            />
+          </Link>
 
           {/* Desktop search bar */}
           <div className="relative max-w-md w-full hidden sm:block">
             <form onSubmit={handleSearchSubmit} className="relative w-full">
-              <Search className="absolute left-3.5 top-2.5 w-4 h-4 text-slate-400" />
+              <MagnifyingGlass size={18} weight="duotone" className="absolute left-3.5 top-2.5 text-slate-400" />
               <input
                 ref={desktopInputRef}
                 type="text"
@@ -149,7 +187,7 @@ export const Navbar = ({ toggleSidebar }) => {
               {searchQuery && (
                 <button
                   type="button"
-                  onClick={() => handleClearSearch(false)}
+                  onClick={(e) => handleClearSearch(e, false)}
                   className="absolute right-3 top-2.5 p-0.5 rounded-full text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"
                   title="Clear search"
                 >
@@ -163,7 +201,7 @@ export const Navbar = ({ toggleSidebar }) => {
           {showMobileSearch && (
             <div className="flex-1 flex items-center gap-2 sm:hidden relative">
               <form onSubmit={handleSearchSubmit} className="relative flex-1">
-                <Search className="absolute left-3 top-2.5 w-4 h-4 text-slate-400" />
+                <MagnifyingGlass size={18} weight="duotone" className="absolute left-3 top-2.5 text-slate-400" />
                 <input
                   ref={mobileInputRef}
                   autoFocus
@@ -184,7 +222,7 @@ export const Navbar = ({ toggleSidebar }) => {
                 {searchQuery && (
                   <button
                     type="button"
-                    onClick={() => handleClearSearch(true)}
+                    onClick={(e) => handleClearSearch(e, true)}
                     className="absolute right-3 top-2.5 p-0.5 rounded-full text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"
                     title="Clear search"
                   >
@@ -192,15 +230,6 @@ export const Navbar = ({ toggleSidebar }) => {
                   </button>
                 )}
               </form>
-              <button
-                onClick={() => {
-                  setShowMobileSearch(false);
-                  setIsSearchFocused(false);
-                }}
-                className="p-2 rounded-xl text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800"
-              >
-                <X className="w-4 h-4" />
-              </button>
             </div>
           )}
 
@@ -334,22 +363,25 @@ export const Navbar = ({ toggleSidebar }) => {
         </div>
 
         {/* Right Action Controls */}
-        <div className="flex items-center gap-1 sm:gap-2 shrink-0">
+        <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
           {/* Mobile search toggle */}
           {!showMobileSearch && (
             <button
-              onClick={() => setShowMobileSearch(true)}
-              className="p-2.5 rounded-xl text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 sm:hidden transition-colors"
+              onClick={() => {
+                setShowMobileSearch(true);
+                setIsSearchFocused(true);
+              }}
+              className="p-2.5 min-h-[44px] min-w-[44px] flex items-center justify-center rounded-xl text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 sm:hidden transition-colors"
               aria-label="Search"
             >
-              <Search className="w-5 h-5" />
+              <MagnifyingGlass size={22} weight="duotone" />
             </button>
           )}
 
-          {/* Dark mode toggle */}
+          {/* Desktop Dark mode toggle */}
           <button
             onClick={toggleTheme}
-            className="p-2.5 rounded-xl text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+            className="p-2.5 rounded-xl text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 hidden md:inline-flex transition-colors"
             title="Toggle theme"
           >
             {isDark ? <Sun className="w-5 h-5 text-amber-400" /> : <Moon className="w-5 h-5 text-slate-600" />}
@@ -362,12 +394,15 @@ export const Navbar = ({ toggleSidebar }) => {
                 setShowNotifications((p) => !p);
                 setShowProfileMenu(false);
               }}
-              className="p-2.5 rounded-xl text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 relative transition-colors"
+              className="p-2.5 rounded-xl text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 relative transition-colors cursor-pointer"
               aria-label="Notifications"
             >
-              <Bell className="w-5 h-5" />
-              <span className="absolute top-2 right-2 w-2 h-2 bg-brand-500 rounded-full animate-ping" />
-              <span className="absolute top-2 right-2 w-2 h-2 bg-brand-500 rounded-full" />
+              <Bell size={22} weight="duotone" />
+              {unreadNotifCount > 0 && (
+                <span className="absolute -top-1 -right-1 h-4 min-w-4 px-1 rounded-full bg-brand-600 text-white text-[10px] font-extrabold flex items-center justify-center border border-white dark:border-slate-900 shadow-xs pointer-events-none">
+                  {formatBadgeCount(unreadNotifCount)}
+                </span>
+              )}
             </button>
 
             {showNotifications && (
@@ -375,14 +410,29 @@ export const Navbar = ({ toggleSidebar }) => {
             )}
           </div>
 
-          {/* Profile Dropdown */}
-          <div className="relative" ref={profileRef}>
+          {/* Messages Link Icon */}
+          <Link
+            to="/messages"
+            className="p-2.5 rounded-xl text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 relative transition-colors flex items-center justify-center shrink-0"
+            title="Messages"
+            aria-label="Messages"
+          >
+            <ChatCircleDots size={22} weight="duotone" />
+            {unreadMsgCount > 0 && (
+              <span className="absolute -top-1 -right-1 h-4 min-w-4 px-1 rounded-full bg-indigo-600 text-white text-[10px] font-extrabold flex items-center justify-center border border-white dark:border-slate-900 shadow-xs pointer-events-none">
+                {formatBadgeCount(unreadMsgCount)}
+              </span>
+            )}
+          </Link>
+
+          {/* Profile Dropdown (Desktop) */}
+          <div className="relative hidden md:block" ref={profileRef}>
             <button
               onClick={() => {
                 setShowProfileMenu((p) => !p);
                 setShowNotifications(false);
               }}
-              className="flex items-center gap-2 p-1.5 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+              className="flex items-center gap-2 p-1.5 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
               aria-label="Profile menu"
             >
               <img
@@ -390,7 +440,7 @@ export const Navbar = ({ toggleSidebar }) => {
                 alt={user?.name || 'User'}
                 className="w-8 h-8 rounded-full border-2 border-brand-500 object-cover"
               />
-              <span className="text-sm font-semibold hidden md:inline-block text-slate-800 dark:text-slate-200 max-w-[100px] truncate">
+              <span className="text-sm font-semibold inline-block text-slate-800 dark:text-slate-200 max-w-[100px] truncate">
                 {user?.name || 'User'}
               </span>
             </button>
@@ -430,7 +480,7 @@ export const Navbar = ({ toggleSidebar }) => {
                 <div className="border-t border-slate-100 dark:border-slate-800 mt-1 pt-1">
                   <button
                     onClick={handleLogout}
-                    className="w-full flex items-center gap-2.5 px-4 py-2.5 text-xs font-medium text-red-500 hover:bg-red-50 dark:hover:bg-red-900/10 transition-colors"
+                    className="w-full flex items-center gap-2.5 px-4 py-2.5 text-xs font-medium text-red-500 hover:bg-red-50 dark:hover:bg-red-900/10 transition-colors cursor-pointer"
                   >
                     <LogOut className="w-4 h-4" /> Sign Out
                   </button>

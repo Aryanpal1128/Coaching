@@ -2,6 +2,7 @@ import { StudyMaterial } from '../models/StudyMaterial.js';
 import { Subject } from '../models/Subject.js';
 import { StudentProfile } from '../models/StudentProfile.js';
 import { TeacherProfile } from '../models/TeacherProfile.js';
+import { Enrollment } from '../models/Enrollment.js';
 import { uploadToCloudinary, deleteFromCloudinary, getResourceType } from '../middlewares/upload.middleware.js';
 import { ApiError } from '../utils/ApiError.js';
 
@@ -11,7 +12,7 @@ import { ApiError } from '../utils/ApiError.js';
 export const uploadStudyMaterial = async (teacherId, data, file) => {
   if (!file) throw new ApiError(400, 'No file uploaded');
 
-  const { title, description, subjectId, fileType } = data;
+  const { title, description, subjectId, fileType, accessType, room } = data;
 
   // Validate subject exists
   const subject = await Subject.findById(subjectId);
@@ -29,10 +30,16 @@ export const uploadStudyMaterial = async (teacherId, data, file) => {
     fileSize: file.size,
     fileName: file.originalname,
     teacher: teacherId,
-    subject: subjectId
+    subject: subjectId,
+    accessType: accessType || 'public',
+    room: room || null
   });
 
-  return material.populate([{ path: 'teacher', select: 'name avatar' }, { path: 'subject', select: 'name' }]);
+  return material.populate([
+    { path: 'teacher', select: 'name avatar' },
+    { path: 'subject', select: 'name' },
+    { path: 'room', select: 'title price currency' }
+  ]);
 };
 
 /**
@@ -48,7 +55,38 @@ export const getStudyMaterials = async ({ subjectId, fileType, teacherId, search
   return StudyMaterial.find(filter)
     .populate('teacher', 'name avatar')
     .populate('subject', 'name')
+    .populate('room', 'title price currency')
     .sort({ createdAt: -1 });
+};
+
+/**
+ * Get single study material with enrollment check.
+ */
+export const getStudyMaterialById = async (materialId, user) => {
+  const material = await StudyMaterial.findById(materialId)
+    .populate('teacher', 'name avatar')
+    .populate('subject', 'name')
+    .populate('room', 'title price currency');
+
+  if (!material) throw new ApiError(404, 'Study material not found');
+
+  // Access control check for paid content
+  if (material.accessType === 'paid' && material.room) {
+    const isTeacherOwner = user && (user._id.toString() === material.teacher._id?.toString() || user._id.toString() === material.teacher.toString());
+    const isAdmin = user && user.role === 'ADMIN';
+
+    if (!isTeacherOwner && !isAdmin) {
+      const enrollment = user
+        ? await Enrollment.findOne({ student: user._id, room: material.room._id || material.room, status: 'active' })
+        : null;
+
+      if (!enrollment) {
+        throw new ApiError(403, 'Paid room enrollment required to access this study material.');
+      }
+    }
+  }
+
+  return material;
 };
 
 /**
@@ -75,6 +113,7 @@ export const getRecommendedMaterials = async (userId) => {
   return StudyMaterial.find(filter)
     .populate('teacher', 'name avatar')
     .populate('subject', 'name')
+    .populate('room', 'title price currency')
     .sort({ createdAt: -1 })
     .limit(20);
 };
@@ -92,7 +131,7 @@ export const deleteStudyMaterial = async (teacherId, materialId) => {
 
   // Delete from Cloudinary
   if (material.publicId) {
-    const resourceType = material.fileType === 'IMAGE' ? 'image' : 'raw';
+    const resourceType = material.fileType === 'IMAGE' ? 'image' : material.fileType === 'VIDEO' ? 'video' : 'raw';
     await deleteFromCloudinary(material.publicId, resourceType);
   }
 
@@ -106,6 +145,7 @@ export const deleteStudyMaterial = async (teacherId, materialId) => {
 const detectFileType = (mimetype) => {
   if (mimetype === 'application/pdf') return 'PDF';
   if (mimetype.startsWith('image/')) return 'IMAGE';
+  if (mimetype.startsWith('video/')) return 'VIDEO';
   if (mimetype.includes('word') || mimetype.includes('document')) return 'DOC';
   if (mimetype.includes('powerpoint') || mimetype.includes('presentation')) return 'PPT';
   return 'OTHER';

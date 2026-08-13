@@ -58,7 +58,7 @@ export const LiveClassCard = ({ cls, currentUser, onJoin }) => {
   };
 
   return (
-    <div className={`relative p-4 rounded-2xl border transition-all ${
+    <div id={`class-card-${cls._id}`} className={`relative p-4 rounded-2xl border transition-all ${
       cls.status === 'LIVE'
         ? 'bg-red-500/5 border-red-500/30 shadow-md shadow-red-500/10'
         : cls.status === 'SCHEDULED'
@@ -71,7 +71,10 @@ export const LiveClassCard = ({ cls, currentUser, onJoin }) => {
           <h3 className="text-sm font-bold text-slate-100 leading-snug line-clamp-2">{cls.title}</h3>
           <p className="text-xs text-slate-400 mt-0.5">{cls.subject?.name}</p>
         </div>
-        <div className="shrink-0">
+        <div className="shrink-0 flex items-center gap-1.5">
+          {cls.accessType === 'paid' && (
+            <Badge variant="amber" size="xs">PAID</Badge>
+          )}
           {dot ? (
             <span className="flex items-center gap-1 text-[11px] font-bold text-red-400 bg-red-500/10 border border-red-500/30 px-2 py-0.5 rounded-full">
               <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-ping" />

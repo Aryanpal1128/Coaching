@@ -9,7 +9,7 @@ export const getLiveClasses = asyncHandler(async (req, res) => {
 });
 
 export const getLiveClass = asyncHandler(async (req, res) => {
-  const liveClass = await liveClassService.getLiveClass(req.params.id);
+  const liveClass = await liveClassService.getLiveClass(req.params.id, req.user);
   return res.status(200).json(new ApiResponse(200, liveClass, 'Live class fetched'));
 });
 
@@ -40,7 +40,7 @@ export const uploadRecording = asyncHandler(async (req, res) => {
 });
 
 export const recordAttendance = asyncHandler(async (req, res) => {
-  const attendance = await liveClassService.recordAttendance(req.user._id, req.params.id);
+  const attendance = await liveClassService.recordAttendance(req.user._id, req.params.id, req.user);
   return res.status(200).json(new ApiResponse(200, attendance, 'Attendance recorded'));
 });
 

@@ -2,6 +2,7 @@ import { LiveClass } from '../models/LiveClass.js';
 import { Attendance } from '../models/Attendance.js';
 import { TeacherProfile } from '../models/TeacherProfile.js';
 import { Subject } from '../models/Subject.js';
+import { Enrollment } from '../models/Enrollment.js';
 import { createNotification } from './notification.service.js';
 import { ApiError } from '../utils/ApiError.js';
 
@@ -12,7 +13,7 @@ const generateJitsiLink = (classId) => {
 };
 
 export const scheduleLiveClass = async (teacherId, data) => {
-  const { title, description, subject, scheduledAt } = data;
+  const { title, description, subject, scheduledAt, accessType, room } = data;
 
   const liveClass = await LiveClass.create({
     title,
@@ -20,7 +21,9 @@ export const scheduleLiveClass = async (teacherId, data) => {
     teacher: teacherId,
     subject,
     scheduledAt: scheduledAt ? new Date(scheduledAt) : new Date(),
-    status: 'SCHEDULED'
+    status: 'SCHEDULED',
+    accessType: accessType || 'public',
+    room: room || null
   });
 
   // Set Jitsi Meet link using the class ID
@@ -29,7 +32,8 @@ export const scheduleLiveClass = async (teacherId, data) => {
 
   await liveClass.populate([
     { path: 'teacher', select: 'name avatar' },
-    { path: 'subject', select: 'name' }
+    { path: 'subject', select: 'name' },
+    { path: 'room', select: 'title price currency' }
   ]);
 
   const teacherProfile = await TeacherProfile.findOne({ user: teacherId });
@@ -57,14 +61,32 @@ export const getLiveClasses = async ({ status, teacherId } = {}) => {
   return LiveClass.find(filter)
     .populate('teacher', 'name avatar')
     .populate('subject', 'name')
+    .populate('room', 'title price currency')
     .sort({ scheduledAt: -1 });
 };
 
-export const getLiveClass = async (classId) => {
+export const getLiveClass = async (classId, user = null) => {
   const liveClass = await LiveClass.findById(classId)
     .populate('teacher', 'name avatar')
-    .populate('subject', 'name');
+    .populate('subject', 'name')
+    .populate('room', 'title price currency');
   if (!liveClass) throw new ApiError(404, 'Live class not found');
+
+  if (liveClass.accessType === 'paid' && liveClass.room) {
+    const isTeacherOwner = user && (user._id.toString() === liveClass.teacher._id?.toString() || user._id.toString() === liveClass.teacher.toString());
+    const isAdmin = user && user.role === 'ADMIN';
+
+    if (!isTeacherOwner && !isAdmin) {
+      const enrollment = user
+        ? await Enrollment.findOne({ student: user._id, room: liveClass.room._id || liveClass.room, status: 'active' })
+        : null;
+
+      if (!enrollment) {
+        throw new ApiError(403, 'Paid room enrollment required to access this live class.');
+      }
+    }
+  }
+
   return liveClass;
 };
 
@@ -141,9 +163,26 @@ export const uploadRecording = async (teacherId, classId, recordingUrl) => {
   return liveClass;
 };
 
-export const recordAttendance = async (studentId, classId) => {
+export const recordAttendance = async (studentId, classId, user = null) => {
   const liveClass = await LiveClass.findById(classId);
   if (!liveClass) throw new ApiError(404, 'Live Class not found');
+
+  if (liveClass.accessType === 'paid' && liveClass.room) {
+    const isTeacherOwner = user && (user._id.toString() === liveClass.teacher.toString());
+    const isAdmin = user && user.role === 'ADMIN';
+
+    if (!isTeacherOwner && !isAdmin) {
+      const enrollment = await Enrollment.findOne({
+        student: studentId,
+        room: liveClass.room,
+        status: 'active'
+      });
+
+      if (!enrollment) {
+        throw new ApiError(403, 'Paid room enrollment required to access this live class.');
+      }
+    }
+  }
 
   const attendance = await Attendance.findOneAndUpdate(
     { liveClass: classId, student: studentId },

@@ -47,3 +47,8 @@ export const addReply = asyncHandler(async (req, res) => {
   const reply = await answerService.addReply(req.user._id, req.params.commentId, text);
   return res.status(201).json(new ApiResponse(201, reply, 'Reply added to comment'));
 });
+
+export const getMyAnswers = asyncHandler(async (req, res) => {
+  const answers = await answerService.getMyAnswers(req.user._id);
+  return res.status(200).json(new ApiResponse(200, answers, 'User answers fetched successfully'));
+});
