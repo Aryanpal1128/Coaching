@@ -353,10 +353,10 @@ export const UserProfile = () => {
   return (
     <div className="space-y-6 max-w-4xl mx-auto">
       {/* Profile Hero Card */}
-      <div className="overflow-hidden border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-md relative rounded-2xl flex flex-col p-0 pb-6">
+      <div className="overflow-hidden border border-slate-200 dark:border-[#1e294b] bg-white dark:bg-[#0b1329] shadow-md relative rounded-2xl flex flex-col p-0 pb-6">
         {/* Banner with dot-grid pattern */}
         <div className="h-32 sm:h-40 w-full bg-gradient-to-r from-brand-900/60 to-indigo-900/60 relative overflow-hidden bg-[radial-gradient(rgba(255,255,255,0.05)_1px,transparent_1px)] [background-size:16px_16px]">
-          <div className="absolute inset-0 bg-gradient-to-t from-slate-900/60 to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-t from-[#0b1329]/60 to-[#0b1329]" />
         </div>
 
         {/* Center profile wrapper */}
@@ -434,7 +434,7 @@ export const UserProfile = () => {
           )}
 
           {/* Stats Row Container */}
-          <div className="border border-slate-200 dark:border-slate-800/80 bg-slate-50 dark:bg-slate-900/40 rounded-2xl p-4 max-w-md mx-auto mt-5 flex justify-around items-center">
+          <div className="border border-slate-200 dark:border-[#1e294b]/60 bg-slate-50 dark:bg-[#070b14]/50 rounded-2xl p-4 max-w-md mx-auto mt-5 flex justify-around items-center">
             {/* Reputation Points */}
             <div className="flex items-center gap-3">
               <Trophy className="w-5 h-5 text-amber-500 shrink-0" />
@@ -468,7 +468,7 @@ export const UserProfile = () => {
           {/* Action buttons */}
           <div className="mt-5 flex justify-center">
             {isOwnProfile ? (
-              <Button onClick={handleOpenEditProfile} variant="outline" className="rounded-full border-slate-350 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-900 dark:text-white font-extrabold text-xs px-6 py-2 flex items-center gap-1.5 shadow-xs">
+              <Button onClick={handleOpenEditProfile} variant="outline" className="rounded-full border-slate-300 dark:border-[#1e294b] hover:bg-slate-100 dark:hover:bg-slate-800/50 text-slate-900 dark:text-white font-extrabold text-xs px-6 py-2 flex items-center gap-1.5 shadow-xs">
                 <Edit className="w-3.5 h-3.5" /> Edit Profile
               </Button>
             ) : (
@@ -628,7 +628,7 @@ export const UserProfile = () => {
       )}
 
       {/* Tabs Header */}
-      <div ref={tabsRef} className="flex items-center gap-6 border-b border-slate-200 dark:border-slate-800 pb-px overflow-x-auto justify-around sm:justify-start">
+      <div ref={tabsRef} className="flex items-center gap-6 border-b border-slate-200 dark:border-[#1e294b] pb-px overflow-x-auto justify-around sm:justify-start">
         {tabs.map((tab) => {
           let icon = <LayoutGrid className="w-4 h-4" />;
           if (tab === 'Questions Asked') icon = <HelpCircle className="w-4 h-4" />;
@@ -657,7 +657,7 @@ export const UserProfile = () => {
       {activeTab === 'Overview' && (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Bio & Details */}
-          <Card className="flex flex-row justify-between items-start gap-4 p-6 sm:p-7 relative overflow-hidden bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
+          <Card className="flex flex-row justify-between items-start gap-4 p-6 sm:p-7 relative overflow-hidden bg-white dark:bg-[#0b1329] border border-slate-200 dark:border-[#1e294b]">
             <div className="space-y-4 flex-1 min-w-0">
               <h3 className="text-sm font-extrabold text-slate-900 dark:text-white flex items-center gap-2">
                 <div className="p-1.5 rounded-lg bg-brand-500/10 text-brand-500 shrink-0">
@@ -711,7 +711,7 @@ export const UserProfile = () => {
           </Card>
 
           {/* Achievements */}
-          <Card className="flex flex-row justify-between items-start gap-4 p-6 sm:p-7 relative overflow-hidden bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
+          <Card className="flex flex-row justify-between items-start gap-4 p-6 sm:p-7 relative overflow-hidden bg-white dark:bg-[#0b1329] border border-slate-200 dark:border-[#1e294b]">
             <div className="space-y-4 flex-1 min-w-0">
               <h3 className="text-sm font-extrabold text-slate-900 dark:text-white flex items-center gap-2">
                 <div className="p-1.5 rounded-lg bg-amber-500/10 text-amber-500 shrink-0">
