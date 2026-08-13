@@ -26,6 +26,7 @@ import {
   CheckCircle2,
   XCircle,
   Users,
+  User,
   Search,
   Lock,
   DollarSign,
