@@ -47,7 +47,7 @@ export const CreateRoomModal = ({ onClose }) => {
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-slate-800 bg-slate-900">
           <div className="flex items-center gap-3">
-            <div className="p-2.5 rounded-2xl bg-amber-500/10 text-amber-400">
+            <div className="p-2.5 rounded-2xl bg-accent-500/10 text-accent-500">
               <Lock className="w-5 h-5" />
             </div>
             <div>
@@ -71,7 +71,7 @@ export const CreateRoomModal = ({ onClose }) => {
               value={form.title}
               onChange={handleChange}
               placeholder="e.g. Premium JEE Math Mastery Room"
-              className="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-slate-100 focus:outline-none focus:ring-2 focus:ring-amber-500 placeholder:text-slate-500"
+              className="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-slate-100 focus:outline-none focus:ring-2 focus:ring-accent-500 placeholder:text-slate-500"
             />
           </div>
 
@@ -90,7 +90,7 @@ export const CreateRoomModal = ({ onClose }) => {
                 value={form.price}
                 onChange={handleChange}
                 placeholder="499"
-                className="w-full bg-slate-800 border border-slate-700 rounded-xl pl-9 pr-4 py-2.5 text-sm text-slate-100 focus:outline-none focus:ring-2 focus:ring-amber-500 placeholder:text-slate-500"
+                className="w-full bg-slate-800 border border-slate-700 rounded-xl pl-9 pr-4 py-2.5 text-sm text-slate-100 focus:outline-none focus:ring-2 focus:ring-accent-500 placeholder:text-slate-500"
               />
             </div>
             <p className="text-[11px] text-slate-400 mt-1">
@@ -109,12 +109,12 @@ export const CreateRoomModal = ({ onClose }) => {
               onChange={handleChange}
               rows={3}
               placeholder="Describe what students get when they enroll (e.g. Exclusive video lectures, PDF notes, weekly live sessions)..."
-              className="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-slate-100 focus:outline-none focus:ring-2 focus:ring-amber-500 placeholder:text-slate-500 resize-none"
+              className="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-slate-100 focus:outline-none focus:ring-2 focus:ring-accent-500 placeholder:text-slate-500 resize-none"
             />
           </div>
 
           {/* Feature Badge info */}
-          <div className="p-3.5 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-amber-300 text-xs flex items-start gap-2.5">
+          <div className="p-3.5 rounded-2xl bg-accent-500/10 border border-accent-500/20 text-accent-500/50 text-xs flex items-start gap-2.5">
             <CheckCircle2 className="w-4 h-4 shrink-0 mt-0.5" />
             <span>
               Once created, you can link any live class or study material to this room. Only enrolled students will get access!
@@ -126,7 +126,7 @@ export const CreateRoomModal = ({ onClose }) => {
             <Button type="button" variant="ghost" onClick={onClose} className="w-full sm:flex-1 justify-center" disabled={isLoading}>
               Cancel
             </Button>
-            <Button type="submit" className="w-full sm:flex-1 justify-center bg-amber-600 hover:bg-amber-500 text-white font-bold" disabled={isLoading}>
+            <Button type="submit" className="w-full sm:flex-1 justify-center bg-accent-605 hover:bg-accent-500 text-white font-bold" disabled={isLoading}>
               {isLoading ? 'Creating Room...' : '💎 Create Paid Room'}
             </Button>
           </div>

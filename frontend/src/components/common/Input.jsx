@@ -20,14 +20,14 @@ export const Input = ({
   return (
     <div className="w-full space-y-1.5">
       {label && (
-        <label className="block text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-400">
+        <label className="block text-xs font-semibold uppercase tracking-wider text-[#8B85A3]">
           {label} {required && <span className="text-red-500">*</span>}
         </label>
       )}
-      <div className="relative rounded-xl shadow-sm">
+      <div className="relative shadow-xs">
         {Icon && (
-          <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
-            <Icon className="w-5 h-5" />
+          <div className="absolute inset-y-0 left-0 pl-1 flex items-center pointer-events-none text-[#8B85A3]">
+            <Icon className="w-4 h-4" />
           </div>
         )}
         <input
@@ -37,20 +37,20 @@ export const Input = ({
           onChange={onChange}
           placeholder={placeholder}
           required={required}
-          className={`w-full bg-slate-50 dark:bg-slate-800/80 border ${
-            error ? 'border-red-500 focus:ring-red-500' : 'border-slate-300 dark:border-slate-700 focus:ring-brand-500'
-          } text-slate-900 dark:text-slate-100 placeholder-slate-400 placeholder:text-xs sm:placeholder:text-sm placeholder:truncate rounded-xl py-2.5 ${
-            Icon ? 'pl-11' : 'pl-3.5'
-          } ${isPassword ? 'pr-11' : 'pr-3.5'} text-sm focus:outline-none focus:ring-2 transition-all ${className}`}
+          className={`w-full bg-transparent border-t-0 border-l-0 border-r-0 border-b ${
+            error ? 'border-red-500 focus:border-red-500' : 'border-white/10 focus:border-[#C5A059]'
+          } text-[#F5F3FA] placeholder-[#8B85A3]/50 placeholder:text-xs sm:placeholder:text-sm placeholder:truncate rounded-none py-2 ${
+            Icon ? 'pl-8' : 'pl-0'
+          } ${isPassword ? 'pr-8' : 'pr-0'} text-sm focus:outline-none focus:ring-0 transition-all ${className}`}
           {...props}
         />
         {isPassword && (
           <button
             type="button"
             onClick={() => setShowPassword(!showPassword)}
-            className="absolute inset-y-0 right-0 pr-3.5 flex items-center text-slate-400 hover:text-slate-200"
+            className="absolute inset-y-0 right-0 pr-1 flex items-center text-[#8B85A3] hover:text-[#F5F3FA]"
           >
-            {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+            {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
           </button>
         )}
       </div>

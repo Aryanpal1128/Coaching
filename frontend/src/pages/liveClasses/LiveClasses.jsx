@@ -253,13 +253,13 @@ export const LiveClasses = () => {
         <div className="flex items-center justify-between">
           <button
             onClick={handleLeaveClass}
-            className="flex items-center gap-2 text-sm font-semibold text-slate-400 hover:text-slate-200 transition-colors"
+            className="flex items-center gap-2 text-sm font-semibold text-theme-secondary hover:text-theme-primary transition-colors"
           >
             <ArrowLeft className="w-4 h-4" />
             Back to Classes
           </button>
           <div className="flex items-center gap-2">
-            <span className="flex items-center gap-1.5 text-xs text-emerald-400 font-medium">
+            <span className="flex items-center gap-1.5 text-xs text-green-400 font-medium">
               <Wifi className="w-3.5 h-3.5" />
               Connected
             </span>
@@ -268,8 +268,8 @@ export const LiveClasses = () => {
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
           {/* Jitsi Meet Embed */}
-          <Card className="lg:col-span-2 p-0 overflow-hidden bg-slate-950 border-slate-800 flex flex-col" style={{ minHeight: 480 }}>
-            <div className="p-3 bg-slate-900/80 border-b border-slate-800 flex items-center justify-between gap-2">
+          <Card className="lg:col-span-2 p-0 overflow-hidden bg-theme-card border-theme-border flex flex-col" style={{ minHeight: 480 }}>
+            <div className="p-3 bg-theme-global border-b border-theme-border flex items-center justify-between gap-2">
               <div className="flex items-center gap-2">
                 <span className="w-2.5 h-2.5 rounded-full bg-red-500 animate-ping" />
                 <span className="text-xs font-bold text-red-400 uppercase tracking-wider">
@@ -277,7 +277,7 @@ export const LiveClasses = () => {
                 </span>
               </div>
               <div className="flex items-center gap-2">
-                <span className="text-xs text-slate-400">
+                <span className="text-xs text-theme-secondary">
                   <Users className="w-3.5 h-3.5 inline mr-1" />
                   {(activeSession.attendeesCount || 0) + onlineCount} attending
                 </span>
@@ -286,7 +286,7 @@ export const LiveClasses = () => {
                     href={activeSession.meetingLink}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex items-center gap-1 text-xs text-indigo-400 hover:text-indigo-300 transition-colors"
+                    className="flex items-center gap-1 text-xs text-brand-500 hover:text-brand-400 transition-colors"
                   >
                     <ExternalLink className="w-3.5 h-3.5" />
                     Open in Tab
@@ -296,11 +296,11 @@ export const LiveClasses = () => {
             </div>
 
             {/* Jitsi Meet Embed Container */}
-            <div className="flex-1 relative w-full h-full min-h-[420px] bg-slate-950">
+            <div className="flex-1 relative w-full h-full min-h-[420px] bg-theme-global">
               <div ref={jitsiContainerRef} className="absolute inset-0 w-full h-full" />
             </div>
 
-            <div className="p-3 bg-slate-900/80 border-t border-slate-800 flex items-center justify-between text-xs text-slate-400">
+            <div className="p-3 bg-theme-global border-t border-theme-border flex items-center justify-between text-xs text-theme-secondary">
               <span>{activeSession.subject?.name}</span>
               <Button size="sm" variant="danger" onClick={handleLeaveClass}>
                 Leave Room
@@ -310,11 +310,11 @@ export const LiveClasses = () => {
 
           {/* Real-time chat */}
           <Card className="flex flex-col" style={{ height: 480 }}>
-            <div className="pb-3 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
-              <h3 className="text-xs font-extrabold uppercase tracking-wider text-slate-900 dark:text-slate-100 flex items-center gap-2">
+            <div className="pb-3 border-b border-theme-border flex items-center justify-between">
+              <h3 className="text-xs font-extrabold uppercase tracking-wider text-theme-primary flex items-center gap-2">
                 <MessageSquare className="w-4 h-4 text-brand-500" /> Live Chat
               </h3>
-              <span className="text-[10px] text-emerald-500 font-bold">Real-Time</span>
+              <span className="text-[10px] text-green-500 font-bold">Real-Time</span>
             </div>
 
             <div className="flex-1 overflow-y-auto py-3 space-y-2 text-xs">
@@ -323,33 +323,33 @@ export const LiveClasses = () => {
                   key={idx}
                   className={`p-2.5 rounded-xl ${
                     m.isSystem
-                      ? 'bg-slate-100 dark:bg-slate-800/30 text-center text-slate-500'
+                      ? 'bg-theme-global text-center text-theme-secondary'
                       : m.isMe
-                      ? 'bg-brand-600/20 border border-brand-500/20'
-                      : 'bg-slate-100 dark:bg-slate-800/60'
+                      ? 'bg-brand-500/20 border border-brand-500/20'
+                      : 'bg-theme-global'
                   }`}
                 >
                   {!m.isSystem && (
                     <div className="flex items-center justify-between mb-0.5">
-                      <span className={`font-bold ${m.isMe ? 'text-brand-400' : 'text-indigo-400'}`}>
+                      <span className={`font-bold ${m.isMe ? 'text-brand-400' : 'text-brand-500'}`}>
                         {m.sender}
                       </span>
-                      <span className="text-[10px] text-slate-400">{m.time}</span>
+                      <span className="text-[10px] text-theme-secondary">{m.time}</span>
                     </div>
                   )}
-                  <p className="text-slate-800 dark:text-slate-200">{m.text}</p>
+                  <p className="text-theme-primary">{m.text}</p>
                 </div>
               ))}
               <div ref={chatEndRef} />
             </div>
 
-            <form onSubmit={handleSendMessage} className="pt-2 border-t border-slate-200 dark:border-slate-800 flex items-center gap-2">
+            <form onSubmit={handleSendMessage} className="pt-2 border-t border-theme-border flex items-center gap-2">
               <input
                 type="text"
                 placeholder="Type a message..."
                 value={chatMessage}
                 onChange={(e) => setChatMessage(e.target.value)}
-                className="flex-1 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-brand-500"
+                className="flex-1 bg-theme-global border border-theme-border rounded-xl px-3 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-brand-500 text-theme-primary"
               />
               <Button type="submit" size="sm">
                 <Send className="w-3.5 h-3.5" />
@@ -367,13 +367,13 @@ export const LiveClasses = () => {
       {/* Header */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
-          <h2 className="text-2xl font-extrabold text-slate-900 dark:text-slate-100">Live Classes</h2>
-          <p className="text-xs text-slate-500 mt-0.5">
+          <h2 className="text-2xl font-extrabold text-theme-primary">Live Classes</h2>
+          <p className="text-xs text-theme-secondary mt-0.5">
             {isTeacher ? 'Schedule and manage your live classes' : 'Join live sessions with your instructors'}
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <Button size="sm" variant="ghost" onClick={() => refetch()} className="gap-1">
+          <Button size="sm" variant="ghost" onClick={() => refetch()} className="gap-1 text-theme-secondary hover:text-theme-primary">
             <RefreshCw className="w-3.5 h-3.5" />
             Refresh
           </Button>
@@ -392,7 +392,7 @@ export const LiveClasses = () => {
               <Button
                 size="sm"
                 variant="primary"
-                className="bg-indigo-600 hover:bg-indigo-500 gap-1"
+                className="gap-1"
                 onClick={() => setShowScheduleModal(true)}
               >
                 <Plus className="w-3.5 h-3.5" />
@@ -411,8 +411,8 @@ export const LiveClasses = () => {
             onClick={() => setActiveTab(tab)}
             className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all ${
               activeTab === tab
-                ? 'bg-indigo-600 text-white shadow-md shadow-indigo-500/20'
-                : 'bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700'
+                ? 'bg-brand-500 text-white shadow-md shadow-brand-500/20'
+                : 'bg-theme-global text-theme-secondary hover:bg-theme-card hover:text-theme-primary'
             }`}
           >
             {tab === 'ALL' ? 'All Classes' : tab.charAt(0) + tab.slice(1).toLowerCase()}
@@ -433,11 +433,11 @@ export const LiveClasses = () => {
           ))}
         </div>
       ) : classes.length === 0 ? (
-        <div className="text-center py-20 text-slate-400">
+        <div className="text-center py-20 text-theme-secondary">
           <Video className="w-12 h-12 mx-auto mb-3 opacity-30" />
           <p className="font-semibold">No {activeTab !== 'ALL' ? activeTab.toLowerCase() : ''} classes found</p>
           {isTeacher && (
-            <Button size="sm" variant="primary" className="mt-4 bg-indigo-600" onClick={() => setShowScheduleModal(true)}>
+            <Button size="sm" variant="primary" className="mt-4" onClick={() => setShowScheduleModal(true)}>
               Schedule Your First Class
             </Button>
           )}

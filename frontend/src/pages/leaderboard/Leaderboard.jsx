@@ -30,11 +30,11 @@ const getInitials = (name) =>
   name.split(' ').map((n) => n[0]).join('').slice(0, 2).toUpperCase();
 
 const AVATAR_COLORS = [
-  'from-amber-500 to-orange-600',
-  'from-brand-600 to-indigo-600',
-  'from-emerald-500 to-teal-600',
-  'from-purple-600 to-pink-600',
-  'from-red-500 to-rose-600'
+  'from-[#1B365D] to-[#C5A059]/80',
+  'from-[#C5A059] to-[#1B365D]/80',
+  'from-[#1B365D]/60 to-[#C5A059]/60',
+  'from-[#C5A059]/60 to-[#1B365D]/60',
+  'from-brand-500 to-accent-500'
 ];
 
 export const Leaderboard = () => {
@@ -62,7 +62,7 @@ export const Leaderboard = () => {
   return (
     <div className="space-y-6">
       {/* Header Banner */}
-      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-amber-500 via-orange-500 to-red-600 p-6 sm:p-8 text-white shadow-xl shadow-orange-500/10">
+      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-brand-700 via-brand-600 to-brand-500 p-6 sm:p-8 text-white shadow-xl shadow-brand-500/10">
         <div className="absolute top-0 right-0 w-48 h-48 bg-white/5 rounded-full -translate-y-1/2 translate-x-1/4 pointer-events-none" />
         <div className="relative flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div>
@@ -70,11 +70,11 @@ export const Leaderboard = () => {
               Gamified Ranking
             </span>
             <h2 className="text-2xl sm:text-3xl font-extrabold">Global Community Leaderboard</h2>
-            <p className="text-xs sm:text-sm text-amber-100 mt-1 max-w-xl">
+            <p className="text-xs sm:text-sm text-accent-100 mt-1 max-w-xl">
               Earn points by answering questions, receiving upvotes & getting teacher endorsements!
             </p>
           </div>
-          <Trophy className="w-16 h-16 text-amber-200/80 hidden sm:block shrink-0" />
+          <Trophy className="w-16 h-16 text-accent-100/80 hidden sm:block shrink-0" />
         </div>
       </div>
 
@@ -86,7 +86,7 @@ export const Leaderboard = () => {
       </div>
 
       {/* Tabs */}
-      <div className="flex items-center gap-2 border-b border-slate-200 dark:border-slate-800 pb-3">
+      <div className="flex items-center gap-2 border-b border-theme-border pb-3">
         {TABS.map((tab) => (
           <button
             key={tab}
@@ -94,7 +94,7 @@ export const Leaderboard = () => {
             className={`px-4 py-2 rounded-xl text-xs font-extrabold capitalize transition-all ${
               activeTab === tab
                 ? 'bg-brand-600 text-white shadow-md shadow-brand-500/20'
-                : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700'
+                : 'bg-theme-global text-theme-secondary hover:bg-theme-card hover:text-theme-primary'
             }`}
           >
             {tab} Rankings
@@ -105,7 +105,7 @@ export const Leaderboard = () => {
       {isLoading ? (
         <div className="space-y-3 animate-pulse">
           {[1, 2, 3, 4, 5].map((i) => (
-            <div key={i} className="h-16 bg-slate-200 dark:bg-slate-800 rounded-2xl" />
+            <div key={i} className="h-16 bg-theme-global rounded-2xl" />
           ))}
         </div>
       ) : (
@@ -118,17 +118,17 @@ export const Leaderboard = () => {
                 if (!user) return <div key={podiumIdx} />;
                 const realIdx = podiumIdx === 1 ? 0 : podiumIdx === 0 ? 1 : 2;
                 const heights = ['h-24', 'h-32', 'h-20'];
-                const medalColors = ['border-slate-300', 'border-amber-400', 'border-orange-300'];
+                const medalColors = ['border-slate-300', 'border-accent-500', 'border-accent-500/60'];
 
                 return (
                   <div key={user._id} className={`flex flex-col items-center justify-end ${heights[podiumIdx]}`}>
                     <div className={`w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-gradient-to-tr ${AVATAR_COLORS[realIdx]} text-white flex items-center justify-center text-sm font-extrabold border-2 ${medalColors[podiumIdx]} shadow-lg mb-1.5`}>
                       {getInitials(user.name)}
                     </div>
-                    <p className="text-[10px] sm:text-xs font-bold text-slate-900 dark:text-slate-100 text-center leading-tight truncate w-full px-1">
+                    <p className="text-[10px] sm:text-xs font-bold text-theme-primary text-center leading-tight truncate w-full px-1">
                       {getRankEmoji(realIdx)} {user.name.split(' ')[0]}
                     </p>
-                    <p className="text-[10px] font-bold text-amber-500">
+                    <p className="text-[10px] font-bold text-accent-500">
                       {user.reputation || user.weeklyPoints || 0} pts
                     </p>
                   </div>
@@ -143,7 +143,7 @@ export const Leaderboard = () => {
               <Card
                 key={person._id}
                 className={`flex items-center gap-3 sm:gap-4 p-3.5 sm:p-4 transition-all ${
-                  idx === 0 ? 'border-2 border-amber-500/40 bg-amber-500/5' : 'hover:border-slate-300 dark:hover:border-slate-600'
+                  idx === 0 ? 'border-2 border-accent-500/40 bg-accent-500/5' : 'hover:border-theme-border'
                 }`}
               >
                 {/* Rank */}
@@ -151,7 +151,7 @@ export const Leaderboard = () => {
                   {getRankEmoji(idx) ? (
                     <span className="text-xl">{getRankEmoji(idx)}</span>
                   ) : (
-                    <span className="text-sm font-extrabold text-slate-400">#{idx + 1}</span>
+                    <span className="text-sm font-extrabold text-theme-secondary">#{idx + 1}</span>
                   )}
                 </div>
 
@@ -163,20 +163,20 @@ export const Leaderboard = () => {
                 {/* Info */}
                 <div className="flex-1 min-w-0">
                   <div className="flex flex-wrap items-center gap-1.5">
-                    <h4 className="text-sm font-bold text-slate-900 dark:text-slate-100 truncate">
+                    <h4 className="text-sm font-bold text-theme-primary truncate">
                       {person.name}
                     </h4>
                     <Badge variant="blue" size="xs">{person.level || 'Contributor'}</Badge>
                   </div>
-                  <p className="text-[11px] text-slate-400 mt-0.5">{person.badge}</p>
+                  <p className="text-[11px] text-theme-secondary mt-0.5">{person.badge}</p>
                 </div>
 
                 {/* Score */}
                 <div className="text-right shrink-0">
-                  <span className="text-base sm:text-lg font-extrabold text-amber-500">
+                  <span className="text-base sm:text-lg font-extrabold text-accent-500">
                     ⚡ {person.reputation || person.weeklyPoints || 0}
                   </span>
-                  <p className="text-[10px] text-slate-400">pts</p>
+                  <p className="text-[10px] text-theme-secondary">pts</p>
                 </div>
               </Card>
             ))}

@@ -100,10 +100,10 @@ export const QuestionFeed = () => {
       {/* Header */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
-          <h2 className="text-2xl font-extrabold text-slate-900 dark:text-slate-100">
+          <h2 className="text-2xl font-extrabold text-theme-primary">
             Community Q&A Feed
           </h2>
-          <p className="text-xs text-slate-500 mt-0.5">
+          <p className="text-xs text-theme-secondary mt-0.5">
             AI-graded questions & answers from students and instructors
           </p>
         </div>
@@ -115,13 +115,13 @@ export const QuestionFeed = () => {
       </div>
 
       {/* Feed Toggle Bar */}
-      <div className="flex items-center gap-2 border-b border-slate-200 dark:border-slate-800 pb-3">
+      <div className="flex items-center gap-2 border-b border-theme-border pb-3">
         <button
           onClick={() => setFeedMode('all')}
           className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-extrabold transition-all cursor-pointer ${
             feedMode === 'all'
-              ? 'bg-brand-600 text-white shadow-md shadow-brand-500/20'
-              : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700'
+              ? 'bg-theme-indigo text-white shadow-md shadow-theme'
+              : 'bg-theme-card text-theme-secondary hover:bg-theme-global hover:text-theme-primary'
           }`}
         >
           <HelpCircle className="w-3.5 h-3.5" /> All Questions
@@ -130,8 +130,8 @@ export const QuestionFeed = () => {
           onClick={() => setFeedMode('my-answers')}
           className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-extrabold transition-all cursor-pointer ${
             feedMode === 'my-answers'
-              ? 'bg-brand-600 text-white shadow-md shadow-brand-500/20'
-              : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700'
+              ? 'bg-theme-indigo text-white shadow-md shadow-theme'
+              : 'bg-theme-card text-theme-secondary hover:bg-theme-global hover:text-theme-primary'
           }`}
         >
           <MessageSquare className="w-3.5 h-3.5" /> My Answers
@@ -142,9 +142,9 @@ export const QuestionFeed = () => {
         <>
           {/* Active URL Filter Indicator */}
           {hasActiveUrlFilter && (
-            <div className="flex items-center justify-between bg-brand-500/10 border border-brand-500/30 p-3 rounded-2xl text-xs text-brand-600 dark:text-brand-400 font-semibold">
+            <div className="flex items-center justify-between bg-theme-badge-indigo border border-theme-indigo/20 p-3 rounded-2xl text-xs text-theme-indigo font-semibold">
               <div className="flex items-center gap-2">
-                <Filter className="w-4 h-4 text-brand-500" />
+                <Filter className="w-4 h-4 text-theme-indigo" />
                 <span>
                   Filtering feed by:{' '}
                   {authorParam && <span>Questions asked by user</span>}
@@ -154,7 +154,7 @@ export const QuestionFeed = () => {
               </div>
               <button
                 onClick={() => setSearchParams({})}
-                className="flex items-center gap-1 text-xs font-bold text-brand-600 hover:text-brand-700 dark:text-brand-400 hover:underline cursor-pointer"
+                className="flex items-center gap-1 text-xs font-bold text-theme-indigo hover:opacity-80 cursor-pointer"
               >
                 <X className="w-3.5 h-3.5" /> Clear filter
               </button>
@@ -162,17 +162,17 @@ export const QuestionFeed = () => {
           )}
 
           {/* Search + Sort Bar */}
-          <div className="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 space-y-3">
+          <div className="bg-theme-card p-4 rounded-2xl border border-theme-border shadow-theme space-y-3">
             <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
               {/* Search */}
               <div className="relative flex-1">
-                <Search className="absolute left-3.5 top-2.5 w-4 h-4 text-slate-400" />
+                <Search className="absolute left-3 w-4 h-4 text-theme-secondary" />
                 <input
                   type="text"
                   placeholder="Search questions, topics, keywords..."
                   value={query}
                   onChange={(e) => setQuery(e.target.value)}
-                  className="w-full bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700/60 rounded-xl pl-10 pr-4 py-2 text-xs text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-brand-500"
+                  className="w-full bg-transparent border-t-0 border-l-0 border-r-0 border-b border-theme-border focus:border-theme-amber rounded-none pl-8 pr-4 py-2 text-xs text-theme-primary focus:outline-none focus:ring-0"
                 />
               </div>
 
@@ -184,8 +184,8 @@ export const QuestionFeed = () => {
                     onClick={() => setSortBy(key)}
                     className={`flex items-center gap-1 px-3 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
                       sortBy === key
-                        ? 'bg-brand-600 text-white shadow-sm'
-                        : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700'
+                        ? 'bg-theme-indigo text-white shadow-sm'
+                        : 'bg-theme-global text-theme-secondary hover:bg-theme-card hover:text-theme-primary border border-transparent hover:border-theme-border'
                     }`}
                   >
                     <Icon className="w-3.5 h-3.5" />
@@ -197,13 +197,13 @@ export const QuestionFeed = () => {
 
             {/* Tag pills */}
             <div className="flex flex-wrap items-center gap-2">
-              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider shrink-0">Filter:</span>
+              <span className="text-[10px] font-bold text-theme-secondary uppercase tracking-wider shrink-0">Filter:</span>
               <button
                 onClick={() => setSelectedTag('')}
                 className={`px-2.5 py-0.5 rounded-full text-[11px] font-semibold transition-all cursor-pointer ${
                   !selectedTag
-                    ? 'bg-brand-600 text-white'
-                    : 'bg-slate-100 dark:bg-slate-800 text-slate-500 hover:bg-slate-200 dark:hover:bg-slate-700'
+                    ? 'bg-theme-indigo text-white'
+                    : 'bg-theme-global text-theme-secondary hover:bg-theme-card hover:text-theme-primary border border-transparent hover:border-theme-border'
                 }`}
               >
                 All
@@ -214,8 +214,8 @@ export const QuestionFeed = () => {
                   onClick={() => setSelectedTag(tag === selectedTag ? '' : tag)}
                   className={`px-2.5 py-0.5 rounded-full text-[11px] font-semibold transition-all cursor-pointer ${
                     selectedTag === tag
-                      ? 'bg-brand-600 text-white'
-                      : 'bg-slate-100 dark:bg-slate-800 text-slate-500 hover:bg-slate-200 dark:hover:bg-slate-700'
+                      ? 'bg-theme-indigo text-white'
+                      : 'bg-theme-global text-theme-secondary hover:bg-theme-card hover:text-theme-primary border border-transparent hover:border-theme-border'
                   }`}
                 >
                   #{tag}
@@ -226,9 +226,9 @@ export const QuestionFeed = () => {
 
           {/* Results count */}
           <div className="flex items-center justify-between">
-            <p className="text-xs text-slate-500">
-              Showing <span className="font-bold text-slate-900 dark:text-slate-100">{filtered.length}</span> questions
-              {selectedTag && <> tagged <span className="text-brand-500">#{selectedTag}</span></>}
+            <p className="text-xs text-theme-secondary">
+              Showing <span className="font-bold text-theme-primary">{filtered.length}</span> questions
+              {selectedTag && <> tagged <span className="text-theme-indigo">#{selectedTag}</span></>}
             </p>
             <Badge variant="blue" size="xs" className="flex items-center gap-1">
               <Sparkles className="w-3 h-3" /> AI Graded
@@ -243,7 +243,7 @@ export const QuestionFeed = () => {
               ))}
             </div>
           ) : filtered.length === 0 ? (
-            <div className="text-center py-16 text-slate-400">
+            <div className="text-center py-16 text-theme-secondary">
               <HelpCircle className="w-12 h-12 mx-auto mb-3 opacity-30" />
               <p className="font-semibold text-sm">No questions found</p>
               <p className="text-xs mt-1 mb-4">Try different keywords or remove the tag filter</p>
@@ -271,12 +271,12 @@ export const QuestionFeed = () => {
               ))}
             </div>
           ) : myAnswers.length === 0 ? (
-            <Card className="p-12 text-center text-slate-400">
-              <MessageSquare className="w-12 h-12 mx-auto mb-3 opacity-30 text-indigo-500" />
-              <h3 className="font-extrabold text-slate-800 dark:text-slate-200 text-sm">
+            <Card className="p-12 text-center text-theme-secondary">
+              <MessageSquare className="w-12 h-12 mx-auto mb-3 opacity-30 text-theme-indigo" />
+              <h3 className="font-extrabold text-theme-primary text-sm">
                 You haven't answered any questions yet
               </h3>
-              <p className="text-xs text-slate-500 mt-1 mb-4">
+              <p className="text-xs text-theme-secondary mt-1 mb-4">
                 Browse the feed to help someone out and earn reputation points!
               </p>
               <Button onClick={() => setFeedMode('all')} variant="primary" size="sm">
@@ -285,21 +285,21 @@ export const QuestionFeed = () => {
             </Card>
           ) : (
             myAnswers.map((ans) => (
-              <Card key={ans._id} className="p-5 space-y-3 hover:border-brand-500/40 transition-all">
+              <Card key={ans._id} className="p-5 space-y-3 hover:border-theme-indigo/40 transition-all">
                 <div className="flex items-start justify-between gap-4">
                   <div>
-                    <span className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">
+                    <span className="text-[10px] uppercase font-bold text-theme-secondary tracking-wider">
                       Question Answered
                     </span>
                     {ans.question ? (
                       <Link
                         to={`/questions/${ans.question._id}`}
-                        className="text-base font-extrabold text-slate-900 dark:text-slate-100 hover:text-brand-500 transition-colors block mt-0.5"
+                        className="text-base font-extrabold text-theme-primary hover:text-theme-indigo transition-colors block mt-0.5"
                       >
                         {ans.question.title}
                       </Link>
                     ) : (
-                      <p className="text-sm font-bold text-slate-500 italic mt-0.5">[Question Deleted]</p>
+                      <p className="text-sm font-bold text-theme-secondary italic mt-0.5">[Question Deleted]</p>
                     )}
                   </div>
                   {ans.isAccepted && (
@@ -309,17 +309,17 @@ export const QuestionFeed = () => {
                   )}
                 </div>
 
-                <p className="text-xs text-slate-700 dark:text-slate-300 leading-relaxed bg-slate-50 dark:bg-slate-800/50 p-3 rounded-xl border border-slate-200/60 dark:border-slate-800 line-clamp-3">
+                <p className="text-xs text-theme-secondary leading-relaxed bg-theme-global p-3 rounded-xl border border-theme-border line-clamp-3">
                   "{ans.answerText}"
                 </p>
 
-                <div className="flex items-center justify-between text-xs text-slate-400 pt-1">
+                <div className="flex items-center justify-between text-xs text-theme-secondary pt-1">
                   <span className="flex items-center gap-1">
                     <Calendar className="w-3.5 h-3.5" />
                     Answered {new Date(ans.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
                   </span>
-                  <span className="flex items-center gap-1 font-bold text-slate-600 dark:text-slate-300">
-                    <ThumbsUp className="w-3.5 h-3.5 text-brand-500" />
+                  <span className="flex items-center gap-1 font-bold text-theme-primary">
+                    <ThumbsUp className="w-3.5 h-3.5 text-theme-indigo" />
                     {ans.upvotesCount || 0} Upvotes
                   </span>
                 </div>

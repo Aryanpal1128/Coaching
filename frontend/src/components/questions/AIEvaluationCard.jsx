@@ -9,21 +9,21 @@ export const AIEvaluationCard = ({ aiEvaluation, accuracyScore }) => {
   const score = accuracyScore || aiEvaluation.accuracyScore || 85;
 
   return (
-    <div className="bg-gradient-to-r from-indigo-900/30 to-purple-900/30 border border-indigo-500/30 rounded-2xl p-4 my-3 text-slate-100 shadow-md">
+    <div className="bg-white/5 dark:bg-white/[0.03] backdrop-blur-md border border-brand-500/30 rounded-2xl p-4 my-3 text-slate-100 shadow-md">
       <div
         onClick={() => setIsOpen(!isOpen)}
         className="flex items-center justify-between cursor-pointer"
       >
         <div className="flex items-center gap-3">
-          <div className="p-2 rounded-xl bg-indigo-500/20 text-indigo-400">
+          <div className="p-2 rounded-xl bg-brand-500/20 text-brand-500">
             <Cpu className="w-5 h-5 animate-pulse" />
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <h4 className="text-xs font-bold uppercase tracking-wider text-indigo-300">
+              <h4 className="text-xs font-bold uppercase tracking-wider text-[#C5A059]">
                 Gemini AI Grade & Feedback
               </h4>
-              <span className="text-[10px] font-extrabold bg-indigo-500 text-white px-2 py-0.5 rounded-full">
+              <span className="text-[10px] font-extrabold bg-brand-500 text-white px-2 py-0.5 rounded-full">
                 {score}% Accuracy
               </span>
             </div>
@@ -39,10 +39,10 @@ export const AIEvaluationCard = ({ aiEvaluation, accuracyScore }) => {
       </div>
 
       {isOpen && (
-        <div className="mt-4 pt-3 border-t border-indigo-500/20 grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
+        <div className="mt-4 pt-3 border-t border-brand-500/20 grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
           {/* Covered Concepts */}
           <div className="bg-slate-900/50 p-3 rounded-xl border border-slate-800">
-            <h5 className="font-semibold text-emerald-400 flex items-center gap-1.5 mb-1">
+            <h5 className="font-semibold text-green-400 flex items-center gap-1.5 mb-1">
               <CheckCircle className="w-4 h-4" /> Concept Coverage
             </h5>
             <p className="text-slate-300 leading-relaxed">
@@ -52,7 +52,7 @@ export const AIEvaluationCard = ({ aiEvaluation, accuracyScore }) => {
 
           {/* Missing Points */}
           <div className="bg-slate-900/50 p-3 rounded-xl border border-slate-800">
-            <h5 className="font-semibold text-amber-400 flex items-center gap-1.5 mb-1">
+            <h5 className="font-semibold text-accent-500 flex items-center gap-1.5 mb-1">
               <AlertTriangle className="w-4 h-4" /> Recommended Additions
             </h5>
             {aiEvaluation.missingPoints && aiEvaluation.missingPoints.length > 0 ? (

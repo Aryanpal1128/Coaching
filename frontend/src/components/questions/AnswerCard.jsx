@@ -39,7 +39,7 @@ export const AnswerCard = ({ answer, isQuestionAuthor, isTeacher }) => {
   };
 
   return (
-    <Card className={`relative ${answer.isAccepted ? 'border-2 border-emerald-500/60 bg-emerald-500/5' : ''}`}>
+    <Card className={`relative ${answer.isAccepted ? 'border-2 border-green-500/60 bg-green-500/5' : ''}`}>
       {/* Ranking Badges */}
       <div className="flex flex-wrap items-center gap-2 mb-3">
         {answer.isAccepted && (
@@ -95,7 +95,7 @@ export const AnswerCard = ({ answer, isQuestionAuthor, isTeacher }) => {
           {isQuestionAuthor && !answer.isAccepted && (
             <button
               onClick={handleAccept}
-              className="text-xs text-emerald-500 font-bold hover:underline flex items-center gap-1"
+              className="text-xs text-green-500 font-bold hover:underline flex items-center gap-1"
             >
               <CheckCircle2 className="w-4 h-4" /> Accept Solution
             </button>
@@ -103,7 +103,7 @@ export const AnswerCard = ({ answer, isQuestionAuthor, isTeacher }) => {
           {isTeacher && !answer.isTeacherEndorsed && (
             <button
               onClick={handleEndorse}
-              className="text-xs text-amber-500 font-bold hover:underline flex items-center gap-1"
+              className="text-xs text-accent-500 font-bold hover:underline flex items-center gap-1"
             >
               <Star className="w-4 h-4" /> Endorse
             </button>
@@ -129,7 +129,7 @@ export const AnswerCard = ({ answer, isQuestionAuthor, isTeacher }) => {
         <div className="flex items-center gap-3">
           <button
             onClick={() => handleVote('UPVOTE')}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-emerald-500/10 text-slate-700 dark:text-slate-300 hover:text-emerald-500 transition-colors font-medium"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-green-500/10 text-slate-700 dark:text-slate-300 hover:text-green-500 transition-colors font-medium"
           >
             <ThumbsUp className="w-4 h-4" />
             <span>{answer.upvotesCount || 0}</span>

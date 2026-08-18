@@ -33,15 +33,15 @@ export const AdminDashboard = () => {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="relative overflow-hidden rounded-3xl bg-slate-900 border border-amber-500/30 p-6 sm:p-8 text-white shadow-xl">
-        <div className="absolute top-0 right-0 w-48 h-48 bg-amber-500/5 rounded-full -translate-y-1/2 translate-x-1/4 pointer-events-none" />
+      <div className="relative overflow-hidden rounded-3xl bg-slate-900 border border-accent-500/30 p-6 sm:p-8 text-white shadow-xl">
+        <div className="absolute top-0 right-0 w-48 h-48 bg-accent-500/5 rounded-full -translate-y-1/2 translate-x-1/4 pointer-events-none" />
         <div className="relative flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div>
             <Badge variant="amber" size="sm" className="mb-2">Admin Control Center</Badge>
             <h2 className="text-2xl sm:text-3xl font-extrabold">System Administration</h2>
             <p className="text-xs text-slate-400 mt-1">Platform analytics, user moderation, report resolutions & AI stats</p>
           </div>
-          <Shield className="w-14 h-14 text-amber-500 hidden sm:block shrink-0" />
+          <Shield className="w-14 h-14 text-accent-500 hidden sm:block shrink-0" />
         </div>
       </div>
 
@@ -84,12 +84,12 @@ export const AdminDashboard = () => {
       {activeTab === 'reports' && (
         <Card>
           <h3 className="text-base font-bold text-slate-900 dark:text-slate-100 mb-4 flex items-center gap-2">
-            <AlertTriangle className="w-5 h-5 text-amber-500" /> Pending Content Moderation Queue
+            <AlertTriangle className="w-5 h-5 text-accent-500" /> Pending Content Moderation Queue
           </h3>
 
           {reports.length === 0 ? (
             <div className="text-center py-10 text-slate-400">
-              <CheckCircle2 className="w-10 h-10 mx-auto mb-2 text-emerald-400" />
+              <CheckCircle2 className="w-10 h-10 mx-auto mb-2 text-green-400" />
               <p className="font-semibold text-sm">All clear! No pending reports.</p>
             </div>
           ) : (

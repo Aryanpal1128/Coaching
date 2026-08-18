@@ -431,7 +431,7 @@ const CallUIOverlay = () => {
             </button>
             <button
               onClick={acceptCall}
-              className="flex-1 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-bold flex items-center justify-center gap-1.5 transition-colors"
+              className="flex-1 py-2.5 rounded-xl bg-green-500 hover:bg-green-600 text-white text-xs font-bold flex items-center justify-center gap-1.5 transition-colors"
             >
               <Phone className="w-4 h-4" /> Accept
             </button>
@@ -483,7 +483,7 @@ const CallUIOverlay = () => {
                   className="w-32 h-32 rounded-full object-cover border-4 border-brand-500 shadow-2xl"
                 />
                 <h3 className="text-lg font-extrabold">{displayUser?.name}</h3>
-                <span className="text-xs text-emerald-400 font-semibold flex items-center gap-1">
+                <span className="text-xs text-green-400 font-semibold flex items-center gap-1">
                   <Volume2 className="w-4 h-4 animate-pulse" /> Audio Call Connected
                 </span>
               </div>

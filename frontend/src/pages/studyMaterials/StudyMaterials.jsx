@@ -130,10 +130,10 @@ export const StudyMaterials = () => {
       {/* Header */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
-          <h2 className="text-2xl font-extrabold text-slate-900 dark:text-slate-100">
+          <h2 className="text-2xl font-extrabold text-theme-primary">
             Study Resources
           </h2>
-          <p className="text-xs text-slate-500 mt-0.5">
+          <p className="text-xs text-theme-secondary mt-0.5">
             {isTeacher
               ? 'Upload and manage your study materials and video lectures'
               : 'Browse instructor-uploaded notes, video lectures, and study guides'}
@@ -148,7 +148,7 @@ export const StudyMaterials = () => {
             <Button
               size="sm"
               variant="primary"
-              className="bg-emerald-600 hover:bg-emerald-500 gap-1"
+              className="bg-green-600 hover:bg-green-500 gap-1"
               onClick={() => setShowUploadModal(true)}
             >
               <Upload className="w-3.5 h-3.5" />
@@ -159,13 +159,13 @@ export const StudyMaterials = () => {
       </div>
 
       {/* Main Tabs (Uploaded vs Recommended) */}
-      <div className="flex items-center gap-2 border-b border-slate-200 dark:border-slate-800 pb-2">
+      <div className="flex items-center gap-2 border-b border-theme-border pb-2">
         <button
           onClick={() => setActiveMainTab('Uploaded')}
           className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold transition-all ${
             activeMainTab === 'Uploaded'
               ? 'bg-brand-500 text-white shadow-md shadow-brand-500/20'
-              : 'text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
+              : 'text-theme-secondary hover:text-theme-primary hover:bg-theme-card'
           }`}
         >
           <BookOpen className="w-4 h-4" /> Uploaded Resources
@@ -175,50 +175,50 @@ export const StudyMaterials = () => {
           className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold transition-all ${
             activeMainTab === 'Recommended'
               ? 'bg-brand-500 text-white shadow-md shadow-brand-500/20'
-              : 'text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
+              : 'text-theme-secondary hover:text-theme-primary hover:bg-theme-card'
           }`}
         >
-          <Sparkles className="w-4 h-4 text-amber-400" /> Recommended For You
+          <Sparkles className="w-4 h-4 text-accent-500" /> Recommended For You
         </button>
       </div>
 
       {activeMainTab === 'Uploaded' ? (
         <>
           {/* Search & Filter Bar */}
-          <div className="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 space-y-3">
+          <div className="bg-theme-card p-4 rounded-2xl border border-theme-border shadow-theme space-y-3">
             {/* Search */}
             <div className="relative">
-              <Search className="absolute left-3.5 top-2.5 w-4 h-4 text-slate-400" />
+              <Search className="absolute left-3.5 top-2.5 w-4 h-4 text-theme-secondary" />
               <input
                 type="text"
                 placeholder="Search by title..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl pl-10 pr-4 py-2 text-sm text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-brand-500"
+                className="w-full bg-theme-global border border-theme-border rounded-xl pl-10 pr-4 py-2 text-sm text-theme-primary focus:outline-none focus:ring-2 focus:ring-brand-500"
               />
             </div>
 
             {/* Subject filter */}
             <div className="flex flex-wrap items-center gap-2">
-              <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Subject:</span>
+              <span className="text-[11px] font-bold text-theme-secondary uppercase tracking-wider">Subject:</span>
               <button
                 onClick={() => setActiveSubject('')}
-                className={`px-3 py-1 rounded-full text-xs font-semibold transition-all ${
+                className={`px-3 py-1 rounded-full text-xs font-semibold transition-all cursor-pointer ${
                   !activeSubject
-                    ? 'bg-brand-600 text-white shadow-sm'
-                    : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
+                    ? 'bg-brand-500 text-white shadow-sm'
+                    : 'bg-theme-global text-theme-secondary hover:bg-theme-card hover:text-theme-primary'
                 }`}
               >
-                All
+                All Subjects
               </button>
               {subjects.map((s) => (
                 <button
                   key={s._id}
                   onClick={() => setActiveSubject(s._id)}
-                  className={`px-3 py-1 rounded-full text-xs font-semibold transition-all ${
+                  className={`px-3 py-1 rounded-full text-xs font-semibold transition-all cursor-pointer ${
                     activeSubject === s._id
-                      ? 'bg-brand-600 text-white shadow-sm'
-                      : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
+                      ? 'bg-brand-500 text-white shadow-sm'
+                      : 'bg-theme-global text-theme-secondary hover:bg-theme-card hover:text-theme-primary'
                   }`}
                 >
                   {s.name}
@@ -228,15 +228,15 @@ export const StudyMaterials = () => {
 
             {/* File type filter */}
             <div className="flex flex-wrap items-center gap-2">
-              <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Type:</span>
+              <span className="text-[11px] font-bold text-theme-secondary uppercase tracking-wider">Type:</span>
               {FILE_TYPE_FILTERS.map((t) => (
                 <button
                   key={t}
                   onClick={() => setActiveType(t)}
-                  className={`px-3 py-1 rounded-full text-xs font-semibold transition-all ${
+                  className={`px-3 py-1 rounded-full text-xs font-semibold transition-all cursor-pointer ${
                     activeType === t
-                      ? 'bg-indigo-600 text-white shadow-sm'
-                      : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
+                      ? 'bg-brand-500 text-white shadow-sm'
+                      : 'bg-theme-global text-theme-secondary hover:bg-theme-card hover:text-theme-primary'
                   }`}
                 >
                   {t}
@@ -247,7 +247,7 @@ export const StudyMaterials = () => {
 
           {/* Stats row */}
           {!isLoading && materials.length > 0 && (
-            <div className="flex items-center gap-2 text-xs text-slate-400">
+            <div className="flex items-center gap-2 text-xs text-theme-secondary">
               <BookOpen className="w-3.5 h-3.5" />
               <span>{materials.length} resource{materials.length !== 1 ? 's' : ''} found</span>
             </div>
@@ -261,14 +261,14 @@ export const StudyMaterials = () => {
               ))}
             </div>
           ) : materials.length === 0 ? (
-            <div className="text-center py-16 text-slate-400">
+            <div className="text-center py-16 text-theme-secondary">
               <BookOpen className="w-12 h-12 mx-auto mb-3 opacity-30" />
               <p className="font-semibold">No materials found</p>
               <p className="text-xs mt-1">
                 {isTeacher ? 'Upload your first study material above' : 'Check back later'}
               </p>
               {isTeacher && (
-                <Button size="sm" variant="primary" className="mt-4 bg-emerald-600" onClick={() => setShowUploadModal(true)}>
+                <Button size="sm" variant="primary" className="mt-4 bg-green-600" onClick={() => setShowUploadModal(true)}>
                   Upload First Material
                 </Button>
               )}
@@ -321,21 +321,21 @@ export const StudyMaterials = () => {
                         </div>
                       )}
 
-                      <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100 leading-snug line-clamp-2">
+                      <h3 className="text-sm font-bold text-theme-primary leading-snug line-clamp-2">
                         {m.title}
                       </h3>
                       {m.description && (
-                        <p className="text-xs text-slate-500 mt-1 line-clamp-2">{m.description}</p>
+                        <p className="text-xs text-theme-secondary mt-1 line-clamp-2">{m.description}</p>
                       )}
-                      <p className="text-xs text-slate-500 mt-1.5">
+                      <p className="text-xs text-theme-secondary mt-1.5">
                         By {m.teacher?.name} {m.fileSize ? `• ${formatSize(m.fileSize)}` : ''}
                       </p>
                     </div>
 
-                    <div className="mt-4 pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between gap-2">
+                    <div className="mt-4 pt-3 border-t border-theme-border flex items-center justify-between gap-2">
                       <div className="flex items-center gap-2 min-w-0">
                         <Badge variant="indigo" size="xs">{m.subject?.name}</Badge>
-                        <span className="text-[10px] text-slate-400 truncate">
+                        <span className="text-[10px] text-theme-secondary truncate">
                           {new Date(m.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' })}
                         </span>
                       </div>
@@ -344,7 +344,7 @@ export const StudyMaterials = () => {
                           <button
                             onClick={() => handleDelete(m._id, m.title)}
                             disabled={deleting}
-                            className="p-1.5 rounded-lg text-slate-500 hover:text-red-500 hover:bg-red-500/10 transition-colors"
+                            className="p-1.5 rounded-lg text-theme-secondary hover:text-red-500 hover:bg-red-500/10 transition-colors"
                             title="Delete material"
                           >
                             <Trash2 className="w-3.5 h-3.5" />
@@ -375,7 +375,7 @@ export const StudyMaterials = () => {
                             }}
                             target={isLocked ? '_self' : '_blank'}
                             rel="noopener noreferrer"
-                            className="inline-flex items-center gap-1 px-2.5 py-1.5 text-xs font-semibold text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl hover:bg-brand-500 hover:text-white hover:border-brand-500 transition-all"
+                            className="inline-flex items-center gap-1 px-2.5 py-1.5 text-xs font-semibold text-theme-secondary bg-theme-global border border-theme-border rounded-xl hover:bg-brand-500 hover:text-white hover:border-brand-500 transition-all"
                           >
                             <Download className="w-3.5 h-3.5" />
                             Download
@@ -399,10 +399,10 @@ export const StudyMaterials = () => {
               ))}
             </div>
           ) : recommendedMaterials.length === 0 ? (
-            <div className="text-center py-16 text-slate-400 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800">
-              <Sparkles className="w-12 h-12 mx-auto mb-3 text-amber-400 opacity-60" />
-              <p className="font-semibold text-slate-700 dark:text-slate-300">No personalized recommendations yet</p>
-              <p className="text-xs mt-1 text-slate-500 max-w-sm mx-auto">
+            <div className="text-center py-16 text-theme-secondary bg-theme-card rounded-2xl border border-theme-border">
+              <Sparkles className="w-12 h-12 mx-auto mb-3 text-accent-500 opacity-60" />
+              <p className="font-semibold text-theme-primary">No personalized recommendations yet</p>
+              <p className="text-xs mt-1 text-theme-secondary max-w-sm mx-auto">
                 Add subjects of interest to your profile to get personalized study material recommendations.
               </p>
             </div>
@@ -416,30 +416,30 @@ export const StudyMaterials = () => {
                 return (
                   <Card
                     key={m._id}
-                    className="flex flex-col justify-between hover:border-amber-500/40 transition-all hover:shadow-md hover:shadow-amber-500/5 border-amber-500/10"
+                    className="flex flex-col justify-between hover:border-accent-500/40 transition-all hover:shadow-md hover:shadow-accent-500/5 border-accent-500/10"
                   >
                     <div>
                       <div className="flex items-start justify-between gap-3 mb-3">
-                        <div className={`p-2.5 rounded-xl ${isVideo ? 'bg-rose-500/10 text-rose-500' : 'bg-amber-500/10 text-amber-500'} shrink-0`}>
+                        <div className={`p-2.5 rounded-xl ${isVideo ? 'bg-rose-500/10 text-rose-500' : 'bg-accent-500/10 text-accent-500'} shrink-0`}>
                           <FileIcon type={m.fileType} />
                         </div>
                         <Badge variant="amber" size="xs">Recommended</Badge>
                       </div>
-                      <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100 leading-snug line-clamp-2">
+                      <h3 className="text-sm font-bold text-theme-primary leading-snug line-clamp-2">
                         {m.title}
                       </h3>
                       {m.description && (
-                        <p className="text-xs text-slate-500 mt-1 line-clamp-2">{m.description}</p>
+                        <p className="text-xs text-theme-secondary mt-1 line-clamp-2">{m.description}</p>
                       )}
-                      <p className="text-xs text-slate-500 mt-1.5">
+                      <p className="text-xs text-theme-secondary mt-1.5">
                         By {m.teacher?.name} {m.fileSize ? `• ${formatSize(m.fileSize)}` : ''}
                       </p>
                     </div>
 
-                    <div className="mt-4 pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between gap-2">
+                    <div className="mt-4 pt-3 border-t border-theme-border flex items-center justify-between gap-2">
                       <div className="flex items-center gap-2 min-w-0">
                         <Badge variant="indigo" size="xs">{m.subject?.name}</Badge>
-                        <span className="text-[10px] text-slate-400 truncate">
+                        <span className="text-[10px] text-theme-secondary truncate">
                           {new Date(m.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' })}
                         </span>
                       </div>
@@ -448,7 +448,7 @@ export const StudyMaterials = () => {
                           <button
                             onClick={() => handleDelete(m._id, m.title)}
                             disabled={deleting}
-                            className="p-1.5 rounded-lg text-slate-500 hover:text-red-500 hover:bg-red-500/10 transition-colors"
+                            className="p-1.5 rounded-lg text-theme-secondary hover:text-red-500 hover:bg-red-500/10 transition-colors"
                             title="Delete material"
                           >
                             <Trash2 className="w-3.5 h-3.5" />
@@ -479,7 +479,7 @@ export const StudyMaterials = () => {
                             }}
                             target={isLocked ? '_self' : '_blank'}
                             rel="noopener noreferrer"
-                            className="inline-flex items-center gap-1 px-2.5 py-1.5 text-xs font-semibold text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl hover:bg-brand-500 hover:text-white hover:border-brand-500 transition-all"
+                            className="inline-flex items-center gap-1 px-2.5 py-1.5 text-xs font-semibold text-theme-secondary bg-theme-global border border-theme-border rounded-xl hover:bg-brand-500 hover:text-white hover:border-brand-500 transition-all"
                           >
                             <Download className="w-3.5 h-3.5" />
                             Download
@@ -498,26 +498,26 @@ export const StudyMaterials = () => {
       {/* Inline Video Player Modal */}
       {activeVideoMaterial && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-4 animate-in fade-in duration-200">
-          <div className="bg-slate-900 border border-slate-800 rounded-3xl w-full max-w-3xl overflow-hidden shadow-2xl space-y-4 p-5">
-            <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+          <div className="bg-theme-card border border-theme-border rounded-3xl w-full max-w-3xl overflow-hidden shadow-2xl space-y-4 p-5">
+            <div className="flex items-center justify-between border-b border-theme-border pb-3">
               <div className="flex items-center gap-2.5">
                 <div className="p-2 rounded-xl bg-rose-500/10 text-rose-500">
                   <Video className="w-5 h-5" />
                 </div>
                 <div>
-                  <h3 className="text-base font-extrabold text-white">{activeVideoMaterial.title}</h3>
-                  <p className="text-xs text-slate-400">By {activeVideoMaterial.teacher?.name || 'Instructor'}</p>
+                  <h3 className="text-base font-extrabold text-theme-primary">{activeVideoMaterial.title}</h3>
+                  <p className="text-xs text-theme-secondary">By {activeVideoMaterial.teacher?.name || 'Instructor'}</p>
                 </div>
               </div>
               <button
                 onClick={() => setActiveVideoMaterial(null)}
-                className="p-2 rounded-xl text-slate-400 hover:bg-slate-800 transition-colors cursor-pointer"
+                className="p-2 rounded-xl text-theme-secondary hover:bg-theme-global transition-colors cursor-pointer"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
 
-            <div className="relative rounded-2xl overflow-hidden bg-black aspect-video flex items-center justify-center border border-slate-800">
+            <div className="relative rounded-2xl overflow-hidden bg-black aspect-video flex items-center justify-center border border-theme-border">
               <video
                 src={activeVideoMaterial.fileUrl}
                 controls
@@ -527,10 +527,10 @@ export const StudyMaterials = () => {
             </div>
 
             {activeVideoMaterial.description && (
-              <p className="text-xs text-slate-300 px-1">{activeVideoMaterial.description}</p>
+              <p className="text-xs text-theme-secondary px-1">{activeVideoMaterial.description}</p>
             )}
 
-            <div className="flex items-center justify-between pt-2 border-t border-slate-800">
+            <div className="flex items-center justify-between pt-2 border-t border-theme-border">
               <Badge variant="rose">{activeVideoMaterial.subject?.name}</Badge>
               <a
                 href={activeVideoMaterial.fileUrl}

@@ -80,13 +80,13 @@ export const Login = () => {
   };
 
   return (
-    <Card className="glass-card shadow-2xl border border-slate-800 p-8 text-slate-100">
+    <Card className="glass-card shadow-theme border border-theme-border p-8 text-theme-primary bg-theme-card">
       <div className="text-center mb-6">
-        <div className="inline-flex p-3 rounded-2xl bg-gradient-to-tr from-brand-600 to-indigo-600 shadow-lg shadow-brand-500/20 text-white mb-3">
+        <div className="inline-flex p-3 rounded-2xl bg-gradient-to-br from-[#1B365D] to-[#C5A059] shadow-lg shadow-[#1B365D]/20 text-[#060B16] mb-3">
           <Sparkles className="w-6 h-6" />
         </div>
         <h2 className="text-2xl font-extrabold tracking-tight">Welcome Back</h2>
-        <p className="text-xs text-slate-400 mt-1">
+        <p className="text-xs text-theme-secondary mt-1">
           Sign in to your AI Coaching Platform account
         </p>
       </div>
@@ -113,8 +113,8 @@ export const Login = () => {
         />
 
         <div className="flex items-center justify-between text-xs">
-          <label className="flex items-center gap-2 text-slate-400 cursor-pointer">
-            <input type="checkbox" className="rounded bg-slate-800 border-slate-700 text-brand-500" />
+          <label className="flex items-center gap-2 text-theme-secondary cursor-pointer">
+            <input type="checkbox" className="rounded bg-theme-global border-theme-border text-brand-500" />
             Remember me
           </label>
           <Link to="/forgot-password" className="text-brand-400 hover:underline font-semibold">
@@ -129,10 +129,10 @@ export const Login = () => {
 
       <div className="relative my-5">
         <div className="absolute inset-0 flex items-center">
-          <div className="w-full border-t border-slate-800"></div>
+          <div className="w-full border-t border-theme-border"></div>
         </div>
         <div className="relative flex justify-center text-[10px] uppercase font-bold tracking-wider">
-          <span className="bg-slate-900 px-3 text-slate-500">Or continue with</span>
+          <span className="bg-theme-card px-3 text-theme-secondary">Or continue with</span>
         </div>
       </div>
 
@@ -146,7 +146,7 @@ export const Login = () => {
         />
       </div>
 
-      <div className="mt-6 text-center text-xs text-slate-400">
+      <div className="mt-6 text-center text-xs text-theme-secondary">
         Don't have an account?{' '}
         <Link to="/register" className="text-brand-400 font-bold hover:underline">
           Create Account

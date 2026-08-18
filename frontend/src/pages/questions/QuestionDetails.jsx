@@ -267,7 +267,7 @@ export const QuestionDetails = () => {
               required
             />
             <span className={`absolute bottom-3 right-3 text-[10px] font-medium ${
-              answerText.length < 20 ? 'text-slate-400' : 'text-emerald-500'
+              answerText.length < 20 ? 'text-slate-400' : 'text-green-500'
             }`}>
               {answerText.length} / 20 min
             </span>
@@ -275,7 +275,7 @@ export const QuestionDetails = () => {
 
           <div className="flex items-center justify-between">
             <p className="text-[11px] text-slate-400 flex items-center gap-1">
-              <Sparkles className="w-3 h-3 text-amber-400" />
+              <Sparkles className="w-3 h-3 text-accent-500" />
               Gemini AI will score accuracy, grammar & concept coverage
             </p>
             <Button type="submit" isLoading={isSubmitting} size="md" disabled={answerText.trim().length < 20}>

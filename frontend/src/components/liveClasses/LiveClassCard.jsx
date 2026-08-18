@@ -62,14 +62,14 @@ export const LiveClassCard = ({ cls, currentUser, onJoin }) => {
       cls.status === 'LIVE'
         ? 'bg-red-500/5 border-red-500/30 shadow-md shadow-red-500/10'
         : cls.status === 'SCHEDULED'
-        ? 'bg-slate-900 border-slate-700 hover:border-indigo-500/40'
-        : 'bg-slate-900/50 border-slate-800 opacity-70'
+        ? 'bg-theme-card backdrop-blur-md border-theme-border hover:border-brand-blue/40 shadow-sm'
+        : 'bg-theme-card border-theme-border opacity-70'
     }`}>
       {/* Status badge */}
       <div className="flex items-start justify-between gap-2 mb-3">
         <div className="flex-1 min-w-0">
-          <h3 className="text-sm font-bold text-slate-100 leading-snug line-clamp-2">{cls.title}</h3>
-          <p className="text-xs text-slate-400 mt-0.5">{cls.subject?.name}</p>
+          <h3 className="text-sm font-[800] text-theme-primary leading-snug line-clamp-2">{cls.title}</h3>
+          <p className="text-xs text-theme-secondary mt-0.5">{cls.subject?.name}</p>
         </div>
         <div className="shrink-0 flex items-center gap-1.5">
           {cls.accessType === 'paid' && (
@@ -87,7 +87,7 @@ export const LiveClassCard = ({ cls, currentUser, onJoin }) => {
       </div>
 
       {/* Meta */}
-      <div className="flex flex-wrap items-center gap-3 text-xs text-slate-400 mb-4">
+      <div className="flex flex-wrap items-center gap-3 text-xs text-theme-secondary mb-4">
         <span className="flex items-center gap-1">
           <Clock className="w-3.5 h-3.5" />
           {new Date(cls.scheduledAt).toLocaleString('en-IN', {
@@ -112,7 +112,7 @@ export const LiveClassCard = ({ cls, currentUser, onJoin }) => {
           <Button
             size="sm"
             variant="primary"
-            className="bg-red-600 hover:bg-red-500 flex-1 gap-1"
+            className="bg-red-650 hover:bg-red-550 flex-1 gap-1"
             onClick={() => onJoin(cls)}
           >
             <PlayCircle className="w-3.5 h-3.5" />
@@ -126,7 +126,7 @@ export const LiveClassCard = ({ cls, currentUser, onJoin }) => {
             href={cls.meetingLink}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-semibold text-indigo-400 bg-indigo-500/10 border border-indigo-500/20 rounded-xl hover:bg-indigo-500/20 transition-colors"
+            className="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-semibold text-brand-505 bg-brand-500/10 border border-brand-500/20 rounded-xl hover:bg-brand-500/20 transition-colors"
           >
             <ExternalLink className="w-3.5 h-3.5" />
             Open in Tab
@@ -136,7 +136,7 @@ export const LiveClassCard = ({ cls, currentUser, onJoin }) => {
         {/* Teacher controls */}
         {canControl && cls.status === 'SCHEDULED' && (
           <>
-            <Button size="sm" variant="primary" className="bg-emerald-600 hover:bg-emerald-500 gap-1" onClick={handleStart} disabled={starting}>
+            <Button size="sm" variant="primary" className="gap-1" onClick={handleStart} disabled={starting}>
               <PlayCircle className="w-3.5 h-3.5" />
               {starting ? 'Starting...' : 'Start'}
             </Button>

@@ -131,15 +131,15 @@ export const AskQuestion = () => {
 
   return (
     <Card className="max-w-3xl mx-auto p-6 sm:p-8">
-      <div className="flex items-center gap-3 mb-6 border-b border-slate-200 dark:border-slate-800 pb-4">
+      <div className="flex items-center gap-3 mb-6 border-b border-theme-border pb-4">
         <div className="p-3 rounded-2xl bg-brand-500/10 text-brand-500">
           <HelpCircle className="w-6 h-6" />
         </div>
         <div>
-          <h2 className="text-xl font-extrabold text-slate-900 dark:text-slate-100">
+          <h2 className="text-xl font-extrabold text-theme-primary">
             Ask a Question
           </h2>
-          <p className="text-xs text-slate-500">
+          <p className="text-xs text-theme-secondary">
             Get instant answers evaluated by AI and top community instructors
           </p>
         </div>
@@ -156,7 +156,7 @@ export const AskQuestion = () => {
         />
 
         <div>
-          <label className="block text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-400 mb-1.5">
+          <label className="block text-xs font-semibold uppercase tracking-wider text-theme-secondary mb-1.5">
             Detailed Description & Context <span className="text-red-500">*</span>
           </label>
           <textarea
@@ -164,11 +164,11 @@ export const AskQuestion = () => {
             placeholder="Explain what you are trying to understand, edge cases, code context..."
             value={description}
             onChange={(e) => setDescription(e.target.value)}
-            className={`w-full bg-slate-50 dark:bg-slate-800/80 border ${
+            className={`w-full bg-theme-global border ${
               description.trim().length > 0 && description.trim().length < 10
                 ? 'border-red-500 focus:ring-red-500'
-                : 'border-slate-300 dark:border-slate-700 focus:ring-brand-500'
-            } rounded-xl p-3.5 text-sm text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 transition-all`}
+                : 'border-theme-border focus:ring-brand-500'
+            } rounded-xl p-3.5 text-sm text-theme-primary focus:outline-none focus:ring-2 transition-all`}
             required
           />
           {description.trim().length > 0 && description.trim().length < 10 && (
@@ -181,13 +181,13 @@ export const AskQuestion = () => {
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
-            <label className="block text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-400 mb-1.5">
+            <label className="block text-xs font-semibold uppercase tracking-wider text-theme-secondary mb-1.5">
               Difficulty
             </label>
             <select
               value={difficulty}
               onChange={(e) => setDifficulty(e.target.value)}
-              className="w-full bg-slate-50 dark:bg-slate-800/80 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-slate-100 rounded-xl p-2.5 text-xs font-semibold"
+              className="w-full bg-theme-global border border-theme-border text-theme-primary rounded-xl p-2.5 text-xs font-semibold"
             >
               <option value="Easy">Easy</option>
               <option value="Medium">Medium</option>
@@ -196,7 +196,7 @@ export const AskQuestion = () => {
           </div>
 
           <div>
-            <label className="block text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-400 mb-1.5">
+            <label className="block text-xs font-semibold uppercase tracking-wider text-theme-secondary mb-1.5">
               Tags (Press Enter)
             </label>
             <input
@@ -205,7 +205,7 @@ export const AskQuestion = () => {
               value={tagInput}
               onChange={(e) => setTagInput(e.target.value)}
               onKeyDown={handleAddTag}
-              className="w-full bg-slate-50 dark:bg-slate-800/80 border border-slate-300 dark:border-slate-700 rounded-xl p-2.5 text-xs text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-brand-500"
+              className="w-full bg-theme-global border border-theme-border rounded-xl p-2.5 text-xs text-theme-primary focus:outline-none focus:ring-2 focus:ring-brand-500"
             />
           </div>
         </div>
@@ -228,22 +228,22 @@ export const AskQuestion = () => {
 
         {/* AI Suggestions Section */}
         {suggestions && (
-          <div className="bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 space-y-4">
-            <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-2.5">
-              <h4 className="text-sm font-bold text-slate-900 dark:text-slate-100 flex items-center gap-1.5">
+          <div className="bg-theme-global border border-theme-border rounded-2xl p-5 space-y-4">
+            <div className="flex items-center justify-between border-b border-theme-border pb-2.5">
+              <h4 className="text-sm font-bold text-theme-primary flex items-center gap-1.5">
                 <Sparkles className="w-4 h-4 text-brand-500 fill-brand-500/20 animate-pulse" />
                 AI Learning Coach Suggestions
               </h4>
               <span className={`text-[10px] font-bold px-2.5 py-0.5 rounded-full ${
                 suggestions.isGood 
-                  ? 'bg-emerald-500/10 text-emerald-500' 
-                  : 'bg-amber-500/10 text-amber-500'
+                  ? 'bg-green-500/10 text-green-500' 
+                  : 'bg-accent-500/10 text-accent-500'
               }`}>
                 {suggestions.isGood ? 'Clear & Well-Structured' : 'Needs Polish'}
               </span>
             </div>
 
-            <p className="text-xs text-slate-600 dark:text-slate-400 italic bg-white dark:bg-slate-950 p-3 rounded-xl border border-slate-100 dark:border-slate-900">
+            <p className="text-xs text-theme-secondary italic bg-theme-card p-3 rounded-xl border border-theme-border">
               "{suggestions.generalFeedback}"
             </p>
 
@@ -256,7 +256,7 @@ export const AskQuestion = () => {
                   </div>
                 ))}
                 {suggestions.conceptualIssues?.map((issue, idx) => (
-                  <div key={idx} className="text-xs text-amber-500 flex items-start gap-1.5">
+                  <div key={idx} className="text-xs text-accent-500 flex items-start gap-1.5">
                     <Lightbulb className="w-3.5 h-3.5 shrink-0 mt-0.5" />
                     <span>{issue}</span>
                   </div>
@@ -266,10 +266,10 @@ export const AskQuestion = () => {
 
             {/* Suggested Title */}
             {suggestions.suggestedTitle && (suggestions.suggestedTitle !== title || previousValues.title !== undefined) && (
-              <div className="bg-white dark:bg-slate-950 border border-slate-100 dark:border-slate-900 p-3 rounded-xl flex items-start justify-between gap-3">
+              <div className="bg-theme-card border border-theme-border p-3 rounded-xl flex items-start justify-between gap-3">
                 <div className="space-y-1">
-                  <span className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Suggested Title:</span>
-                  <p className="text-xs font-semibold text-slate-900 dark:text-slate-100">{suggestions.suggestedTitle}</p>
+                  <span className="text-[10px] uppercase font-bold text-theme-secondary tracking-wider">Suggested Title:</span>
+                  <p className="text-xs font-semibold text-theme-primary">{suggestions.suggestedTitle}</p>
                 </div>
                 <button
                   type="button"
@@ -291,10 +291,10 @@ export const AskQuestion = () => {
 
             {/* Suggested Description */}
             {suggestions.suggestedDescription && (suggestions.suggestedDescription !== description || previousValues.description !== undefined) && (
-              <div className="bg-white dark:bg-slate-950 border border-slate-100 dark:border-slate-900 p-3 rounded-xl flex items-start justify-between gap-3">
+              <div className="bg-theme-card border border-theme-border p-3 rounded-xl flex items-start justify-between gap-3">
                 <div className="space-y-1 overflow-hidden">
-                  <span className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Suggested Description:</span>
-                  <p className="text-xs text-slate-700 dark:text-slate-300 line-clamp-3 leading-relaxed whitespace-pre-wrap">{suggestions.suggestedDescription}</p>
+                  <span className="text-[10px] uppercase font-bold text-theme-secondary tracking-wider">Suggested Description:</span>
+                  <p className="text-xs text-theme-primary line-clamp-3 leading-relaxed whitespace-pre-wrap">{suggestions.suggestedDescription}</p>
                 </div>
                 <button
                   type="button"
@@ -316,10 +316,10 @@ export const AskQuestion = () => {
 
             {/* Suggested Difficulty */}
             {suggestions.suggestedDifficulty && (suggestions.suggestedDifficulty !== difficulty || previousValues.difficulty !== undefined) && (
-              <div className="bg-white dark:bg-slate-950 border border-slate-100 dark:border-slate-900 p-3 rounded-xl flex items-center justify-between gap-3">
+              <div className="bg-theme-card border border-theme-border p-3 rounded-xl flex items-center justify-between gap-3">
                 <div className="space-y-1">
-                  <span className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Suggested Difficulty:</span>
-                  <p className="text-xs font-semibold text-slate-900 dark:text-slate-100">
+                  <span className="text-[10px] uppercase font-bold text-theme-secondary tracking-wider">Suggested Difficulty:</span>
+                  <p className="text-xs font-semibold text-theme-primary">
                     <span className="inline-block px-2 py-0.5 rounded text-[11px] font-bold bg-brand-500/10 text-brand-500">
                       {suggestions.suggestedDifficulty}
                     </span>
@@ -345,14 +345,14 @@ export const AskQuestion = () => {
 
             {/* Suggested Tags */}
             {suggestions.suggestedTags && suggestions.suggestedTags.length > 0 && (
-              <div className="bg-white dark:bg-slate-950 border border-slate-100 dark:border-slate-900 p-3 rounded-xl flex items-center justify-between gap-3">
+              <div className="bg-theme-card border border-theme-border p-3 rounded-xl flex items-center justify-between gap-3">
                 <div className="space-y-1 overflow-hidden">
-                  <span className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Suggested Tags:</span>
+                  <span className="text-[10px] uppercase font-bold text-theme-secondary tracking-wider">Suggested Tags:</span>
                   <div className="flex flex-wrap gap-1.5 pt-0.5">
                     {suggestions.suggestedTags.map((tag) => (
                       <span
                         key={tag}
-                        className="inline-flex items-center bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 px-2 py-0.5 rounded text-[11px] font-medium"
+                        className="inline-flex items-center bg-theme-global text-theme-primary px-2 py-0.5 rounded text-[11px] font-medium"
                       >
                         #{tag}
                       </span>

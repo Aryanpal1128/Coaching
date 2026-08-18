@@ -56,12 +56,12 @@ export const ScheduleClassModal = ({ onClose }) => {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
-      <div className="bg-slate-900 border border-slate-700 rounded-2xl w-full max-w-lg shadow-2xl shadow-indigo-500/10 animate-fadeIn overflow-y-auto max-h-[90vh]">
+      <div className="bg-[#060B16] border border-white/10 rounded-2xl w-full max-w-lg shadow-2xl overflow-y-auto max-h-[90vh]">
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-slate-800">
+        <div className="flex items-center justify-between p-6 border-b border-white/5">
           <div className="flex items-center gap-3">
-            <div className="p-2 rounded-xl bg-indigo-500/10">
-              <Video className="w-5 h-5 text-indigo-400" />
+            <div className="p-2 rounded-xl bg-brand-500/10">
+              <Video className="w-5 h-5 text-brand-500" />
             </div>
             <div>
               <h2 className="text-base font-bold text-slate-100">Schedule Live Class</h2>
@@ -88,7 +88,7 @@ export const ScheduleClassModal = ({ onClose }) => {
               value={form.title}
               onChange={handleChange}
               placeholder="e.g. Advanced Graph Algorithms"
-              className="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 placeholder:text-slate-500"
+              className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-slate-100 focus:outline-none focus:ring-2 focus:ring-brand-500 placeholder:text-slate-500"
             />
           </div>
 
@@ -101,7 +101,7 @@ export const ScheduleClassModal = ({ onClose }) => {
               name="subject"
               value={form.subject}
               onChange={handleChange}
-              className="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-slate-100 focus:outline-none focus:ring-2 focus:ring-brand-500"
             >
               <option value="">Select subject...</option>
               {subjects.map((s) => (
@@ -111,7 +111,7 @@ export const ScheduleClassModal = ({ onClose }) => {
           </div>
 
           {/* Access Type Selector (Public vs Paid Room) */}
-          <div className="space-y-2 p-3.5 bg-slate-800/60 rounded-xl border border-slate-700/60">
+          <div className="space-y-2 p-3.5 bg-white/5 rounded-xl border border-white/10">
             <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider">
               Access Type
             </label>
@@ -121,8 +121,8 @@ export const ScheduleClassModal = ({ onClose }) => {
                 onClick={() => setForm((prev) => ({ ...prev, accessType: 'public', roomId: '' }))}
                 className={`flex items-center justify-center gap-2 p-2.5 rounded-xl border text-xs font-bold transition-all cursor-pointer ${
                   form.accessType === 'public'
-                    ? 'bg-indigo-600/20 border-indigo-500 text-indigo-300'
-                    : 'bg-slate-800 border-slate-700 text-slate-400 hover:bg-slate-700'
+                    ? 'bg-brand-500/20 border-brand-500 text-brand-400'
+                    : 'bg-white/5 border-white/10 text-slate-400 hover:bg-white/10'
                 }`}
               >
                 <Globe className="w-4 h-4" />
@@ -133,8 +133,8 @@ export const ScheduleClassModal = ({ onClose }) => {
                 onClick={() => setForm((prev) => ({ ...prev, accessType: 'paid' }))}
                 className={`flex items-center justify-center gap-2 p-2.5 rounded-xl border text-xs font-bold transition-all cursor-pointer ${
                   form.accessType === 'paid'
-                    ? 'bg-amber-600/20 border-amber-500 text-amber-300'
-                    : 'bg-slate-800 border-slate-700 text-slate-400 hover:bg-slate-700'
+                    ? 'bg-accent-605/20 border-accent-500 text-accent-500/50'
+                    : 'bg-white/5 border-white/10 text-slate-400 hover:bg-white/10'
                 }`}
               >
                 <Lock className="w-4 h-4" />
@@ -144,11 +144,11 @@ export const ScheduleClassModal = ({ onClose }) => {
 
             {form.accessType === 'paid' && (
               <div className="pt-2 animate-in fade-in duration-150">
-                <label className="block text-[11px] font-bold text-amber-400 mb-1">
+                <label className="block text-[11px] font-bold text-accent-500 mb-1">
                   Select Target Paid Room <span className="text-red-500">*</span>
                 </label>
                 {myRooms.length === 0 ? (
-                  <p className="text-xs text-amber-300/80 bg-amber-500/10 p-2 rounded-lg border border-amber-500/20">
+                  <p className="text-xs text-accent-500/50/80 bg-accent-500/10 p-2 rounded-lg border border-accent-500/20">
                     No paid rooms found. Create a paid room first under Teacher Dashboard or Profile.
                   </p>
                 ) : (
@@ -156,12 +156,12 @@ export const ScheduleClassModal = ({ onClose }) => {
                     name="roomId"
                     value={form.roomId}
                     onChange={handleChange}
-                    className="w-full bg-slate-900 border border-amber-500/50 rounded-xl px-3 py-2 text-xs text-slate-100 focus:outline-none focus:ring-2 focus:ring-amber-500"
+                    className="w-full bg-slate-900 border border-accent-500/50 rounded-xl px-3 py-2 text-xs text-slate-100 focus:outline-none focus:ring-2 focus:ring-accent-500"
                   >
                     <option value="">Select Paid Room...</option>
                     {myRooms.map((r) => (
                       <option key={r._id} value={r._id}>
-                        {r.title} (₹{(r.price / 100).toFixed(0)})
+                        {r.title} (₹{r?.price ? (r.price / 100).toFixed(0) : '0'})
                       </option>
                     ))}
                   </select>
@@ -180,7 +180,7 @@ export const ScheduleClassModal = ({ onClose }) => {
               type="datetime-local"
               value={form.scheduledAt}
               onChange={handleChange}
-              className="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 [color-scheme:dark]"
+              className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-slate-100 focus:outline-none focus:ring-2 focus:ring-brand-500 [color-scheme:dark]"
             />
           </div>
 
@@ -195,7 +195,7 @@ export const ScheduleClassModal = ({ onClose }) => {
               onChange={handleChange}
               rows={3}
               placeholder="What will be covered in this class?"
-              className="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 placeholder:text-slate-500 resize-none"
+              className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-slate-100 focus:outline-none focus:ring-2 focus:ring-brand-500 placeholder:text-slate-500 resize-none"
             />
           </div>
 
@@ -204,7 +204,7 @@ export const ScheduleClassModal = ({ onClose }) => {
             <Button type="button" variant="ghost" onClick={onClose} className="w-full sm:flex-1 justify-center">
               Cancel
             </Button>
-            <Button type="submit" variant="primary" className="w-full sm:flex-1 justify-center bg-indigo-600 hover:bg-indigo-500" disabled={isLoading}>
+            <Button type="submit" variant="primary" className="w-full sm:flex-1 justify-center" disabled={isLoading}>
               {isLoading ? 'Scheduling...' : '📅 Schedule Class'}
             </Button>
           </div>

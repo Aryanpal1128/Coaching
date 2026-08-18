@@ -31,8 +31,8 @@ const Onboarding = lazy(() => import('../pages/onboarding/Onboarding.jsx').then(
 export const AppRoutes = () => {
   return (
     <Suspense fallback={
-      <div className="flex h-screen items-center justify-center bg-slate-950 flex-col gap-4">
-        <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-brand-600 to-indigo-600 flex items-center justify-center text-white font-black text-xl animate-pulse">
+      <div className="flex h-screen items-center justify-center bg-theme-global text-theme-primary flex-col gap-4">
+        <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-[#1B365D] to-[#C5A059] flex items-center justify-center text-[#060B16] font-black text-xl animate-pulse">
           AI
         </div>
         <p className="text-xs text-slate-400 animate-pulse">Loading Coaching.ai...</p>

@@ -173,7 +173,7 @@ export const Onboarding = () => {
       <div className="max-w-2xl w-full space-y-6">
         {/* Header */}
         <div className="text-center space-y-2">
-          <div className="inline-flex p-3 rounded-2xl bg-gradient-to-tr from-brand-600 to-indigo-600 shadow-xl shadow-brand-500/20 text-white mb-1">
+          <div className="inline-flex p-3 rounded-2xl bg-gradient-to-br from-[#1B365D] to-[#C5A059] shadow-xl shadow-brand-500/20 text-[#060B16] mb-1">
             <Sparkles className="w-7 h-7 animate-pulse" />
           </div>
           <h1 className="text-3xl font-extrabold text-slate-900 dark:text-slate-100 tracking-tight">
@@ -183,6 +183,8 @@ export const Onboarding = () => {
             Let's personalize your learning experience. Set your unique username to get started.
           </p>
         </div>
+        
+        {/* We skip to line 250 replace content directly by matching next chunks, but let's do this one first and the others in the same file sequentially */}
 
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Section 1: Required Username */}
@@ -212,8 +214,8 @@ export const Onboarding = () => {
                     </>
                   ) : usernameStatus.isValid ? (
                     <>
-                      <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
-                      <span className="text-emerald-500">{usernameStatus.message}</span>
+                      <CheckCircle2 className="w-3.5 h-3.5 text-green-500 shrink-0" />
+                      <span className="text-green-500">{usernameStatus.message}</span>
                     </>
                   ) : (
                     <>
@@ -247,7 +249,7 @@ export const Onboarding = () => {
                     className="w-20 h-20 rounded-full object-cover border-2 border-brand-500 shadow-md"
                   />
                 ) : (
-                  <div className="w-20 h-20 rounded-full bg-gradient-to-tr from-brand-600 to-indigo-600 flex items-center justify-center text-white text-xl font-bold border-2 border-brand-500 shadow-md">
+                  <div className="w-20 h-20 rounded-full bg-gradient-to-br from-[#1B365D] to-[#C5A059] flex items-center justify-center text-[#060B16] text-xl font-bold border-2 border-brand-500 shadow-md">
                     {getInitials(user?.name)}
                   </div>
                 )}
@@ -352,10 +354,10 @@ export const Onboarding = () => {
                             key={subject._id}
                             type="button"
                             onClick={() => handleToggleSubject(subject._id)}
-                            className={`px-3 py-1 rounded-full text-xs font-semibold transition-all ${
+                            className={`px-3 py-1 rounded-full text-xs font-semibold transition-all cursor-pointer ${
                               isSelected
-                                ? 'bg-indigo-600 text-white shadow-sm'
-                                : 'bg-slate-100 dark:bg-slate-800 text-slate-500 hover:bg-slate-200 dark:hover:bg-slate-700'
+                                ? 'bg-brand-500 text-white shadow-sm'
+                                : 'bg-white/5 text-[#8B85A3] hover:bg-white/10 hover:text-[#F5F3FA]'
                             }`}
                           >
                             {isSelected ? '✓ ' : ''}{subject.name}
@@ -399,10 +401,10 @@ export const Onboarding = () => {
                             key={subject._id}
                             type="button"
                             onClick={() => handleToggleSubject(subject._id)}
-                            className={`px-3 py-1 rounded-full text-xs font-semibold transition-all ${
+                            className={`px-3 py-1 rounded-full text-xs font-semibold transition-all cursor-pointer ${
                               isSelected
-                                ? 'bg-indigo-600 text-white shadow-sm'
-                                : 'bg-slate-100 dark:bg-slate-800 text-slate-500 hover:bg-slate-200 dark:hover:bg-slate-700'
+                                ? 'bg-brand-500 text-white shadow-sm'
+                                : 'bg-white/5 text-[#8B85A3] hover:bg-white/10 hover:text-[#F5F3FA]'
                             }`}
                           >
                             {isSelected ? '✓ ' : ''}{subject.name}

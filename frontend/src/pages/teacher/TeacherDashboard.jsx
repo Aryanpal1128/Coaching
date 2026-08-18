@@ -74,24 +74,24 @@ export const TeacherDashboard = () => {
   return (
     <div className="space-y-6">
       {/* Banner */}
-      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-indigo-700 via-purple-700 to-indigo-800 p-6 sm:p-8 text-white shadow-xl shadow-indigo-500/10">
+      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-[#1B365D] to-[#C5A059]/85 p-6 sm:p-8 text-[#060B16] shadow-xl shadow-[#1B365D]/10">
         <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full -translate-y-1/2 translate-x-1/4 pointer-events-none" />
         <div className="relative flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div>
-            <span className="inline-block bg-white/20 backdrop-blur-md px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider mb-2">
+            <span className="inline-block bg-[#060B16]/20 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider mb-2">
               Instructor Dashboard
             </span>
             <h2 className="text-2xl sm:text-3xl font-extrabold">
               {user?.name || 'Instructor'} 👨‍🏫
             </h2>
-            <p className="text-xs sm:text-sm text-indigo-200 mt-1 max-w-xl">
+            <p className="text-xs sm:text-sm text-slate-800 mt-1 max-w-xl font-medium">
               Manage your live class schedules, study resources, and student Q&A.
             </p>
           </div>
           <div className="flex flex-wrap gap-2 shrink-0">
             <Button
               variant="primary"
-              className="bg-red-600 hover:bg-red-500 font-bold border-0 text-white shadow-lg shadow-red-500/20"
+              className="bg-red-650 hover:bg-red-550 font-bold border-0 text-white shadow-lg shadow-red-500/20"
               onClick={handleGoLiveInstantly}
               disabled={isStartingInstant}
             >
@@ -99,10 +99,10 @@ export const TeacherDashboard = () => {
             </Button>
             <Button
               variant="primary"
-              className="bg-white !text-indigo-900 hover:bg-slate-100 font-bold border-0"
+              className="bg-white !text-brand-500 hover:bg-slate-100 font-bold border-0"
               onClick={() => setShowScheduleModal(true)}
             >
-              <Video className="w-4 h-4 mr-2 text-indigo-600" /> Schedule Class
+              <Video className="w-4 h-4 mr-2 text-brand-500" /> Schedule Class
             </Button>
             <Button
               variant="primary"
@@ -153,12 +153,12 @@ export const TeacherDashboard = () => {
         <Card>
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-base font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
-              <Calendar className="w-5 h-5 text-indigo-500" /> My Classes
+              <Calendar className="w-5 h-5 text-brand-500" /> My Classes
             </h3>
             <div className="flex items-center gap-2">
               <button
                 onClick={() => setShowScheduleModal(true)}
-                className="p-1.5 rounded-lg text-indigo-400 hover:bg-indigo-500/10 transition-colors"
+                className="p-1.5 rounded-lg text-brand-500 hover:bg-brand-500/10 transition-colors"
                 title="Schedule new class"
               >
                 <Plus className="w-4 h-4" />
@@ -173,7 +173,7 @@ export const TeacherDashboard = () => {
             <div className="text-center py-8 text-slate-400">
               <Video className="w-8 h-8 mx-auto mb-2 opacity-30" />
               <p className="text-xs">No upcoming classes</p>
-              <Button size="sm" variant="primary" className="mt-3 bg-indigo-600" onClick={() => setShowScheduleModal(true)}>
+              <Button size="sm" variant="primary" className="mt-3" onClick={() => setShowScheduleModal(true)}>
                 Schedule First Class
               </Button>
             </div>
@@ -199,7 +199,7 @@ export const TeacherDashboard = () => {
                       <div className="flex gap-1.5">
                         {cls.status === 'SCHEDULED' && (
                           <>
-                            <Button size="sm" variant="primary" className="bg-emerald-600 hover:bg-emerald-500 text-[10px] px-2 py-1" onClick={() => handleStart(cls)} disabled={starting}>
+                            <Button size="sm" variant="primary" className="bg-green-600 hover:bg-green-500 text-[10px] px-2 py-1" onClick={() => handleStart(cls)} disabled={starting}>
                               Start
                             </Button>
                             <Button size="sm" variant="danger" className="text-[10px] px-2 py-1" onClick={() => handleCancel(cls)}>
@@ -232,12 +232,12 @@ export const TeacherDashboard = () => {
         <Card>
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-base font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
-              <FileText className="w-5 h-5 text-emerald-500" /> My Materials
+              <FileText className="w-5 h-5 text-green-500" /> My Materials
             </h3>
             <div className="flex items-center gap-2">
               <button
                 onClick={() => setShowUploadModal(true)}
-                className="p-1.5 rounded-lg text-emerald-400 hover:bg-emerald-500/10 transition-colors"
+                className="p-1.5 rounded-lg text-green-400 hover:bg-green-500/10 transition-colors"
                 title="Upload material"
               >
                 <Plus className="w-4 h-4" />
@@ -252,7 +252,7 @@ export const TeacherDashboard = () => {
             <div className="text-center py-8 text-slate-400">
               <BookOpen className="w-8 h-8 mx-auto mb-2 opacity-30" />
               <p className="text-xs">No materials uploaded yet</p>
-              <Button size="sm" variant="primary" className="mt-3 bg-emerald-600" onClick={() => setShowUploadModal(true)}>
+              <Button size="sm" variant="primary" className="mt-3 bg-green-600" onClick={() => setShowUploadModal(true)}>
                 Upload First Material
               </Button>
             </div>

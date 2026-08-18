@@ -67,7 +67,7 @@ const VoicePlayer = ({ url, isMe }) => {
     <div className={`flex items-center gap-3 p-2 rounded-2xl border ${
       isMe
         ? 'bg-brand-700/40 border-brand-400/30 text-white'
-        : 'bg-slate-100 dark:bg-slate-900 border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-100'
+        : 'bg-theme-card border-theme-border text-theme-primary'
     } min-w-[200px]`}>
       <audio
         ref={audioRef}
@@ -95,7 +95,7 @@ const VoicePlayer = ({ url, isMe }) => {
           max="100"
           value={progress}
           onChange={handleSeek}
-          className="w-full h-1 bg-slate-300 dark:bg-slate-700 rounded-lg appearance-none cursor-pointer accent-brand-500"
+          className="w-full h-1 bg-theme-border rounded-lg appearance-none cursor-pointer accent-brand-500"
         />
         <div className="flex justify-between items-center text-[9px] opacity-70 mt-1">
           <span>{fmtDur(audioRef.current?.currentTime || 0)}</span>
@@ -107,11 +107,11 @@ const VoicePlayer = ({ url, isMe }) => {
 };
 
 const AVATAR_COLORS = [
-  'from-brand-600 to-indigo-600',
-  'from-emerald-600 to-teal-600',
-  'from-amber-500 to-orange-600',
-  'from-purple-600 to-pink-600',
-  'from-rose-500 to-red-600'
+  'from-[#1B365D] to-[#C5A059]/80',
+  'from-[#C5A059] to-[#1B365D]/80',
+  'from-[#1B365D]/60 to-[#C5A059]/60',
+  'from-[#C5A059]/60 to-[#1B365D]/60',
+  'from-brand-500 to-accent-500'
 ];
 
 const EMOJIS = ['👍', '❤️', '😂', '😮', '😢', '🙏'];
@@ -341,10 +341,7 @@ export const Messages = () => {
     return [...prev, newMsg];
   }, []);
 
-  // Auto-scroll
-  useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [liveMessages, partnerTyping]);
+  // Auto-scroll removed in favor of flex-col-reverse
 
   // Global click listener to clear message action menu state on tap outside
   useEffect(() => {
@@ -914,14 +911,14 @@ export const Messages = () => {
     <div className={`min-h-[500px] -mx-4 -mt-4 -mb-24 sm:m-0 ${
       partner && showChat ? 'h-screen' : 'h-[calc(100vh-128px)] sm:h-[calc(100vh-140px)]'
     }`}>
-      <div className="flex h-full sm:rounded-2xl overflow-hidden sm:border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm">
+      <div className="flex h-full sm:rounded-2xl overflow-hidden sm:border border-theme-border bg-theme-global shadow-sm">
 
         {/* ── Contacts Sidebar ─────────────────────────── */}
-        <div className={`w-full sm:w-72 md:w-80 border-r border-slate-200 dark:border-slate-800 flex flex-col shrink-0 ${showChat ? 'hidden sm:flex' : 'flex'}`}>
+        <div className={`w-full sm:w-72 md:w-80 border-r border-theme-border flex flex-col shrink-0 ${showChat ? 'hidden sm:flex' : 'flex'}`}>
 
-          <div className="p-4 border-b border-slate-200 dark:border-slate-800">
+          <div className="p-4 border-b border-theme-border">
             <div className="flex items-center justify-between mb-3">
-              <h2 className="text-sm font-extrabold text-slate-900 dark:text-slate-100">Messages</h2>
+              <h2 className="text-sm font-extrabold text-theme-primary">Messages</h2>
             </div>
             <div className="relative">
               <Search className="absolute left-3 top-2.5 w-3.5 h-3.5 text-slate-400" />
@@ -930,7 +927,7 @@ export const Messages = () => {
                 placeholder="Search conversations..."
                 value={contactSearch}
                 onChange={(e) => setContactSearch(e.target.value)}
-                className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl pl-9 pr-4 py-2 text-xs text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-brand-500"
+                className="w-full bg-theme-card border border-theme-border rounded-xl pl-9 pr-4 py-2 text-xs text-theme-primary focus:outline-none focus:ring-2 focus:ring-brand-500"
               />
             </div>
           </div>
@@ -946,19 +943,19 @@ export const Messages = () => {
               <button
                 key={conv.user._id}
                 onClick={() => handleSelectPartner(conv.user)}
-                className={`w-full text-left p-3.5 flex items-center gap-3 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors ${
+                className={`w-full text-left p-3.5 flex items-center gap-3 hover:bg-theme-card transition-colors ${
                   partner?._id === conv.user._id ? 'bg-brand-500/5 border-r-2 border-brand-500' : ''
                 }`}
               >
                 <div className="relative">
                   <Avatar user={conv.user} />
                   {isOnline(conv.user._id) && (
-                    <span className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-emerald-500 rounded-full border-2 border-white dark:border-slate-900" />
+                    <span className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-green-500 rounded-full border-2 border-white dark:border-slate-900" />
                   )}
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center justify-between">
-                    <span className="text-xs font-bold text-slate-900 dark:text-slate-100 truncate">{conv.user.name}</span>
+                    <span className="text-xs font-bold text-theme-primary truncate">{conv.user.name}</span>
                     <span className="text-[10px] text-slate-400 shrink-0 ml-1">{fmtTime(conv.lastMessageAt)}</span>
                   </div>
                   <p className="text-[11px] text-slate-500 truncate mt-0.5">{conv.lastMessage}</p>
@@ -980,7 +977,7 @@ export const Messages = () => {
           {partner && (
             <>
               {/* Chat header */}
-              <div className="p-3.5 border-b border-slate-200 dark:border-slate-800 flex items-center gap-3 bg-white dark:bg-slate-900">
+              <div className="p-3.5 border-b border-theme-border flex items-center gap-3 bg-theme-card">
                 <button
                   onClick={() => { setShowChat(false); setPartner(null); }}
                   className="p-2 rounded-xl text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 sm:hidden"
@@ -994,12 +991,12 @@ export const Messages = () => {
                   <div className="relative animate-fadeIn">
                     <Avatar user={partner} />
                     {isOnline(partner._id) && (
-                      <span className="absolute bottom-0 right-0 w-2 h-2 bg-emerald-500 rounded-full border-2 border-white dark:border-slate-900" />
+                      <span className="absolute bottom-0 right-0 w-2 h-2 bg-green-500 rounded-full border-2 border-white dark:border-slate-900" />
                     )}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <h3 className="text-xs font-bold text-slate-900 dark:text-slate-100 hover:underline">{partner.name}</h3>
-                    <p className={`text-[10px] font-semibold ${isOnline(partner._id) ? 'text-emerald-500' : 'text-slate-400'}`}>
+                    <h3 className="text-xs font-bold text-theme-primary hover:underline">{partner.name}</h3>
+                    <p className={`text-[10px] font-semibold ${isOnline(partner._id) ? 'text-green-500' : 'text-slate-400'}`}>
                       {partnerTyping ? '✍️ typing...' : isOnline(partner._id) ? 'Online' : 'Offline'}
                       {partner.role && ` • ${partner.role}`}
                     </p>
@@ -1026,18 +1023,27 @@ export const Messages = () => {
               </div>
 
               {/* Messages */}
-              <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-slate-50/50 dark:bg-slate-950/50">
+              <div className="flex-1 overflow-y-auto p-4 bg-theme-global flex flex-col-reverse gap-4">
                 {liveMessages.length === 0 && (
-                  <div className="flex flex-col items-center justify-center h-full text-slate-400 gap-2">
+                  <div className="flex flex-col items-center justify-center h-full text-slate-400 gap-2 mb-auto mt-auto">
                     <MessageSquare className="w-8 h-8 opacity-30" />
                     <p className="text-xs">No messages yet. Say hi! 👋</p>
                   </div>
                 )}
-                {liveMessages.map((m) => (
-                  <div
-                    key={m._id}
-                    onMouseEnter={() => setHoveredMessageId(m._id)}
-                    onMouseLeave={() => { setHoveredMessageId(null); setShowReactionPickerId(null); }}
+                {partnerTyping && (
+                  <div className="flex justify-start">
+                    <div className="bg-theme-card border border-theme-border rounded-2xl rounded-tl-sm p-3 flex gap-1.5 items-center">
+                      <div className="w-1.5 h-1.5 bg-brand-500 rounded-full animate-bounce [animation-delay:-0.3s]" />
+                      <div className="w-1.5 h-1.5 bg-brand-500 rounded-full animate-bounce [animation-delay:-0.15s]" />
+                      <div className="w-1.5 h-1.5 bg-brand-500 rounded-full animate-bounce" />
+                    </div>
+                  </div>
+                )}
+                {liveMessages.slice().reverse().map((m) => (
+                    <div
+                      key={m._id}
+                      onMouseEnter={() => setHoveredMessageId(m._id)}
+                      onMouseLeave={() => { setHoveredMessageId(null); setShowReactionPickerId(null); }}
                     onClick={(e) => {
                       e.stopPropagation();
                       setHoveredMessageId((prev) => (prev === m._id ? null : m._id));
@@ -1073,7 +1079,7 @@ export const Messages = () => {
                         <div className={`text-[10px] rounded-t-2xl px-3 py-1.5 border-l-2 opacity-80 ${
                           m.isMe
                             ? 'bg-brand-700/50 text-brand-100 border-brand-300'
-                            : 'bg-slate-100 dark:bg-slate-800/80 text-slate-500 border-slate-400'
+                            : 'bg-theme-card text-theme-secondary border-theme-border'
                         } truncate`}>
                           <span className="font-extrabold block text-[9px] uppercase tracking-wider opacity-90">
                             Replying to {m.parentMessage.sender?.name || 'User'}
@@ -1089,7 +1095,7 @@ export const Messages = () => {
                           ? 'opacity-85 border border-red-500/35 bg-red-500/10 text-red-700 dark:text-red-450 rounded-br-sm animate-pulse'
                           : m.isMe
                           ? 'bg-brand-600 text-white rounded-br-sm'
-                          : 'bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 rounded-bl-sm border border-slate-200 dark:border-slate-700'
+                          : 'bg-theme-card text-theme-primary rounded-bl-sm border border-theme-border'
                       } ${m.parentMessage ? 'rounded-b-2xl' : 'rounded-2xl'}`}>
 
                         {/* Attachments rendering */}
@@ -1128,7 +1134,7 @@ export const Messages = () => {
                                     className={`flex items-center gap-2.5 p-2.5 rounded-xl border transition-colors ${
                                       m.isMe
                                         ? 'bg-brand-700/40 border-brand-400/30 text-white hover:bg-brand-700/60'
-                                        : 'bg-slate-100 dark:bg-slate-900 border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-100 hover:bg-slate-200/70'
+                                        : 'bg-theme-global border-theme-border text-theme-primary hover:opacity-80'
                                     }`}
                                   >
                                     <div className="p-2 rounded-lg bg-brand-500/20 text-brand-400 shrink-0">
@@ -1153,7 +1159,7 @@ export const Messages = () => {
                         {m.text && <p className="text-xs leading-relaxed break-words">{m.text}</p>}
                         <p className={`text-[8px] mt-1 text-right ${
                           m.isMe && m.status !== 'failed'
-                            ? 'text-indigo-200'
+                            ? 'text-slate-300'
                             : m.status === 'failed'
                             ? 'text-red-400'
                             : 'text-slate-400'
@@ -1197,7 +1203,7 @@ export const Messages = () => {
                                 className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-extrabold border transition-all ${
                                   hasReacted
                                     ? 'bg-brand-500/10 border-brand-500/30 text-brand-500'
-                                    : 'bg-slate-50 dark:bg-slate-850/80 border-slate-200 dark:border-slate-700 text-slate-500 hover:bg-slate-100'
+                                    : 'bg-theme-global border-theme-border text-theme-secondary hover:bg-theme-card'
                                 }`}
                               >
                                 <span>{emoji}</span>
@@ -1209,9 +1215,8 @@ export const Messages = () => {
                       )}
                     </div>
 
-                    {/* Action hovering trigger buttons */}
                     {hoveredMessageId === m._id && (
-                      <div className={`absolute top-1/2 -translate-y-1/2 flex items-center gap-1 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-md rounded-full px-1.5 py-1 z-20 ${
+                      <div className={`absolute top-1/2 -translate-y-1/2 flex items-center gap-1 bg-theme-card border border-theme-border shadow-md rounded-full px-1.5 py-1 z-20 ${
                         m.isMe ? 'right-[100%] mr-2' : 'left-[100%] ml-2'
                       }`}>
                         {/* Reaction picker trigger */}
@@ -1225,7 +1230,7 @@ export const Messages = () => {
                             😊
                           </button>
                           {showReactionPickerId === m._id && (
-                            <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex gap-1.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-xl rounded-xl p-1.5 z-30 animate-in fade-in slide-in-from-bottom-2 duration-150">
+                            <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex gap-1.5 bg-theme-card border border-theme-border shadow-xl rounded-xl p-1.5 z-30 animate-in fade-in slide-in-from-bottom-2 duration-150">
                               {EMOJIS.map((emoji) => (
                                 <button
                                   key={emoji}
@@ -1253,18 +1258,6 @@ export const Messages = () => {
                     )}
                   </div>
                 ))}
-                {partnerTyping && (
-                  <div className="flex justify-start">
-                    <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl rounded-bl-sm px-4 py-3">
-                      <div className="flex gap-1 items-center">
-                        <span className="w-1.5 h-1.5 bg-slate-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
-                        <span className="w-1.5 h-1.5 bg-slate-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
-                        <span className="w-1.5 h-1.5 bg-slate-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
-                      </div>
-                    </div>
-                  </div>
-                )}
-                <div ref={messagesEndRef} />
               </div>
 
               {/* File Attachment Selected Preview */}
@@ -1299,9 +1292,8 @@ export const Messages = () => {
                 </div>
               )}
 
-              {/* Reply Preview Above Input */}
               {replyingTo && (
-                <div className="px-4 py-2 bg-slate-50 dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between text-xs text-slate-500 dark:text-slate-400 animate-in slide-in-from-bottom duration-150">
+                <div className="px-4 py-2 bg-theme-global border-t border-theme-border flex items-center justify-between text-xs text-theme-secondary animate-in slide-in-from-bottom duration-150">
                   <div className="flex-1 truncate">
                     <span className="font-extrabold text-brand-500">Replying to {replyingTo.sender?.name || (replyingTo.isMe ? 'You' : 'User')}: </span>
                     <span className="italic">"{replyingTo.text}"</span>
@@ -1354,7 +1346,7 @@ export const Messages = () => {
                   <button
                     type="button"
                     onClick={stopAndSendRecording}
-                    className="p-2 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl transition-colors shrink-0 shadow-sm"
+                    className="p-2 bg-green-500 hover:bg-green-600 text-white rounded-xl transition-colors shrink-0 shadow-sm"
                     title="Send voice note"
                   >
                     <Send className="w-4 h-4" />
@@ -1363,7 +1355,7 @@ export const Messages = () => {
               ) : (
                 <form
                   onSubmit={handleSend}
-                  className={`p-3 border-t border-slate-200 dark:border-slate-800 flex items-center gap-2 bg-white dark:bg-slate-900 ${
+                  className={`p-3 border-t border-theme-border flex items-center gap-2 bg-theme-card ${
                     partner && showChat ? 'pb-[calc(0.75rem+env(safe-area-inset-bottom))]' : 'pb-16 md:pb-3'
                   }`}
                 >
@@ -1396,7 +1388,7 @@ export const Messages = () => {
                     value={text}
                     onChange={handleTyping}
                     onBlur={stopTyping}
-                    className="flex-1 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-2.5 text-xs text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-brand-500"
+                    className="flex-1 bg-theme-global border border-theme-border rounded-xl px-4 py-2.5 text-xs text-theme-primary focus:outline-none focus:ring-2 focus:ring-brand-500"
                   />
                   <Button type="submit" size="md" disabled={(!text.trim() && !selectedFile) || isUploading} isLoading={isUploading}>
                     <Send className="w-4 h-4" />

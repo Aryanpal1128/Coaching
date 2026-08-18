@@ -60,7 +60,7 @@ export const handleRazorpayPayment = async ({
       email: user?.email || ''
     },
     theme: {
-      color: '#2563eb'
+      color: '#1B365D'
     },
     handler: async function (response) {
       toast.loading('Verifying payment with bank...', { id: 'razorpay-toast' });

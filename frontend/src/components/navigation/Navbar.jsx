@@ -151,7 +151,7 @@ export const Navbar = ({ toggleSidebar }) => {
   };
 
   return (
-    <header className="sticky top-0 z-30 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 px-4 py-3">
+    <header className="sticky top-0 z-30 bg-white/90 dark:bg-[#0B1321]/90 backdrop-blur-md border-b border-theme-border px-4 py-3">
       <div className="flex items-center justify-between gap-3">
         {/* Left: Mobile Avatar & Search */}
         <div className="flex items-center gap-2 flex-1 min-w-0" ref={searchRef}>
@@ -160,14 +160,14 @@ export const Navbar = ({ toggleSidebar }) => {
             <img
               src={user?.avatar || 'https://res.cloudinary.com/demo/image/upload/v1571218039/sample.jpg'}
               alt={user?.name || 'Profile'}
-              className="w-9 h-9 rounded-full border-2 border-brand-500 object-cover shadow-sm"
+              className="w-9 h-9 rounded-full border-2 border-[#C5A059] object-cover shadow-sm"
             />
           </Link>
 
           {/* Desktop search bar */}
           <div className="relative max-w-md w-full hidden sm:block">
             <form onSubmit={handleSearchSubmit} className="relative w-full">
-              <MagnifyingGlass size={18} weight="duotone" className="absolute left-3.5 top-2.5 text-slate-400" />
+              <MagnifyingGlass size={18} weight="duotone" className="absolute left-3 top-2.5 text-slate-400" />
               <input
                 ref={desktopInputRef}
                 type="text"
@@ -178,17 +178,17 @@ export const Navbar = ({ toggleSidebar }) => {
                   setSearchQuery(e.target.value);
                   setIsSearchFocused(true);
                 }}
-                className={`w-full bg-slate-100 dark:bg-slate-800/60 border rounded-xl pl-10 pr-9 py-2 text-sm text-slate-900 dark:text-slate-100 focus:outline-none transition-all ${
+                className={`w-full bg-transparent border-t-0 border-l-0 border-r-0 border-b ${
                   isSearchFocused
-                    ? 'border-brand-500 ring-2 ring-brand-500 shadow-md bg-white dark:bg-slate-900'
-                    : 'border-slate-200 dark:border-slate-700/60'
-                }`}
+                    ? 'border-brand-gold focus:border-brand-gold'
+                    : 'border-theme-border'
+                } text-theme-primary placeholder-theme-muted placeholder:text-xs sm:placeholder:text-sm placeholder:truncate rounded-none pl-10 pr-9 py-2 text-sm focus:outline-none focus:ring-0 transition-all`}
               />
               {searchQuery && (
                 <button
                   type="button"
                   onClick={(e) => handleClearSearch(e, false)}
-                  className="absolute right-3 top-2.5 p-0.5 rounded-full text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"
+                  className="absolute right-3 top-2.5 p-0.5 rounded-full text-slate-400 hover:text-slate-200 hover:bg-white/5 transition-colors"
                   title="Clear search"
                 >
                   <X className="w-3.5 h-3.5" />
@@ -213,17 +213,17 @@ export const Navbar = ({ toggleSidebar }) => {
                     setSearchQuery(e.target.value);
                     setIsSearchFocused(true);
                   }}
-                  className={`w-full bg-slate-100 dark:bg-slate-800 border rounded-xl pl-9 pr-9 py-2 text-sm text-slate-900 dark:text-slate-100 focus:outline-none transition-all ${
+                  className={`w-full bg-transparent border-t-0 border-l-0 border-r-0 border-b ${
                     isSearchFocused
-                      ? 'border-brand-500 ring-2 ring-brand-500 shadow-md bg-white dark:bg-slate-900'
-                      : 'border-slate-200 dark:border-slate-700'
-                  }`}
+                      ? 'border-brand-gold focus:border-brand-gold'
+                      : 'border-theme-border'
+                  } text-theme-primary placeholder-theme-muted placeholder:text-xs sm:placeholder:text-sm placeholder:truncate rounded-none pl-9 pr-9 py-2 text-sm focus:outline-none focus:ring-0 transition-all`}
                 />
                 {searchQuery && (
                   <button
                     type="button"
                     onClick={(e) => handleClearSearch(e, true)}
-                    className="absolute right-3 top-2.5 p-0.5 rounded-full text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"
+                    className="absolute right-3 top-2.5 p-0.5 rounded-full text-slate-400 hover:text-slate-250 hover:bg-white/5 transition-colors"
                     title="Clear search"
                   >
                     <X className="w-3.5 h-3.5" />
@@ -235,17 +235,17 @@ export const Navbar = ({ toggleSidebar }) => {
 
           {/* Live Search Results Dropdown */}
           {trimmedQuery && isSearchFocused && (
-            <div className="absolute left-4 right-4 sm:left-auto sm:right-auto sm:w-[480px] top-full mt-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl z-50 max-h-[70vh] overflow-y-auto p-4 space-y-4 animate-in fade-in slide-in-from-top-2 duration-150">
+            <div className="absolute left-4 right-4 sm:left-auto sm:right-auto sm:w-[480px] top-full mt-2 bg-white/95 dark:bg-[#0B1321]/95 backdrop-blur-md border border-theme-border rounded-2xl shadow-sm z-50 max-h-[70vh] overflow-y-auto p-4 space-y-4 animate-in fade-in slide-in-from-top-2 duration-150">
               {isSearchLoading ? (
                 <div className="flex justify-center py-6">
-                  <div className="w-6 h-6 rounded-full border-2 border-brand-500 border-t-transparent animate-spin" />
+                  <div className="w-6 h-6 rounded-full border-2 border-[#C5A059] border-t-transparent animate-spin" />
                 </div>
               ) : (
                 <>
                   {/* People Section */}
                   <div>
-                    <h4 className="text-[11px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5 mb-2">
-                      <Users className="w-3.5 h-3.5 text-purple-500" /> People ({matchedUsers.length})
+                    <h4 className="text-[11px] font-[800] text-theme-secondary uppercase tracking-wider flex items-center gap-1.5 mb-2">
+                      <Users className="w-3.5 h-3.5 text-brand-blue" /> People ({matchedUsers.length})
                     </h4>
                     {matchedUsers.length === 0 ? (
                       <p className="text-xs text-slate-400 italic">No people found</p>
@@ -264,14 +264,14 @@ export const Navbar = ({ toggleSidebar }) => {
                                 'https://res.cloudinary.com/demo/image/upload/v1571218039/sample.jpg'
                               }
                               alt={u.name}
-                              className="w-7 h-7 rounded-full border border-purple-500 object-cover shrink-0"
+                              className="w-7 h-7 rounded-full border border-brand-500 object-cover shrink-0"
                             />
                             <div className="min-w-0 flex-1">
                               <p className="text-xs font-bold text-slate-900 dark:text-slate-100 truncate">
                                 {u.name}
                               </p>
                               {u.username ? (
-                                <p className="text-[10px] font-semibold text-brand-600 dark:text-brand-400 truncate">
+                                <p className="text-[10px] font-semibold text-brand-500 truncate">
                                   @{u.username}
                                 </p>
                               ) : (
@@ -325,7 +325,7 @@ export const Navbar = ({ toggleSidebar }) => {
                   {/* Subjects Section */}
                   <div>
                     <h4 className="text-[11px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5 mb-2">
-                      <BookOpen className="w-3.5 h-3.5 text-emerald-500" /> Subjects ({matchedSubjects.length})
+                      <BookOpen className="w-3.5 h-3.5 text-green-500" /> Subjects ({matchedSubjects.length})
                     </h4>
                     {matchedSubjects.length === 0 ? (
                       <p className="text-xs text-slate-400 italic">No subjects found</p>
@@ -341,7 +341,7 @@ export const Navbar = ({ toggleSidebar }) => {
                             <span className="text-xs font-medium text-slate-800 dark:text-slate-200 truncate">
                               {s.name} {s.code && `(${s.code})`}
                             </span>
-                            <ArrowUpRight className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
+                            <ArrowUpRight className="w-3.5 h-3.5 text-green-500 shrink-0" />
                           </Link>
                         ))}
                       </div>
@@ -381,10 +381,10 @@ export const Navbar = ({ toggleSidebar }) => {
           {/* Desktop Dark mode toggle */}
           <button
             onClick={toggleTheme}
-            className="p-2.5 rounded-xl text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 hidden md:inline-flex transition-colors"
+            className="p-2.5 rounded-xl text-theme-secondary hover:bg-theme-global hidden md:inline-flex transition-colors"
             title="Toggle theme"
           >
-            {isDark ? <Sun className="w-5 h-5 text-amber-400" /> : <Moon className="w-5 h-5 text-slate-600" />}
+            {isDark ? <Sun className="w-5 h-5 text-brand-gold" /> : <Moon className="w-5 h-5 text-theme-secondary" />}
           </button>
 
           {/* Notifications */}
@@ -394,7 +394,7 @@ export const Navbar = ({ toggleSidebar }) => {
                 setShowNotifications((p) => !p);
                 setShowProfileMenu(false);
               }}
-              className="p-2.5 rounded-xl text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 relative transition-colors cursor-pointer"
+              className="p-2.5 rounded-xl text-theme-secondary hover:bg-theme-global relative transition-colors cursor-pointer"
               aria-label="Notifications"
             >
               <Bell size={22} weight="duotone" />
@@ -413,13 +413,13 @@ export const Navbar = ({ toggleSidebar }) => {
           {/* Messages Link Icon */}
           <Link
             to="/messages"
-            className="p-2.5 rounded-xl text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 relative transition-colors flex items-center justify-center shrink-0"
+            className="p-2.5 rounded-xl text-theme-secondary hover:bg-theme-global relative transition-colors flex items-center justify-center shrink-0"
             title="Messages"
             aria-label="Messages"
           >
             <ChatCircleDots size={22} weight="duotone" />
             {unreadMsgCount > 0 && (
-              <span className="absolute -top-1 -right-1 h-4 min-w-4 px-1 rounded-full bg-indigo-600 text-white text-[10px] font-extrabold flex items-center justify-center border border-white dark:border-slate-900 shadow-xs pointer-events-none">
+              <span className="absolute -top-1 -right-1 h-4 min-w-4 px-1 rounded-full bg-brand-500 text-white text-[10px] font-extrabold flex items-center justify-center border border-[#060B16] shadow-xs pointer-events-none">
                 {formatBadgeCount(unreadMsgCount)}
               </span>
             )}
@@ -432,7 +432,7 @@ export const Navbar = ({ toggleSidebar }) => {
                 setShowProfileMenu((p) => !p);
                 setShowNotifications(false);
               }}
-              className="flex items-center gap-2 p-1.5 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+              className="flex items-center gap-2 p-1.5 rounded-xl hover:bg-theme-global transition-colors cursor-pointer"
               aria-label="Profile menu"
             >
               <img
@@ -440,14 +440,14 @@ export const Navbar = ({ toggleSidebar }) => {
                 alt={user?.name || 'User'}
                 className="w-8 h-8 rounded-full border-2 border-brand-500 object-cover"
               />
-              <span className="text-sm font-semibold inline-block text-slate-800 dark:text-slate-200 max-w-[100px] truncate">
+              <span className="text-sm font-semibold inline-block text-theme-primary max-w-[100px] truncate">
                 {user?.name || 'User'}
               </span>
             </button>
 
             {showProfileMenu && (
-              <div className="absolute right-0 mt-2 w-52 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-xl py-2 z-50">
-                <div className="px-4 py-2.5 border-b border-slate-100 dark:border-slate-800">
+              <div className="absolute right-0 mt-2 w-52 bg-theme-card border border-theme-border rounded-2xl shadow-xl py-2 z-50">
+                <div className="px-4 py-2.5 border-b border-theme-border">
                   <p className="text-xs font-bold text-slate-900 dark:text-slate-100 truncate">
                     {user?.name}
                   </p>
@@ -471,7 +471,7 @@ export const Navbar = ({ toggleSidebar }) => {
                   <Link
                     to="/admin-dashboard"
                     onClick={() => setShowProfileMenu(false)}
-                    className="flex items-center gap-2.5 px-4 py-2.5 text-xs font-medium text-amber-600 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
+                    className="flex items-center gap-2.5 px-4 py-2.5 text-xs font-medium text-accent-605 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
                   >
                     <Shield className="w-4 h-4" /> Admin Panel
                   </Link>

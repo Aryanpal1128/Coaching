@@ -86,15 +86,15 @@ export const Register = () => {
 
   if (showOtpScreen) {
     return (
-      <Card className="glass-card shadow-2xl border border-slate-800 p-8 text-slate-100 max-w-md mx-auto text-center">
+      <Card className="glass-card shadow-theme border border-theme-border p-8 text-theme-primary max-w-md mx-auto text-center bg-theme-card">
         <div className="flex flex-col items-center justify-center space-y-6">
-          <div className="inline-flex p-3 rounded-2xl bg-gradient-to-tr from-brand-600 to-indigo-600 shadow-lg shadow-brand-500/20 text-white">
+          <div className="inline-flex p-3 rounded-2xl bg-gradient-to-br from-[#1B365D] to-[#C5A059] shadow-lg shadow-brand-500/20 text-[#060B16]">
             <Sparkles className="w-8 h-8 animate-pulse" />
           </div>
           <div>
             <h2 className="text-xl font-extrabold tracking-tight">Verify Your Email</h2>
-            <p className="text-xs text-slate-400 mt-2 leading-relaxed">
-              We sent a 6-digit verification code to <span className="font-semibold text-slate-200">{email}</span>. Please enter it below to complete sign up.
+            <p className="text-xs text-theme-secondary mt-2 leading-relaxed">
+              We sent a 6-digit verification code to <span className="font-semibold text-theme-primary">{email}</span>. Please enter it below to complete sign up.
             </p>
           </div>
 
@@ -114,11 +114,11 @@ export const Register = () => {
             </Button>
           </form>
 
-          <div className="flex items-center justify-between w-full text-xs text-slate-400 pt-4 border-t border-slate-800/60">
+          <div className="flex items-center justify-between w-full text-xs text-theme-secondary pt-4 border-t border-theme-border">
             <button
               type="button"
               onClick={() => setShowOtpScreen(false)}
-              className="hover:text-slate-200 transition-colors font-medium"
+              className="hover:text-theme-primary transition-colors font-medium"
             >
               ← Edit Email
             </button>
@@ -136,13 +136,13 @@ export const Register = () => {
   }
 
   return (
-    <Card className="glass-card shadow-2xl border border-slate-800 p-8 text-slate-100">
+    <Card className="glass-card shadow-theme border border-theme-border p-8 text-theme-primary bg-theme-card">
       <div className="text-center mb-6">
-        <div className="inline-flex p-3 rounded-2xl bg-gradient-to-tr from-brand-600 to-indigo-600 shadow-lg shadow-brand-500/20 text-white mb-3">
+        <div className="inline-flex p-3 rounded-2xl bg-gradient-to-br from-[#1B365D] to-[#C5A059] shadow-lg shadow-brand-500/20 text-[#060B16] mb-3">
           <GraduationCap className="w-6 h-6" />
         </div>
         <h2 className="text-2xl font-extrabold tracking-tight">Create Account</h2>
-        <p className="text-xs text-slate-400 mt-1">
+        <p className="text-xs text-theme-secondary mt-1">
           Join the AI-Powered Learning Community
         </p>
       </div>
@@ -179,17 +179,17 @@ export const Register = () => {
         />
 
         <div>
-          <label className="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1">
+          <label className="block text-xs font-semibold uppercase tracking-wider text-theme-secondary mb-1">
             Account Role
           </label>
           <div className="grid grid-cols-2 gap-2">
             <button
               type="button"
               onClick={() => setRole('STUDENT')}
-              className={`p-2.5 rounded-xl border text-xs font-bold transition-all ${
+              className={`p-2.5 rounded-xl border text-xs font-bold transition-all cursor-pointer ${
                 role === 'STUDENT'
-                  ? 'bg-brand-600 border-brand-500 text-white shadow-md'
-                  : 'bg-slate-800 border-slate-700 text-slate-400'
+                  ? 'bg-brand-500 border-brand-500 text-white shadow-md'
+                  : 'bg-theme-global border-theme-border text-theme-secondary'
               }`}
             >
               🎓 Student
@@ -197,10 +197,10 @@ export const Register = () => {
             <button
               type="button"
               onClick={() => setRole('TEACHER')}
-              className={`p-2.5 rounded-xl border text-xs font-bold transition-all ${
+              className={`p-2.5 rounded-xl border text-xs font-bold transition-all cursor-pointer ${
                 role === 'TEACHER'
-                  ? 'bg-indigo-600 border-indigo-500 text-white shadow-md'
-                  : 'bg-slate-800 border-slate-700 text-slate-400'
+                  ? 'bg-brand-500 border-brand-500 text-white shadow-md'
+                  : 'bg-theme-global border-theme-border text-theme-secondary'
               }`}
             >
               👨‍🏫 Instructor
@@ -213,7 +213,7 @@ export const Register = () => {
         </Button>
       </form>
 
-      <div className="mt-6 text-center text-xs text-slate-400">
+      <div className="mt-6 text-center text-xs text-theme-secondary">
         Already have an account?{' '}
         <Link to="/login" className="text-brand-400 font-bold hover:underline">
           Sign In

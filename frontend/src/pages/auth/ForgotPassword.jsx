@@ -31,7 +31,7 @@ export const ForgotPassword = () => {
       </div>
 
       {isSuccess ? (
-        <div className="bg-emerald-500/10 border border-emerald-500/30 rounded-xl p-4 text-center text-xs text-emerald-400">
+        <div className="bg-green-500/10 border border-green-500/30 rounded-xl p-4 text-center text-xs text-green-400">
           Check your email for the reset instructions token link!
         </div>
       ) : (

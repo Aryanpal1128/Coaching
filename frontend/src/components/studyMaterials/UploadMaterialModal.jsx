@@ -92,8 +92,8 @@ export const UploadMaterialModal = ({ onClose }) => {
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-slate-800 sticky top-0 bg-slate-900 z-10">
           <div className="flex items-center gap-3">
-            <div className="p-2 rounded-xl bg-emerald-500/10">
-              <Upload className="w-5 h-5 text-emerald-400" />
+            <div className="p-2 rounded-xl bg-green-500/10">
+              <Upload className="w-5 h-5 text-green-400" />
             </div>
             <div>
               <h2 className="text-base font-bold text-slate-100">Upload Study Material</h2>
@@ -114,9 +114,9 @@ export const UploadMaterialModal = ({ onClose }) => {
             onClick={() => fileInputRef.current?.click()}
             className={`cursor-pointer rounded-2xl border-2 border-dashed p-6 text-center transition-all ${
               dragOver
-                ? 'border-emerald-500 bg-emerald-500/10'
+                ? 'border-green-500 bg-green-500/10'
                 : selectedFile
-                ? 'border-emerald-600 bg-emerald-500/5'
+                ? 'border-green-600 bg-green-500/5'
                 : 'border-slate-700 hover:border-slate-500 bg-slate-800/50'
             }`}
           >
@@ -129,10 +129,10 @@ export const UploadMaterialModal = ({ onClose }) => {
             />
             {selectedFile ? (
               <div className="flex flex-col items-center gap-2">
-                <FileText className="w-8 h-8 text-emerald-400" />
+                <FileText className="w-8 h-8 text-green-400" />
                 <p className="text-sm font-bold text-slate-200">{selectedFile.name}</p>
                 <p className="text-xs text-slate-400">{formatSize(selectedFile.size)}</p>
-                <p className="text-[10px] text-emerald-400">Click to change file</p>
+                <p className="text-[10px] text-green-400">Click to change file</p>
               </div>
             ) : (
               <div className="flex flex-col items-center gap-2">
@@ -153,7 +153,7 @@ export const UploadMaterialModal = ({ onClose }) => {
               value={form.title}
               onChange={handleChange}
               placeholder="e.g. Graph Theory Notes - Chapter 3"
-              className="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-slate-100 focus:outline-none focus:ring-2 focus:ring-emerald-500 placeholder:text-slate-500"
+              className="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-slate-100 focus:outline-none focus:ring-2 focus:ring-green-500 placeholder:text-slate-500"
             />
           </div>
 
@@ -167,7 +167,7 @@ export const UploadMaterialModal = ({ onClose }) => {
                 name="subjectId"
                 value={form.subjectId}
                 onChange={handleChange}
-                className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2.5 text-sm text-slate-100 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2.5 text-sm text-slate-100 focus:outline-none focus:ring-2 focus:ring-green-500"
               >
                 <option value="">Select...</option>
                 {subjects.map((s) => (
@@ -183,7 +183,7 @@ export const UploadMaterialModal = ({ onClose }) => {
                 name="fileType"
                 value={form.fileType}
                 onChange={handleChange}
-                className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2.5 text-sm text-slate-100 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2.5 text-sm text-slate-100 focus:outline-none focus:ring-2 focus:ring-green-500"
               >
                 {FILE_TYPES.map((t) => (
                   <option key={t} value={t}>{t}</option>
@@ -203,7 +203,7 @@ export const UploadMaterialModal = ({ onClose }) => {
                 onClick={() => setForm((prev) => ({ ...prev, accessType: 'public', roomId: '' }))}
                 className={`flex items-center justify-center gap-2 p-2.5 rounded-xl border text-xs font-bold transition-all cursor-pointer ${
                   form.accessType === 'public'
-                    ? 'bg-emerald-600/20 border-emerald-500 text-emerald-300'
+                    ? 'bg-green-600/20 border-green-500 text-green-300'
                     : 'bg-slate-800 border-slate-700 text-slate-400 hover:bg-slate-700'
                 }`}
               >
@@ -215,7 +215,7 @@ export const UploadMaterialModal = ({ onClose }) => {
                 onClick={() => setForm((prev) => ({ ...prev, accessType: 'paid' }))}
                 className={`flex items-center justify-center gap-2 p-2.5 rounded-xl border text-xs font-bold transition-all cursor-pointer ${
                   form.accessType === 'paid'
-                    ? 'bg-amber-600/20 border-amber-500 text-amber-300'
+                    ? 'bg-accent-605/20 border-accent-500 text-accent-500/50'
                     : 'bg-slate-800 border-slate-700 text-slate-400 hover:bg-slate-700'
                 }`}
               >
@@ -226,11 +226,11 @@ export const UploadMaterialModal = ({ onClose }) => {
 
             {form.accessType === 'paid' && (
               <div className="pt-2 animate-in fade-in duration-150">
-                <label className="block text-[11px] font-bold text-amber-400 mb-1">
+                <label className="block text-[11px] font-bold text-accent-500 mb-1">
                   Select Target Paid Room <span className="text-red-500">*</span>
                 </label>
                 {myRooms.length === 0 ? (
-                  <p className="text-xs text-amber-300/80 bg-amber-500/10 p-2 rounded-lg border border-amber-500/20">
+                  <p className="text-xs text-accent-500/50/80 bg-accent-500/10 p-2 rounded-lg border border-accent-500/20">
                     No paid rooms found. Create a paid room first under Teacher Dashboard or Profile.
                   </p>
                 ) : (
@@ -238,12 +238,12 @@ export const UploadMaterialModal = ({ onClose }) => {
                     name="roomId"
                     value={form.roomId}
                     onChange={handleChange}
-                    className="w-full bg-slate-900 border border-amber-500/50 rounded-xl px-3 py-2 text-xs text-slate-100 focus:outline-none focus:ring-2 focus:ring-amber-500"
+                    className="w-full bg-slate-900 border border-accent-500/50 rounded-xl px-3 py-2 text-xs text-slate-100 focus:outline-none focus:ring-2 focus:ring-accent-500"
                   >
                     <option value="">Select Paid Room...</option>
                     {myRooms.map((r) => (
                       <option key={r._id} value={r._id}>
-                        {r.title} (₹{(r.price / 100).toFixed(0)})
+                        {r.title} (₹{r?.price ? (r.price / 100).toFixed(0) : '0'})
                       </option>
                     ))}
                   </select>
@@ -263,15 +263,15 @@ export const UploadMaterialModal = ({ onClose }) => {
               onChange={handleChange}
               rows={2}
               placeholder="Brief description of this material..."
-              className="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-slate-100 focus:outline-none focus:ring-2 focus:ring-emerald-500 placeholder:text-slate-500 resize-none"
+              className="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-slate-100 focus:outline-none focus:ring-2 focus:ring-green-500 placeholder:text-slate-500 resize-none"
             />
           </div>
 
           {/* Upload progress info */}
           {isLoading && (
-            <div className="p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center gap-2">
-              <div className="w-4 h-4 border-2 border-emerald-400 border-t-transparent rounded-full animate-spin shrink-0" />
-              <p className="text-xs text-emerald-300">Uploading to Cloudinary...</p>
+            <div className="p-3 rounded-xl bg-green-500/10 border border-green-500/20 flex items-center gap-2">
+              <div className="w-4 h-4 border-2 border-green-400 border-t-transparent rounded-full animate-spin shrink-0" />
+              <p className="text-xs text-green-300">Uploading to Cloudinary...</p>
             </div>
           )}
 
@@ -280,7 +280,7 @@ export const UploadMaterialModal = ({ onClose }) => {
             <Button type="button" variant="ghost" onClick={onClose} className="w-full sm:flex-1 justify-center" disabled={isLoading}>
               Cancel
             </Button>
-            <Button type="submit" className="w-full sm:flex-1 justify-center bg-emerald-600 hover:bg-emerald-500" disabled={isLoading || !selectedFile}>
+            <Button type="submit" className="w-full sm:flex-1 justify-center bg-green-600 hover:bg-green-500" disabled={isLoading || !selectedFile}>
               {isLoading ? 'Uploading...' : '📤 Upload Material'}
             </Button>
           </div>

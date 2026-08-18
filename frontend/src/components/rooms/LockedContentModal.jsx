@@ -44,26 +44,26 @@ export const LockedContentModal = ({ item, user, onClose, onSuccess }) => {
         </button>
 
         {/* Lock Icon */}
-        <div className="w-16 h-16 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-400 flex items-center justify-center mx-auto shadow-lg shadow-amber-500/10 animate-bounce">
+        <div className="w-16 h-16 rounded-full bg-accent-500/10 border border-accent-500/30 text-accent-500 flex items-center justify-center mx-auto shadow-lg shadow-accent-500/10 animate-bounce">
           <Lock className="w-8 h-8" />
         </div>
 
         <div>
-          <span className="bg-amber-500/20 text-amber-300 text-[10px] font-extrabold uppercase px-3 py-1 rounded-full border border-amber-500/30">
+          <span className="bg-accent-500/20 text-accent-500/50 text-[10px] font-extrabold uppercase px-3 py-1 rounded-full border border-accent-500/30">
             Paid Content Locked
           </span>
           <h3 className="text-xl font-black text-white mt-3 leading-snug">
             {item?.title || 'Exclusive Offering'}
           </h3>
           <p className="text-xs text-slate-400 mt-2 leading-relaxed">
-            This content is part of <strong className="text-slate-200">{teacher?.name || 'Instructor'}</strong>'s paid room: <strong className="text-amber-400">{room?.title || 'Premium Room'}</strong>.
+            This content is part of <strong className="text-slate-200">{teacher?.name || 'Instructor'}</strong>'s paid room: <strong className="text-accent-500">{room?.title || 'Premium Room'}</strong>.
           </p>
         </div>
 
         {/* Benefits list */}
         <div className="bg-slate-800/60 rounded-2xl p-4 border border-slate-800 text-left space-y-2.5 text-xs text-slate-300">
           <div className="flex items-center gap-2 font-semibold">
-            <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+            <CheckCircle2 className="w-4 h-4 text-green-400 shrink-0" />
             <span>Lifetime access to all lectures & notes in this room</span>
           </div>
           <div className="flex items-center gap-2 font-semibold">
@@ -71,7 +71,7 @@ export const LockedContentModal = ({ item, user, onClose, onSuccess }) => {
             <span>Secure 100% verified payment via Razorpay</span>
           </div>
           <div className="flex items-center gap-2 font-semibold">
-            <Sparkles className="w-4 h-4 text-amber-400 shrink-0" />
+            <Sparkles className="w-4 h-4 text-accent-500 shrink-0" />
             <span>Instant unlock right after payment</span>
           </div>
         </div>
@@ -81,7 +81,7 @@ export const LockedContentModal = ({ item, user, onClose, onSuccess }) => {
           <Button
             onClick={handleEnroll}
             disabled={isLoading}
-            className="w-full py-3.5 rounded-2xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-white font-extrabold text-sm shadow-xl shadow-amber-500/20 justify-center gap-2"
+            className="w-full py-3.5 rounded-2xl bg-gradient-to-r from-accent-500 to-accent-605 hover:from-accent-500 hover:to-accent-500 text-white font-extrabold text-sm shadow-xl shadow-accent-500/20 justify-center gap-2"
           >
             <Lock className="w-4 h-4" />
             {isLoading ? 'Preparing Razorpay Checkout...' : `Enroll in Room — ₹${priceInINR}`}

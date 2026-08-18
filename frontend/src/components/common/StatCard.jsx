@@ -1,25 +1,24 @@
 import React from 'react';
 import { Card } from './Card.jsx';
+import { CaretRight } from '@phosphor-icons/react';
 
 export const StatCard = ({ title, value, icon: Icon, trend, color = 'blue', onClick }) => {
-  const cardTints = {
-    emerald: 'bg-emerald-500/5 border-emerald-500/20 hover:border-emerald-500/40',
-    rose: 'bg-rose-500/5 border-rose-500/20 hover:border-rose-500/40',
-    purple: 'bg-purple-500/5 border-purple-500/20 hover:border-purple-500/40',
-    slate: 'bg-slate-500/5 border-slate-500/20 hover:border-slate-500/40',
-    blue: 'bg-blue-500/5 border-blue-500/20 hover:border-blue-500/40',
-    indigo: 'bg-indigo-500/5 border-indigo-500/20 hover:border-indigo-500/40',
-    amber: 'bg-amber-500/5 border-amber-500/20 hover:border-amber-500/40'
-  };
-
   const iconColors = {
-    emerald: 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400',
-    rose: 'bg-rose-500/15 text-rose-600 dark:text-rose-400',
-    purple: 'bg-purple-500/15 text-purple-600 dark:text-purple-400',
-    slate: 'bg-slate-500/15 text-slate-600 dark:text-slate-400',
-    blue: 'bg-blue-500/15 text-blue-500',
-    indigo: 'bg-indigo-500/15 text-indigo-500',
-    amber: 'bg-amber-500/15 text-amber-500'
+    emerald: 'text-[#C5A059] shadow-[#C5A059]/30', // Map emerald to gold
+    rose: 'text-[#E53E6B] shadow-[#E53E6B]/30', // Red/Pink
+    purple: 'text-[#9B59B6] shadow-[#9B59B6]/30', // Purple
+    slate: 'text-[#2DD4BF] shadow-[#2DD4BF]/30', // Teal
+    amber: 'text-[#9B59B6] shadow-[#9B59B6]/30', // Map amber to purple
+    blue: 'text-brand-500 shadow-brand-500/30'
+  };
+  
+  const ringColors = {
+    emerald: 'border-[#C5A059]',
+    rose: 'border-[#E53E6B]',
+    purple: 'border-[#9B59B6]',
+    slate: 'border-[#2DD4BF]',
+    amber: 'border-[#9B59B6]',
+    blue: 'border-brand-500'
   };
 
   const isClickable = !!onClick;
@@ -28,29 +27,38 @@ export const StatCard = ({ title, value, icon: Icon, trend, color = 'blue', onCl
     <Card
       hover={isClickable}
       onClick={onClick}
-      className={`border ${cardTints[color] || ''} transition-all duration-150 ${
+      className={`border border-theme-border bg-theme-card shadow-theme transition-all duration-150 p-4 ${
         isClickable
-          ? 'cursor-pointer hover:-translate-y-0.5 hover:shadow-md active:translate-y-0'
+          ? 'cursor-pointer hover:-translate-y-0.5 hover:shadow-md active:translate-y-0 hover:border-theme-border'
           : ''
       }`}
     >
       <div className="flex items-center justify-between">
-        <div>
-          <p className="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
-            {title}
-          </p>
-          <div className="text-2xl font-extrabold text-slate-900 dark:text-slate-100 mt-1">
-            {value}
-          </div>
-          {trend && (
-            <p className="text-xs text-slate-500 dark:text-slate-400 font-medium mt-1">
-              {trend}
-            </p>
+        <div className="flex items-center gap-4">
+          {Icon && (
+            <div className={`w-12 h-12 rounded-full border border-solid flex items-center justify-center shrink-0 shadow-[0_0_15px_rgba(0,0,0,0)] ${ringColors[color] || ringColors.blue} ${iconColors[color] || iconColors.blue}`}>
+              <div className={`w-full h-full rounded-full flex items-center justify-center shadow-[inset_0_0_10px_rgba(255,255,255,0.1),0_0_15px_var(--tw-shadow-color)]`}>
+                <Icon size={24} weight="fill" className="drop-shadow-lg" />
+              </div>
+            </div>
           )}
+          <div>
+            <p className="text-[10px] font-bold uppercase tracking-wider text-theme-secondary mb-0.5">
+              {title}
+            </p>
+            <div className="text-xl font-extrabold text-theme-primary leading-tight">
+              {value}
+            </div>
+            {trend && (
+              <p className="text-[11px] text-theme-secondary font-medium mt-0.5">
+                {trend}
+              </p>
+            )}
+          </div>
         </div>
-        {Icon && (
-          <div className={`p-3.5 rounded-2xl ${iconColors[color] || iconColors.blue}`}>
-            <Icon size={24} weight="duotone" className="w-6 h-6" />
+        {isClickable && (
+          <div className="text-theme-secondary pl-2">
+            <CaretRight size={20} weight="bold" />
           </div>
         )}
       </div>

@@ -8,6 +8,7 @@ import { Input } from '../../components/common/Input.jsx';
 import { StatCard } from '../../components/common/StatCard.jsx';
 import { QuestionCard } from '../../components/questions/QuestionCard.jsx';
 import { CreateRoomModal } from '../../components/rooms/CreateRoomModal.jsx';
+import { FollowListModal } from '../../components/profile/FollowListModal.jsx';
 import {
   Trophy,
   Flame,
@@ -18,6 +19,7 @@ import {
   MessageSquare,
   UserCheck,
   UserPlus,
+  UserMinus,
   Mail,
   Camera,
   Loader2,
@@ -37,6 +39,14 @@ import {
   TrendingUp,
   GraduationCap
 } from 'lucide-react';
+import { motion } from 'framer-motion';
+import {
+  Trophy as PhTrophy,
+  Medal as PhMedal,
+  ListChecks as PhListChecks,
+  Chat as PhChat,
+  Flame as PhFlame
+} from '@phosphor-icons/react';
 import {
   useGetUserProfileQuery,
   useUpdateUserProfileMutation
@@ -45,7 +55,8 @@ import {
   useFollowUserMutation,
   useUnfollowUserMutation,
   useGetFollowersQuery,
-  useGetFollowingQuery
+  useGetFollowingQuery,
+  useGetFollowCountsQuery
 } from '../../redux/api/followApi.js';
 import { useSearchQuestionsQuery } from '../../redux/api/questionApi.js';
 import { useGetSubjectsQuery } from '../../redux/api/teacherApi.js';
@@ -60,8 +71,78 @@ import { updateUser } from '../../redux/slices/authSlice.js';
 import { handleRazorpayPayment } from '../../utils/razorpay.js';
 import toast from 'react-hot-toast';
 
+const getLevelProgress = (reputation, levelStr) => {
+  const rep = reputation || 0;
+  const level = levelStr || 'Beginner';
+
+  if (level.includes('Beginner') || rep <= 100) {
+    return { min: 0, max: 100, pct: Math.min(100, Math.max(0, (rep / 100) * 100)) };
+  } else if (level.includes('Learner') || (rep > 100 && rep <= 300)) {
+    return { min: 101, max: 300, pct: Math.min(100, Math.max(0, ((rep - 101) / 199) * 100)) };
+  } else if (level.includes('Contributor') || (rep > 300 && rep <= 700)) {
+    return { min: 301, max: 700, pct: Math.min(100, Math.max(0, ((rep - 301) / 399) * 100)) };
+  } else if (level.includes('Expert') || (rep > 700 && rep <= 1500)) {
+    return { min: 701, max: 1500, pct: Math.min(100, Math.max(0, ((rep - 701) / 799) * 100)) };
+  } else {
+    return { min: 1501, max: 3000, pct: 100 }; // Master
+  }
+};
+
+const CountUp = ({ value, duration = 800 }) => {
+  const [count, setCount] = useState(0);
+  const elementRef = useRef(null);
+  const [hasStarted, setHasStarted] = useState(false);
+
+  useEffect(() => {
+    if (typeof window === 'undefined' || !window.IntersectionObserver) {
+      setCount(value);
+      return;
+    }
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && !hasStarted) {
+          setHasStarted(true);
+        }
+      },
+      { threshold: 0.1 }
+    );
+    const el = elementRef.current;
+    if (el) {
+      observer.observe(el);
+    }
+    return () => {
+      if (el) observer.unobserve(el);
+    };
+  }, [hasStarted, value]);
+
+  useEffect(() => {
+    if (!hasStarted) return;
+    let start = 0;
+    const end = parseInt(value, 10) || 0;
+    if (end === 0) {
+      setCount(0);
+      return;
+    }
+    const totalMiliseconds = duration;
+    const incrementTime = Math.max(Math.floor(totalMiliseconds / end), 16);
+    const step = Math.max(Math.ceil(end / (totalMiliseconds / incrementTime)), 1);
+    let timer = setInterval(() => {
+      start += step;
+      if (start >= end) {
+        clearInterval(timer);
+        setCount(end);
+      } else {
+        setCount(start);
+      }
+    }, incrementTime);
+    return () => clearInterval(timer);
+  }, [hasStarted, value, duration]);
+
+  return <span ref={elementRef}>{count}</span>;
+};
+
 export const UserProfile = () => {
-  const { id: routeUserId } = useParams();
+  const { userId: routeUserId } = useParams();
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const { user: currentUser } = useSelector((state) => state.auth);
@@ -117,9 +198,15 @@ export const UserProfile = () => {
     skip: !activeUserId || followModalType !== 'following'
   });
 
-  const followersCount = profileRes?.data?.followersCount ?? profile?.followers?.length ?? 0;
-  const followingCount = profileRes?.data?.followingCount ?? profile?.following?.length ?? 0;
-  const isFollowingUser = profileRes?.data?.isFollowing ?? false;
+  const [isHoveringFollowBtn, setIsHoveringFollowBtn] = useState(false);
+
+  const { data: followCountsRes } = useGetFollowCountsQuery(activeUserId, {
+    skip: !activeUserId
+  });
+
+  const followersCount = followCountsRes?.data?.followers ?? followCountsRes?.data?.followersCount ?? profileRes?.data?.followersCount ?? profile?.followers?.length ?? 0;
+  const followingCount = followCountsRes?.data?.following ?? followCountsRes?.data?.followingCount ?? profileRes?.data?.followingCount ?? profile?.following?.length ?? 0;
+  const isFollowingUser = followCountsRes?.data?.isFollowing ?? false;
 
   // Edit Profile Modal State
   const [isEditingProfile, setIsEditingProfile] = useState(false);
@@ -299,8 +386,8 @@ export const UserProfile = () => {
   const tabs = isTeacher
     ? ['Overview', 'Questions Asked', 'Paid Rooms']
     : isOwnProfile
-    ? ['Overview', 'Questions Asked', 'Saved Questions', 'My Enrollments']
-    : ['Overview', 'Questions Asked', 'Paid Rooms'];
+      ? ['Overview', 'Questions Asked', 'Saved Questions', 'My Enrollments']
+      : ['Overview', 'Questions Asked', 'Paid Rooms'];
 
   const [activeTab, setActiveTab] = useState('Overview');
   const tabsRef = useRef(null);
@@ -330,7 +417,7 @@ export const UserProfile = () => {
   if (isLoading) {
     return (
       <div className="flex h-[300px] items-center justify-center bg-transparent flex-col gap-4">
-        <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-brand-600 to-indigo-600 flex items-center justify-center text-white font-black text-xl animate-pulse">
+        <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-[#1B365D] to-[#C5A059] flex items-center justify-center text-[#060B16] font-black text-xl animate-pulse">
           AI
         </div>
         <p className="text-xs text-slate-400 animate-pulse">Loading profile...</p>
@@ -342,40 +429,38 @@ export const UserProfile = () => {
     return (
       <Card className="p-8 text-center max-w-md mx-auto my-12">
         <Trophy className="w-12 h-12 text-rose-500 mx-auto mb-3 opacity-30" />
-        <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100">Failed to Load Profile</h3>
-        <p className="text-xs text-slate-500 mt-1">{error?.data?.message || 'Profile could not be found.'}</p>
+        <h3 className="text-sm font-bold text-theme-primary">Failed to Load Profile</h3>
+        <p className="text-xs text-theme-secondary mt-1">{error?.data?.message || 'Profile could not be found.'}</p>
       </Card>
     );
   }
-
   const displayAvatar = avatarPreview || user?.avatar;
 
   return (
-    <div className="space-y-6 max-w-4xl mx-auto">
+    <div className="relative min-h-screen space-y-6 max-w-4xl mx-auto pb-12 p-3 sm:p-0">
+      {/* Page-wide Gradient Background Layer */}
+      <div className="absolute inset-0 -z-10 bg-theme-global"></div>
+
       {/* Profile Hero Card */}
-      <div className="overflow-hidden border border-slate-200 dark:border-[#1e294b] bg-white dark:bg-[#0b1329] shadow-md relative rounded-2xl flex flex-col p-0 pb-6">
-        {/* Banner with dot-grid pattern */}
-        <div className="h-32 sm:h-40 w-full bg-gradient-to-r from-brand-900/60 to-indigo-900/60 relative overflow-hidden bg-[radial-gradient(rgba(255,255,255,0.05)_1px,transparent_1px)] [background-size:16px_16px]">
-          <div className="absolute inset-0 bg-gradient-to-t from-[#0b1329]/60 to-[#0b1329]" />
-        </div>
+      <div className="border border-theme-border bg-theme-card shadow-theme relative rounded-[32px] flex flex-col p-6 sm:p-8 mt-6">
 
         {/* Center profile wrapper */}
-        <div className="px-6 pb-2 text-center -mt-16 sm:-mt-20 relative z-10">
+        <div className="text-center relative z-10 flex flex-col items-center">
           {/* Avatar */}
-          <div className="relative inline-block shrink-0">
+          <div className="relative inline-block shrink-0 mb-6 sm:mb-7">
             {displayAvatar ? (
               <img
                 src={displayAvatar}
                 alt={user?.name}
-                className="w-28 h-28 sm:w-32 sm:h-32 rounded-full object-cover border-4 border-white dark:border-slate-900 shadow-2xl ring-4 ring-brand-500/10"
+                className="w-32 h-32 sm:w-[140px] sm:h-[140px] rounded-full object-cover border-4 border-white shadow-sm ring-1 ring-brand-blue/20"
               />
             ) : (
-              <div className="w-28 h-28 sm:w-32 sm:h-32 rounded-full bg-gradient-to-tr from-brand-600 to-indigo-600 flex items-center justify-center text-white text-4xl font-extrabold border-4 border-white dark:border-slate-900 shadow-2xl ring-4 ring-brand-500/10">
+              <div className="w-32 h-32 sm:w-[140px] sm:h-[140px] rounded-full bg-theme-secondary-bg flex items-center justify-center text-theme-primary text-4xl font-extrabold border-4 border-white shadow-sm ring-1 ring-brand-blue/20">
                 {getInitials(user?.name)}
               </div>
             )}
             {isUploadingAvatar && (
-              <div className="absolute inset-0 rounded-full bg-slate-900/60 backdrop-blur-[1px] flex items-center justify-center z-10 border-4 border-white dark:border-slate-900">
+              <div className="absolute inset-0 rounded-full bg-slate-900/40 backdrop-blur-sm flex items-center justify-center z-10 border-4 border-white">
                 <Loader2 className="w-6 h-6 text-white animate-spin" />
               </div>
             )}
@@ -393,102 +478,123 @@ export const UserProfile = () => {
                   onClick={handleAvatarClick}
                   disabled={isUploadingAvatar}
                   title="Upload profile picture"
-                  className="absolute bottom-1 right-1 p-2 rounded-full bg-brand-600 hover:bg-brand-500 text-white shadow-lg transition-transform hover:scale-105 active:scale-95 z-20 cursor-pointer"
+                  className="absolute bottom-2 right-1 p-2.5 sm:p-3 rounded-full bg-brand-blue hover:bg-brand-dark-blue text-white shadow-md transition-transform hover:scale-105 active:scale-95 z-20 cursor-pointer border-2 border-white"
                 >
-                  <Camera className="w-3.5 h-3.5" />
+                  <Camera className="w-4 h-4" />
                 </button>
               </>
             )}
           </div>
 
           {/* Name */}
-          <h2 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white mt-3 tracking-wide uppercase">
+          <h2 className="text-2xl sm:text-[28px] font-[900] text-theme-primary tracking-wide uppercase leading-tight mb-4">
             {user?.name || 'Your Profile'}
           </h2>
 
+
+          {/* Username & Edit */}
+          <div className="flex items-center justify-center gap-3 mb-4">
+            {user?.username && (
+              <span className="text-[13px] sm:text-sm font-semibold text-brand-blue">
+                @{user.username}
+              </span>
+            )}
+            {isOwnProfile && (
+              <button
+                onClick={handleOpenEditProfile}
+                className="text-[13px] sm:text-sm text-theme-secondary hover:text-brand-blue transition-colors font-medium cursor-pointer ml-1 underline decoration-transparent hover:decoration-brand-blue underline-offset-2"
+              >
+                Edit
+              </button>
+            )}
+          </div>
+
           {/* Badges */}
-          <div className="flex items-center justify-center gap-2 mt-2 flex-wrap">
-            <span className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full text-[10px] font-extrabold bg-brand-500/10 text-brand-600 dark:text-brand-400 border border-brand-500/20">
-              <GraduationCap className="w-3.5 h-3.5" />
-              {user?.role || 'STUDENT'}
+          <div className="flex items-center justify-center gap-3 mb-3.5 flex-wrap">
+            <span className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full text-[11px] sm:text-xs font-[800] bg-brand-light-blue border border-brand-blue/20 text-brand-blue">
+              <GraduationCap className="w-4 h-4" />
+              <span className="uppercase">{user?.role || 'STUDENT'}</span>
             </span>
-            <span className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full text-[10px] font-extrabold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
-              <TrendingUp className="w-3.5 h-3.5" />
-              {user?.level || 'Beginner'}
+            <span className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full text-[11px] sm:text-xs font-[800] bg-brand-light-gold border border-brand-gold/30 text-brand-gold">
+              <TrendingUp className="w-4 h-4" />
+              <span className="uppercase">{user?.level || 'BEGINNER'}</span>
             </span>
           </div>
 
-          {/* Username */}
-          {user?.username && (
-            <p className="text-xs font-bold text-brand-500 mt-2.5 flex items-center justify-center gap-1">
-              <span>@{user.username}</span>
-              {isOwnProfile && (
-                <button
-                  onClick={handleOpenEditProfile}
-                  className="text-xs text-slate-400 hover:text-slate-200 underline font-normal cursor-pointer ml-1"
-                >
-                  Edit
-                </button>
-              )}
-            </p>
-          )}
+
 
           {/* Stats Row Container */}
-          <div className="border border-slate-200 dark:border-[#1e294b]/60 bg-slate-50 dark:bg-[#070b14]/50 rounded-2xl p-4 max-w-md mx-auto mt-5 flex flex-col min-[400px]:flex-row justify-around items-center gap-4 min-[400px]:gap-2">
+          <div className="w-full border border-theme-border bg-theme-card rounded-[24px] p-5 sm:p-6 mt-8 grid grid-cols-3 items-center relative overflow-hidden shadow-sm">
+            <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-white/50 dark:from-white/5 via-transparent to-transparent opacity-20 pointer-events-none" />
+
             {/* Reputation Points */}
-            <div className="flex items-center gap-3">
-              <Trophy className="w-5 h-5 text-amber-500 shrink-0" />
-              <div className="text-left">
-                <p className="text-sm font-extrabold text-slate-900 dark:text-white leading-tight">{user?.reputation || 0}</p>
-                <p className="text-[9px] text-slate-400 uppercase tracking-wider font-bold">Reputation Pts</p>
+            <div className="flex flex-col items-center justify-center gap-1.5 relative z-10">
+              <div className="text-brand-gold bg-brand-light-gold/50 border border-brand-gold/10 p-2 rounded-full mb-1">
+                <Trophy className="w-5 h-5 sm:w-6 sm:h-6" />
               </div>
+              <span className="text-[20px] sm:text-2xl font-[900] text-theme-primary leading-none">{user?.reputation || 0}</span>
+              <span className="text-[9px] sm:text-[10px] text-theme-muted font-[700] tracking-wider uppercase">Reputation Pts</span>
+              {/* Divider */}
+              <div className="absolute right-0 top-1/2 -translate-y-1/2 w-px h-12 bg-theme-border" />
             </div>
-            {/* Divider */}
-            <div className="hidden min-[400px]:block w-px h-8 bg-slate-200 dark:bg-slate-800" />
+
             {/* Followers */}
-            <button onClick={() => setFollowModalType('followers')} className="flex items-center gap-3 hover:opacity-80 transition-opacity">
-              <User className="w-5 h-5 text-purple-500 shrink-0" />
-              <div className="text-left">
-                <p className="text-sm font-extrabold text-slate-900 dark:text-white leading-tight">{followersCount}</p>
-                <p className="text-[9px] text-slate-400 uppercase tracking-wider font-bold">Followers</p>
+            <button
+              onClick={() => setFollowModalType('followers')}
+              className="flex flex-col items-center justify-center gap-1.5 relative group cursor-pointer z-10"
+            >
+              <div className="text-brand-blue bg-brand-light-blue/50 border border-brand-blue/10 p-2 rounded-full mb-1 group-hover:scale-110 transition-transform">
+                <User className="w-5 h-5 sm:w-6 sm:h-6" />
               </div>
+              <span className="text-[20px] sm:text-2xl font-[900] text-theme-primary leading-none group-hover:text-brand-blue transition-colors">{followersCount}</span>
+              <span className="text-[9px] sm:text-[10px] text-theme-muted font-[700] tracking-wider uppercase">Followers</span>
+              {/* Divider */}
+              <div className="absolute right-0 top-1/2 -translate-y-1/2 w-px h-12 bg-theme-border" />
             </button>
-            {/* Divider */}
-            <div className="hidden min-[400px]:block w-px h-8 bg-slate-200 dark:bg-slate-800" />
+
             {/* Following */}
-            <button onClick={() => setFollowModalType('following')} className="flex items-center gap-3 hover:opacity-80 transition-opacity">
-              <Users className="w-5 h-5 text-brand-500 shrink-0" />
-              <div className="text-left">
-                <p className="text-sm font-extrabold text-slate-900 dark:text-white leading-tight">{followingCount}</p>
-                <p className="text-[9px] text-slate-400 uppercase tracking-wider font-bold">Following</p>
+            <button
+              onClick={() => setFollowModalType('following')}
+              className="flex flex-col items-center justify-center gap-1.5 group cursor-pointer z-10"
+            >
+              <div className="text-brand-blue bg-brand-light-blue/50 border border-brand-blue/10 p-2 rounded-full mb-1 group-hover:scale-110 transition-transform">
+                <Users className="w-5 h-5 sm:w-6 sm:h-6" />
               </div>
+              <span className="text-[20px] sm:text-2xl font-[900] text-theme-primary leading-none group-hover:text-brand-blue transition-colors">{followingCount}</span>
+              <span className="text-[9px] sm:text-[10px] text-theme-muted font-[700] tracking-wider uppercase">Following</span>
             </button>
           </div>
 
           {/* Action buttons */}
-          <div className="mt-5 flex justify-center">
-            {isOwnProfile ? (
-              <Button onClick={handleOpenEditProfile} variant="outline" className="rounded-full border-slate-300 dark:border-[#1e294b] hover:bg-slate-100 dark:hover:bg-slate-800/50 text-slate-900 dark:text-white font-extrabold text-xs px-6 py-2 flex items-center gap-1.5 shadow-xs">
-                <Edit className="w-3.5 h-3.5" /> Edit Profile
-              </Button>
-            ) : (
+          {!isOwnProfile && (
+            <div className="mt-5 flex justify-center">
               <div className="flex items-center gap-3">
                 <Button
                   onClick={() => navigate('/messages', { state: { startChatWith: user } })}
                   variant="outline"
-                  className="rounded-full border-slate-350 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-900 dark:text-white font-extrabold text-xs px-6 py-2 flex items-center gap-1.5 shadow-xs"
+                  className="rounded-full border-theme-border hover:bg-theme-card text-theme-primary font-extrabold text-xs px-6 py-2 flex items-center gap-1.5 shadow-xs"
                 >
                   <MessageSquare className="w-3.5 h-3.5" /> Message
                 </Button>
-                
+
                 {isFollowingUser ? (
                   <Button
                     onClick={() => unfollowUser(activeUserId)}
                     disabled={isUnfollowingLoading}
+                    onMouseEnter={() => setIsHoveringFollowBtn(true)}
+                    onMouseLeave={() => setIsHoveringFollowBtn(false)}
                     variant="outline"
-                    className="rounded-full border-red-500/40 text-red-500 hover:bg-red-50 dark:hover:bg-red-950/20 font-extrabold text-xs px-6 py-2 flex items-center gap-1.5"
+                    className="rounded-full border-red-500/40 text-red-500 hover:bg-red-50 dark:hover:bg-red-950/20 font-extrabold text-xs px-6 py-2 flex items-center gap-1.5 transition-all duration-200"
                   >
-                    <UserCheck className="w-3.5 h-3.5" /> Following
+                    {isHoveringFollowBtn ? (
+                      <>
+                        <UserMinus className="w-3.5 h-3.5" /> Unfollow
+                      </>
+                    ) : (
+                      <>
+                        <UserCheck className="w-3.5 h-3.5" /> Following
+                      </>
+                    )}
                   </Button>
                 ) : (
                   <Button
@@ -500,8 +606,8 @@ export const UserProfile = () => {
                   </Button>
                 )}
               </div>
-            )}
-          </div>
+            </div>
+          )}
         </div>
       </div>
 
@@ -510,13 +616,13 @@ export const UserProfile = () => {
         <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
           <Card className="max-w-xl w-full p-6 sm:p-8 space-y-5 my-8 max-h-[90vh] overflow-y-auto border border-slate-700 shadow-2xl">
             <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-3">
-              <h3 className="text-lg font-extrabold text-slate-900 dark:text-slate-100 flex items-center gap-2">
+              <h3 className="text-lg font-extrabold text-theme-primary flex items-center gap-2">
                 <Edit className="w-5 h-5 text-brand-500" /> Edit Profile
               </h3>
               <button
                 type="button"
                 onClick={() => setIsEditingProfile(false)}
-                className="p-1 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors cursor-pointer"
+                className="p-1 rounded-lg text-theme-secondary hover:text-theme-primary transition-colors cursor-pointer"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -533,7 +639,7 @@ export const UserProfile = () => {
                       className="w-16 h-16 rounded-full object-cover border-2 border-brand-500 shadow-md"
                     />
                   ) : (
-                    <div className="w-16 h-16 rounded-full bg-gradient-to-tr from-brand-600 to-indigo-600 flex items-center justify-center text-white text-lg font-bold border-2 border-brand-500 shadow-md">
+                    <div className="w-16 h-16 rounded-full bg-gradient-to-br from-[#1B365D] to-[#C5A059] flex items-center justify-center text-[#060B16] text-lg font-bold border-2 border-brand-500 shadow-md">
                       {getInitials(user?.name)}
                     </div>
                   )}
@@ -547,14 +653,14 @@ export const UserProfile = () => {
                   <button
                     type="button"
                     onClick={() => editModalFileInputRef.current?.click()}
-                    className="absolute bottom-0 right-0 p-1.5 rounded-full bg-white dark:bg-slate-800 border border-brand-500 text-brand-500 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors shadow cursor-pointer"
+                    className="absolute bottom-0 right-0 p-1.5 rounded-full bg-theme-global border border-brand-500 text-brand-500 hover:bg-theme-card transition-colors shadow cursor-pointer"
                   >
                     <Camera className="w-3 h-3" />
                   </button>
                 </div>
                 <div>
-                  <p className="text-xs font-bold text-slate-900 dark:text-slate-100">Profile Avatar</p>
-                  <p className="text-[11px] text-slate-400">Click to upload a new profile picture.</p>
+                  <p className="text-xs font-bold text-theme-primary">Profile Avatar</p>
+                  <p className="text-[11px] text-theme-secondary">Click to upload a new profile picture.</p>
                 </div>
               </div>
 
@@ -576,8 +682,8 @@ export const UserProfile = () => {
                       </>
                     ) : editUsernameStatus.isValid ? (
                       <>
-                        <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
-                        <span className="text-emerald-500">{editUsernameStatus.message}</span>
+                        <CheckCircle2 className="w-3.5 h-3.5 text-green-500 shrink-0" />
+                        <span className="text-green-500">{editUsernameStatus.message}</span>
                       </>
                     ) : (
                       <>
@@ -591,7 +697,7 @@ export const UserProfile = () => {
 
               {/* Bio */}
               <div>
-                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                <label className="block text-xs font-bold text-theme-primary mb-1">
                   Bio
                 </label>
                 <textarea
@@ -599,12 +705,12 @@ export const UserProfile = () => {
                   value={editBio}
                   onChange={(e) => setEditBio(e.target.value)}
                   rows={3}
-                  className="w-full bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700/60 rounded-xl p-3 text-xs text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-brand-500"
+                  className="w-full bg-theme-global border border-theme-border rounded-xl p-3 text-xs text-theme-primary focus:outline-none focus:ring-2 focus:ring-brand-500"
                 />
               </div>
 
               {/* Action buttons */}
-              <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-200 dark:border-slate-800">
+              <div className="flex items-center justify-end gap-3 pt-3 border-t border-theme-border">
                 <Button
                   type="button"
                   variant="outline"
@@ -628,147 +734,151 @@ export const UserProfile = () => {
       )}
 
       {/* Tabs Header */}
-      <div ref={tabsRef} className="flex items-center gap-6 border-b border-slate-200 dark:border-[#1e294b] pb-px overflow-x-auto justify-around sm:justify-start">
-        {tabs.map((tab) => {
-          let icon = <LayoutGrid className="w-4 h-4" />;
-          if (tab === 'Questions Asked') icon = <HelpCircle className="w-4 h-4" />;
-          if (tab === 'Saved Questions') icon = <Bookmark className="w-4 h-4" />;
-          if (tab === 'My Enrollments' || tab === 'Paid Rooms') icon = <BookOpen className="w-4 h-4" />;
+      <div ref={tabsRef} className="flex items-center justify-between border-b border-theme-border overflow-x-auto pb-0 mt-4 px-2 sm:px-4">
+        <div className="flex items-center gap-6 sm:gap-10 min-w-max w-full justify-start">
+          {tabs.map((tab) => {
+            let icon = <LayoutGrid className="w-4 h-4 sm:w-5 sm:h-5" />;
+            if (tab === 'Questions Asked') icon = <HelpCircle className="w-4 h-4 sm:w-5 sm:h-5" />;
+            if (tab === 'Saved Questions') icon = <Bookmark className="w-4 h-4 sm:w-5 sm:h-5" />;
+            if (tab === 'My Enrollments' || tab === 'Paid Rooms') icon = <BookOpen className="w-4 h-4 sm:w-5 sm:h-5" />;
 
-          const active = activeTab === tab;
-          return (
-            <button
-              key={tab}
-              onClick={() => setActiveTab(tab)}
-              className={`flex items-center gap-2 py-3 px-1 text-xs font-extrabold border-b-2 transition-all cursor-pointer ${
-                active
-                  ? 'border-brand-500 text-brand-600 dark:text-brand-400 font-extrabold'
-                  : 'border-transparent text-slate-400 hover:text-slate-200'
-              }`}
-            >
-              {icon}
-              <span>{tab}</span>
-            </button>
-          );
-        })}
-      </div>
-
-      {/* Tab Content: Overview */}
+            const active = activeTab === tab;
+            return (
+              <button
+                key={tab}
+                onClick={() => setActiveTab(tab)}
+                className={`flex items-center gap-2 py-4 px-1 text-[12px] sm:text-[14px] transition-all cursor-pointer relative ${active
+                  ? 'text-brand-blue font-[800]'
+                  : 'text-theme-secondary hover:text-theme-primary font-[600]'
+                  }`}
+              >
+                {icon}
+                <span>{tab}</span>
+                {active && (
+                  <motion.div
+                    layoutId="activeTabProfile"
+                    className="absolute bottom-0 left-0 right-0 h-[3px] bg-brand-blue rounded-t-full"
+                  />
+                )}
+              </button>
+            );
+          })}
+        </div>
+        <div className="hidden sm:flex text-theme-secondary p-2 shrink-0">
+          <BookOpen className="w-5 h-5" />
+        </div>
+      </div>      {/* Tab Content: Overview */}
       {activeTab === 'Overview' && (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
           {/* Bio & Details */}
-          <Card className="flex flex-col-reverse min-[480px]:flex-row justify-between items-center min-[480px]:items-start gap-6 p-6 sm:p-7 relative overflow-hidden bg-white dark:bg-[#0b1329] border border-slate-200 dark:border-[#1e294b]">
+          <div className="p-6 sm:p-7 relative overflow-hidden bg-theme-card rounded-[24px] border border-brand-blue/20 shadow-sm">
             <div className="space-y-4 flex-1 min-w-0">
-              <h3 className="text-sm font-extrabold text-slate-900 dark:text-white flex items-center gap-2">
-                <div className="p-1.5 rounded-lg bg-brand-500/10 text-brand-500 shrink-0">
+              <h3 className="text-sm sm:text-base font-[800] text-theme-primary flex items-center gap-3">
+                <div className="w-8 h-8 rounded-full bg-brand-light-blue text-brand-blue flex items-center justify-center shrink-0">
                   <User className="w-4 h-4" />
                 </div>
                 <span>About</span>
               </h3>
-              <p className="text-xs text-slate-605 dark:text-slate-300 leading-relaxed font-medium">
-                {profile?.bio || 'Passionate learner with a strong interest in exploring new concepts and building a solid foundation in academics.'}
+              <p className="text-sm text-theme-secondary font-[500] pl-11">
+                {profile?.bio || 'don tell me what to do'}
               </p>
-              {(profile?.institution || user?.institution) && (
-                <div className="pt-2 text-xs">
-                  <span className="font-bold text-slate-400 uppercase tracking-wider text-[9px]">Institution</span>
-                  <p className="font-semibold text-slate-800 dark:text-slate-200 mt-0.5">{profile.institution || user.institution || 'General Academy'}</p>
-                </div>
+
+              {/* Institution, Stream & Subjects Chips */}
+              {(profile?.institution || user?.institution || profile?.stream || (profile?.subjectsOfInterest && profile.subjectsOfInterest.length > 0) || (profile?.subjectsTaught && profile.subjectsTaught.length > 0)) && (
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  whileInView={{ opacity: 1 }}
+                  viewport={{ once: true }}
+                  transition={{ staggerChildren: 0.1 }}
+                  className="flex flex-wrap gap-2 pt-5 mt-2 border-t border-theme-border pl-11"
+                >
+                  {(profile?.institution || user?.institution || true) && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 10 }}
+                      whileInView={{ opacity: 1, y: 0 }}
+                      viewport={{ once: true }}
+                      className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-[800] bg-brand-light-blue text-brand-blue border border-brand-blue/20"
+                    >
+                      <GraduationCap className="w-4 h-4 text-brand-blue" />
+                      <span>{profile?.institution || user?.institution || 'General Academy'}</span>
+                    </motion.div>
+                  )}
+                  {profile?.stream && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 10 }}
+                      whileInView={{ opacity: 1, y: 0 }}
+                      viewport={{ once: true }}
+                      className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-[800] bg-brand-light-blue text-brand-blue border border-brand-blue/20"
+                    >
+                      <BookOpen className="w-4 h-4 text-brand-blue" />
+                      <span>{profile.stream}</span>
+                    </motion.div>
+                  )}
+                  {((profile?.subjectsOfInterest || profile?.subjectsTaught || [])).map((subject, idx) => {
+                    const subjectName = typeof subject === 'string' ? subject : subject.name;
+                    if (!subjectName) return null;
+                    return (
+                      <motion.div
+                        key={idx}
+                        initial={{ opacity: 0, y: 10 }}
+                        whileInView={{ opacity: 1, y: 0 }}
+                        viewport={{ once: true }}
+                        className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-[800] bg-brand-light-blue text-brand-blue border border-brand-blue/20"
+                      >
+                        <span>📝</span>
+                        <span>{subjectName}</span>
+                      </motion.div>
+                    );
+                  })}
+                </motion.div>
               )}
             </div>
-            
-            {/* Books Stack Illustration */}
-            <svg className="w-20 h-20 sm:w-32 sm:h-32 shrink-0 text-brand-500 self-center" viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg">
-              {/* Potted Plant */}
-              <rect x="15" y="85" width="14" height="18" rx="3" fill="#3B82F6" opacity="0.8"/>
-              <path d="M22 65 C20 75 16 85 16 85" stroke="#10B981" strokeWidth="2.5" strokeLinecap="round"/>
-              <path d="M22 65 C24 75 28 85 28 85" stroke="#10B981" strokeWidth="2.5" strokeLinecap="round"/>
-              <circle cx="22" cy="62" r="6" fill="#10B981"/>
-              <circle cx="16" cy="70" r="5" fill="#059669"/>
-              <circle cx="28" cy="72" r="5" fill="#059669"/>
-              
-              {/* Stack of books */}
-              {/* Book 1 (Bottom, Green) */}
-              <path d="M45 80 H105 V92 H45 Z" fill="#059669" stroke="#047857" strokeWidth="1.5"/>
-              <path d="M45 80 C40 80 40 92 45 92" fill="#10B981"/>
-              <rect x="52" y="84" width="45" height="4" rx="1" fill="#047857" opacity="0.6"/>
-
-              {/* Book 2 (Middle, Orange) */}
-              <path d="M42 66 H102 V78 H42 Z" fill="#EA580C" stroke="#C2410C" strokeWidth="1.5"/>
-              <path d="M42 66 C37 66 37 78 42 78" fill="#F97316"/>
-              <rect x="49" y="70" width="45" height="4" rx="1" fill="#C2410C" opacity="0.6"/>
-
-              {/* Book 3 (Top, Blue) */}
-              <path d="M48 52 H108 V64 H48 Z" fill="#2563EB" stroke="#1D4ED8" strokeWidth="1.5"/>
-              <path d="M48 52 C43 52 43 64 48 64" fill="#3B82F6"/>
-              <rect x="55" y="56" width="45" height="4" rx="1" fill="#1D4ED8" opacity="0.6"/>
-
-              {/* Graduation Cap */}
-              <path d="M78 28 L110 38 L78 48 L46 38 Z" fill="#1E293B" stroke="#475569" strokeWidth="1.5"/>
-              <rect x="68" y="44" width="20" height="10" fill="#0F172A" stroke="#334155" strokeWidth="1.5"/>
-              <path d="M94 38 L98 52" stroke="#F59E0B" strokeWidth="2" strokeLinecap="round"/>
-              <circle cx="98" cy="54" r="2.5" fill="#F59E0B"/>
-            </svg>
-          </Card>
+          </div>
 
           {/* Achievements */}
-          <Card className="flex flex-col-reverse min-[480px]:flex-row justify-between items-center min-[480px]:items-start gap-6 p-6 sm:p-7 relative overflow-hidden bg-white dark:bg-[#0b1329] border border-slate-200 dark:border-[#1e294b]">
-            <div className="space-y-4 flex-1 min-w-0">
-              <h3 className="text-sm font-extrabold text-slate-900 dark:text-white flex items-center gap-2">
-                <div className="p-1.5 rounded-lg bg-amber-500/10 text-amber-500 shrink-0">
-                  <Award className="w-4 h-4" />
-                </div>
-                <span>Achievements</span>
-              </h3>
-              
-              <div className="grid grid-cols-1 gap-3">
+          <div className="p-5 sm:p-7 relative overflow-hidden bg-theme-card rounded-[24px] border border-brand-gold/20 shadow-sm flex flex-col gap-5 sm:gap-6">
+            <h3 className="text-sm sm:text-base font-[800] text-theme-primary flex items-center gap-3">
+              <div className="w-8 h-8 rounded-full bg-brand-light-gold text-brand-gold flex items-center justify-center shrink-0">
+                <Award className="w-4 h-4" />
+              </div>
+              <span>Achievements</span>
+            </h3>
+
+            <div className="flex flex-row justify-between items-center gap-4">
+              <div className="flex flex-col gap-3 sm:gap-4 flex-1 min-w-0">
                 {/* Rep Points sub-card */}
-                <div className="flex items-center gap-3 p-3 bg-slate-50 dark:bg-slate-950/40 rounded-xl border border-slate-100 dark:border-slate-850">
-                  <div className="p-2 bg-amber-500/10 text-amber-500 rounded-lg">
-                    <Flame className="w-4 h-4 fill-current" />
+                <div className="flex items-center gap-2.5 sm:gap-3 p-3 sm:p-4 bg-theme-global rounded-xl border border-theme-border transition-all hover:shadow-sm">
+                  <div className="p-1.5 sm:p-2 bg-brand-light-gold text-brand-gold rounded-lg shrink-0">
+                    <Flame className="w-4 h-4 sm:w-5 sm:h-5 fill-current" />
                   </div>
-                  <div>
-                    <p className="text-xs font-extrabold text-slate-900 dark:text-white">{user?.reputation || 0} Pts</p>
-                    <p className="text-[10px] text-slate-400 font-semibold mt-0.5">Reputation Points</p>
+                  <div className="min-w-0">
+                    <p className="text-xs sm:text-sm font-extrabold text-theme-primary truncate">{user?.reputation || 0} Pts</p>
+                    <p className="text-[9px] sm:text-[10px] text-theme-secondary font-semibold mt-0.5 truncate">Reputation Points</p>
                   </div>
                 </div>
 
                 {/* Level sub-card */}
-                <div className="flex items-center gap-3 p-3 bg-slate-50 dark:bg-slate-950/40 rounded-xl border border-slate-100 dark:border-slate-850">
-                  <div className="p-2 bg-emerald-500/10 text-emerald-500 rounded-lg">
-                    <TrendingUp className="w-4 h-4" />
+                <div className="flex items-center gap-2.5 sm:gap-3 p-3 sm:p-4 bg-theme-global rounded-xl border border-theme-border transition-all hover:shadow-sm">
+                  <div className="p-1.5 sm:p-2 bg-brand-light-blue text-brand-blue rounded-lg shrink-0">
+                    <TrendingUp className="w-4 h-4 sm:w-5 sm:h-5" />
                   </div>
-                  <div>
-                    <p className="text-xs font-extrabold text-slate-900 dark:text-white">Level: {user?.level || 'Beginner'}</p>
-                    <p className="text-[10px] text-slate-400 font-semibold mt-0.5">Keep learning and grow!</p>
+                  <div className="min-w-0">
+                    <p className="text-xs sm:text-sm font-extrabold text-theme-primary truncate">Level: {user?.level || 'Beginner'}</p>
+                    <p className="text-[9px] sm:text-[10px] text-theme-secondary font-semibold mt-0.5 truncate">Keep learning and grow!</p>
                   </div>
                 </div>
               </div>
+
+              <div className="w-24 h-24 xl:w-32 xl:h-32 shrink-0 relative transition-all">
+                <div className="absolute inset-0 bg-[#2B4C7E]/20 blur-3xl rounded-full" />
+                <img
+                  src="/assets/profile_trophy.jpg"
+                  alt="Trophy"
+                  className="w-full h-full object-cover rounded-[1.5rem] [mask-image:radial-gradient(circle_at_center,black_60%,transparent_100%)] relative z-10 opacity-90"
+                />
+              </div>
             </div>
-            
-            {/* Gold Trophy Illustration */}
-            <svg className="w-20 h-20 sm:w-32 sm:h-32 shrink-0 self-center" viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg">
-              {/* Gold Trophy */}
-              <path d="M40 40 H80 V62 C80 72 72 80 60 80 C48 80 40 72 40 62 Z" fill="#EAB308" stroke="#CA8A04" strokeWidth="1.5"/>
-              <path d="M60 80 V94" stroke="#CA8A04" strokeWidth="3" strokeLinecap="round"/>
-              <path d="M45 94 H75" stroke="#CA8A04" strokeWidth="3" strokeLinecap="round"/>
-              <rect x="42" y="94" width="36" height="8" rx="2" fill="#475569"/>
-              
-              {/* Handles */}
-              <path d="M40 46 H32 V58 H40" stroke="#CA8A04" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
-              <path d="M80 46 H88 V58 H80" stroke="#CA8A04" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
-              
-              {/* Star on Trophy */}
-              <path d="M60 50 L62 55 L67 55 L63 58 L65 63 L60 60 L55 63 L57 58 L53 55 L58 55 Z" fill="#FFF" opacity="0.9"/>
-              
-              {/* Confetti */}
-              <circle cx="25" cy="30" r="2" fill="#3B82F6"/>
-              <circle cx="95" cy="35" r="1.5" fill="#EF4444"/>
-              <rect x="30" y="70" width="3" height="3" fill="#10B981" transform="rotate(45 30 70)"/>
-              <rect x="88" y="75" width="2.5" height="2.5" fill="#EAB308" transform="rotate(30 88 75)"/>
-              <path d="M28 50 Q31 52 34 50" stroke="#EC4899" strokeWidth="1" fill="none"/>
-              <path d="M92 58 Q95 60 98 58" stroke="#3B82F6" strokeWidth="1" fill="none"/>
-            </svg>
-          </Card>
+          </div>
         </div>
       )}
 
@@ -776,7 +886,7 @@ export const UserProfile = () => {
       {activeTab === 'Questions Asked' && (
         <div className="space-y-4">
           {askedQuestions.length === 0 ? (
-            <Card className="p-8 text-center text-slate-400">
+            <Card className="p-8 text-center text-theme-secondary">
               <HelpCircle className="w-10 h-10 mx-auto mb-2 opacity-30" />
               <p className="text-xs font-semibold">No questions asked yet.</p>
             </Card>
@@ -790,7 +900,7 @@ export const UserProfile = () => {
       {activeTab === 'Saved Questions' && (
         <div className="space-y-4">
           {savedQuestions.length === 0 ? (
-            <Card className="p-8 text-center text-slate-400">
+            <Card className="p-8 text-center text-theme-secondary">
               <BookOpen className="w-10 h-10 mx-auto mb-2 opacity-30" />
               <p className="text-xs font-semibold">No saved questions.</p>
             </Card>
@@ -808,7 +918,7 @@ export const UserProfile = () => {
               <Button
                 size="sm"
                 onClick={() => setShowCreateRoomModal(true)}
-                className="bg-amber-600 hover:bg-amber-500 text-white font-bold gap-1.5"
+                className="bg-accent-605 hover:bg-accent-500 text-white font-bold gap-1.5"
               >
                 <Lock className="w-4 h-4" /> + Create Paid Room
               </Button>
@@ -816,10 +926,10 @@ export const UserProfile = () => {
           )}
 
           {((isOwnProfile && isTeacher ? myRooms : teacherRooms) || []).length === 0 ? (
-            <Card className="p-10 text-center text-slate-400">
-              <Lock className="w-12 h-12 text-amber-500 mx-auto mb-3 opacity-40" />
-              <p className="font-semibold text-slate-300">No Paid Rooms Offered Yet</p>
-              <p className="text-xs text-slate-500 mt-1 max-w-sm mx-auto">
+            <Card className="p-10 text-center text-theme-secondary">
+              <Lock className="w-12 h-12 text-accent-500 mx-auto mb-3 opacity-40" />
+              <p className="font-semibold text-theme-primary">No Paid Rooms Offered Yet</p>
+              <p className="text-xs text-theme-secondary mt-1 max-w-sm mx-auto">
                 {isOwnProfile && isTeacher
                   ? 'Create a paid room to bundle live classes and study materials for paying students.'
                   : `${user?.name || 'This instructor'} has not created any paid rooms yet.`}
@@ -828,26 +938,26 @@ export const UserProfile = () => {
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               {(isOwnProfile && isTeacher ? myRooms : teacherRooms).map((r) => {
-                const priceInINR = (r.price / 100).toFixed(0);
+                const priceInINR = r?.price ? (r.price / 100).toFixed(0) : '0';
                 return (
-                  <Card key={r._id} className="flex flex-col justify-between hover:border-amber-500/40 transition-all border-amber-500/10">
+                  <Card key={r._id} className="flex flex-col justify-between hover:border-accent-500/40 transition-all border-accent-500/10">
                     <div>
                       <div className="flex items-start justify-between gap-3 mb-2">
-                        <div className="p-2.5 rounded-xl bg-amber-500/10 text-amber-400">
+                        <div className="p-2.5 rounded-xl bg-accent-500/10 text-accent-500">
                           <Lock className="w-5 h-5" />
                         </div>
-                        <span className="text-base font-black text-amber-400 bg-amber-500/10 px-3 py-1 rounded-full border border-amber-500/20">
+                        <span className="text-base font-black text-accent-500 bg-accent-500/10 px-3 py-1 rounded-full border border-accent-500/20">
                           ₹{priceInINR}
                         </span>
                       </div>
                       <h4 className="text-base font-black text-white leading-snug">{r.title}</h4>
                       {r.description && (
-                        <p className="text-xs text-slate-400 mt-1.5 line-clamp-3">{r.description}</p>
+                        <p className="text-xs text-theme-secondary mt-1.5 line-clamp-3">{r.description}</p>
                       )}
                     </div>
 
-                    <div className="mt-4 pt-3 border-t border-slate-800 flex items-center justify-between">
-                      <span className="text-[11px] text-slate-400">
+                    <div className="mt-4 pt-3 border-t border-theme-border flex items-center justify-between">
+                      <span className="text-[11px] text-theme-secondary">
                         {r.isActive ? '🟢 Active Room' : '🔴 Inactive'}
                       </span>
                       {!isOwnProfile && (
@@ -855,7 +965,7 @@ export const UserProfile = () => {
                           size="sm"
                           onClick={() => handleEnrollInRoom(r)}
                           disabled={isOrdering}
-                          className="bg-amber-600 hover:bg-amber-500 text-white font-extrabold text-xs shadow-md shadow-amber-500/20"
+                          className="bg-accent-605 hover:bg-accent-500 text-white font-extrabold text-xs shadow-md shadow-accent-500/20"
                         >
                           Enroll Now — ₹{priceInINR}
                         </Button>
@@ -873,10 +983,10 @@ export const UserProfile = () => {
       {activeTab === 'My Enrollments' && (
         <div className="space-y-4">
           {myEnrollments.length === 0 ? (
-            <Card className="p-10 text-center text-slate-400">
-              <ShieldCheck className="w-12 h-12 text-emerald-500 mx-auto mb-3 opacity-40" />
-              <p className="font-semibold text-slate-300">No Active Enrollments</p>
-              <p className="text-xs text-slate-500 mt-1 max-w-sm mx-auto">
+            <Card className="p-10 text-center text-theme-secondary">
+              <ShieldCheck className="w-12 h-12 text-green-500 mx-auto mb-3 opacity-40" />
+              <p className="font-semibold text-theme-primary">No Active Enrollments</p>
+              <p className="text-xs text-theme-secondary mt-1 max-w-sm mx-auto">
                 Explore instructors' paid rooms and enroll to get unlimited access to exclusive live classes and study materials.
               </p>
             </Card>
@@ -886,22 +996,22 @@ export const UserProfile = () => {
                 const r = e.room;
                 const priceInINR = r?.price ? (r.price / 100).toFixed(0) : '0';
                 return (
-                  <Card key={e._id} className="flex flex-col justify-between border-emerald-500/20 bg-emerald-500/5">
+                  <Card key={e._id} className="flex flex-col justify-between border-green-500/20 bg-green-500/5">
                     <div>
                       <div className="flex items-start justify-between gap-3 mb-2">
-                        <div className="p-2.5 rounded-xl bg-emerald-500/10 text-emerald-400">
+                        <div className="p-2.5 rounded-xl bg-green-500/10 text-green-400">
                           <ShieldCheck className="w-5 h-5" />
                         </div>
                         <Badge variant="emerald" size="xs">ACTIVE</Badge>
                       </div>
                       <h4 className="text-base font-black text-white leading-snug">{r?.title || 'Paid Room'}</h4>
-                      <p className="text-xs text-slate-400 mt-1">Instructor: {r?.teacher?.name || 'Teacher'}</p>
-                      <p className="text-xs text-slate-400 mt-0.5">Paid: ₹{priceInINR}</p>
+                      <p className="text-xs text-theme-secondary mt-1">Instructor: {r?.teacher?.name || 'Teacher'}</p>
+                      <p className="text-xs text-theme-secondary mt-0.5">Paid: ₹{priceInINR}</p>
                     </div>
 
-                    <div className="mt-4 pt-3 border-t border-slate-800 flex items-center justify-between text-[11px] text-slate-400">
+                    <div className="mt-4 pt-3 border-t border-theme-border flex items-center justify-between text-[11px] text-theme-secondary">
                       <span>Enrolled on {new Date(e.paidAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}</span>
-                      <span className="text-emerald-400 font-bold">Lifetime Access</span>
+                      <span className="text-green-400 font-bold">Lifetime Access</span>
                     </div>
                   </Card>
                 );
@@ -914,6 +1024,15 @@ export const UserProfile = () => {
       {/* Teacher Create Room Modal */}
       {showCreateRoomModal && (
         <CreateRoomModal onClose={() => setShowCreateRoomModal(false)} />
+      )}
+
+      {/* Followers & Following Modal */}
+      {followModalType && (
+        <FollowListModal
+          userId={activeUserId}
+          type={followModalType}
+          onClose={() => setFollowModalType(null)}
+        />
       )}
     </div>
   );

@@ -131,7 +131,7 @@ export const SearchResults = () => {
           <Card>
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
-                <BookOpen className="w-4 h-4 text-emerald-500" />
+                <BookOpen className="w-4 h-4 text-green-500" />
                 Subjects ({filteredSubjects.length})
               </h3>
             </div>
@@ -145,7 +145,7 @@ export const SearchResults = () => {
                   <Link
                     key={s._id}
                     to={`/questions?subject=${s._id}`}
-                    className="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 hover:border-emerald-500/40 transition-all flex items-center justify-between"
+                    className="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 hover:border-green-500/40 transition-all flex items-center justify-between"
                   >
                     <div>
                       <h4 className="text-xs font-bold text-slate-900 dark:text-slate-100">
@@ -155,7 +155,7 @@ export const SearchResults = () => {
                         <span className="text-[10px] text-slate-500">{s.code}</span>
                       )}
                     </div>
-                    <ArrowUpRight className="w-3.5 h-3.5 text-emerald-500" />
+                    <ArrowUpRight className="w-3.5 h-3.5 text-green-500" />
                   </Link>
                 ))}
               </div>
@@ -166,7 +166,7 @@ export const SearchResults = () => {
           <Card>
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
-                <Users className="w-4 h-4 text-purple-500" />
+                <Users className="w-4 h-4 text-brand-500" />
                 People ({users.length})
               </h3>
             </div>
@@ -180,7 +180,7 @@ export const SearchResults = () => {
                   <Link
                     key={u._id}
                     to={`/profile/${u._id}`}
-                    className="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 hover:border-purple-500/40 transition-all flex items-center gap-3"
+                    className="p-3.5 rounded-2xl bg-white/5 dark:bg-white/[0.03] backdrop-blur-md border border-white/10 hover:border-brand-500/40 transition-all flex items-center gap-3"
                   >
                     <img
                       src={
@@ -188,7 +188,7 @@ export const SearchResults = () => {
                         'https://res.cloudinary.com/demo/image/upload/v1571218039/sample.jpg'
                       }
                       alt={u.name}
-                      className="w-8 h-8 rounded-full border border-purple-500 object-cover shrink-0"
+                      className="w-8 h-8 rounded-full border border-brand-500 object-cover shrink-0"
                     />
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center gap-1.5">

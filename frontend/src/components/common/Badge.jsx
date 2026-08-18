@@ -2,13 +2,14 @@ import React from 'react';
 
 export const Badge = ({ children, variant = 'blue', size = 'sm', className = '' }) => {
   const variants = {
-    blue: 'bg-blue-500/10 text-blue-500 border-blue-500/20',
-    indigo: 'bg-indigo-500/10 text-indigo-500 border-indigo-500/20',
-    purple: 'bg-purple-500/10 text-purple-500 border-purple-500/20',
-    emerald: 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20',
-    amber: 'bg-amber-500/10 text-amber-500 border-amber-500/20',
+    blue: 'bg-brand-500/10 text-brand-500 border-brand-500/20',
+    indigo: 'bg-brand-500/10 text-brand-500 border-brand-500/20',
+    purple: 'bg-brand-500/10 text-brand-500 border-brand-500/20',
+    emerald: 'bg-green-500/10 text-green-500 border-green-500/20',
+    amber: 'bg-accent-500/10 text-accent-500 border-accent-500/20',
     red: 'bg-red-500/10 text-red-500 border-red-500/20',
-    dark: 'bg-slate-800 text-slate-300 border-slate-700'
+    rose: 'bg-red-500/10 text-red-400 border-red-500/20',
+    dark: 'bg-white/5 text-[#F5F3FA] border-white/10'
   };
 
   const sizes = {

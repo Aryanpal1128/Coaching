@@ -46,11 +46,11 @@ export const NotificationDropdown = ({ onClose }) => {
   const getIcon = (type) => {
     switch (type) {
       case 'AI_EVALUATION_COMPLETED':
-        return <Sparkles className="w-4 h-4 text-purple-400" />;
+        return <Sparkles className="w-4 h-4 text-[#C5A059]" />;
       case 'TEACHER_LIVE_CLASS':
-        return <Video className="w-4 h-4 text-emerald-400" />;
+        return <Video className="w-4 h-4 text-green-400" />;
       case 'BADGE_EARNED':
-        return <Trophy className="w-4 h-4 text-amber-400" />;
+        return <Trophy className="w-4 h-4 text-accent-500" />;
       case 'NEW_FOLLOWER':
         return <UserPlus className="w-4 h-4 text-brand-400" />;
       default:
